@@ -3,10 +3,9 @@ import { z } from "zod";
 // ─── Request schema (drives client-side form validation) ──────────────────────
 
 export const loginRequestSchema = z.object({
-  email: z
+  username: z
     .string()
-    .min(1, "Email wajib diisi")
-    .email("Format email tidak valid"),
+    .min(1, "Username wajib diisi"),
   password: z
     .string()
     .min(1, "Password wajib diisi")

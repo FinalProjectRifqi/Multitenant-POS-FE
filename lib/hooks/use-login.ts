@@ -6,6 +6,7 @@ import { login } from "@/lib/api/auth";
 import { getDashboardRoute } from "@/lib/constants/roles";
 import { getErrorMessage } from "@/lib/api/client";
 import type { LoginRequest } from "@/lib/types/auth";
+import { toast } from "sonner";
 
 /**
  * useLogin — encapsulates the full login mutation lifecycle:
@@ -24,7 +25,20 @@ export function useLogin() {
     onSuccess: (data) => {
       const roleCode = data.user.role?.role_code ?? "";
       const route = getDashboardRoute(roleCode);
+      toast.success("Login berhasil!", {
+        description: "Anda berhasil login ke sistem POS.",
+        position: "top-right",
+        richColors: true,
+        duration: 3000, 
+      });
       router.push(route);
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error), {
+        position: "top-right",
+        richColors: true,
+        duration: 3000, 
+      });
     },
   });
 

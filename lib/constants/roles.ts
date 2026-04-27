@@ -24,10 +24,10 @@ export const ROLE_LABEL: Record<RoleCode, string> = {
  * Update these paths when the actual dashboard pages are created.
  */
 export const ROLE_DASHBOARD_ROUTE: Record<RoleCode, string> = {
-  [ROLE_CODE.STAF_UNIT]: "/dashboard/unit/pos",
-  [ROLE_CODE.TIM_DAPUR]: "/dashboard/unit/kitchen",
-  [ROLE_CODE.MANAJER_UNIT]: "/dashboard/unit",
-  [ROLE_CODE.MANAJEMEN_GRUP]: "/dashboard/group",
+  [ROLE_CODE.STAF_UNIT]: "/unit/pos",
+  [ROLE_CODE.TIM_DAPUR]: "/unit/kitchen",
+  [ROLE_CODE.MANAJER_UNIT]: "/unit",
+  [ROLE_CODE.MANAJEMEN_GRUP]: "/group",
 };
 
 /** Fallback route for unknown role codes */
