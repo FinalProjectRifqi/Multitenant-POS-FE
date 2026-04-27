@@ -1,0 +1,148 @@
+"use client";
+
+import { useMemo } from "react";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
+import { DataTable } from "@/components/shared/data-table";
+import { StatsGrid } from "@/components/shared/stats-grid";
+import { getErrorMessage } from "@/lib/api/client";
+import { UnitFormDialog } from "@/components/unit/unit-form-dialog";
+import { buildUnitColumns } from "@/components/unit/unit-table-columns";
+import { useUnitPage } from "@/lib/unit/use-unit-page";
+import { UnitDetailDialog } from "@/components/unit/unit-detail-dialog";
+
+export default function Page() {
+  const p = useUnitPage();
+
+  const columns = useMemo(
+    () =>
+      buildUnitColumns({
+        onEdit: p.setEditingUnit,
+        onDelete: p.setDeletingUnit,
+        onView: p.setViewingUnit,
+      }),
+    [p.setEditingUnit, p.setDeletingUnit, p.setViewingUnit],
+  );
+
+  return (
+    <div className="space-y-5 p-8">
+      {/* ── Page heading ── */}
+      <section className="space-y-1">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          Kelola Unit Usaha
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Kelola semua unit usaha, cabang, dan lokasi bisnis Anda
+        </p>
+      </section>
+
+      {/* ── Stat cards ── */}
+      <StatsGrid stats={p.stats} columns={3} />
+
+      {/* ── Table card ── */}
+      <Card className="bg-primary-foreground ring-1 ring-border/90">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-xl font-semibold">
+            Daftar Unit Usaha
+          </CardTitle>
+          <CardDescription>
+            Kelola semua unit usaha, cabang, dan lokasi bisnis Anda
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-5">
+          {p.query.isError && (
+            <Alert variant="destructive">
+              <AlertTitle>Gagal memuat data unit usaha</AlertTitle>
+              <AlertDescription>
+                {getErrorMessage(p.query.error)}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <DataTable
+            columns={columns}
+            data={p.units}
+            isLoading={p.query.isLoading}
+            // Search — points to the column whose filterFn handles all fields
+            searchColumn="unit_name"
+            searchPlaceholder="Cari nama, alamat, telepon, status..."
+            // Toolbar CTA
+            actionLabel="Tambah Unit Usaha"
+            onActionClick={() => p.setIsCreateOpen(true)}
+            // Empty states
+            emptyMessage="Belum ada unit usaha yang terdaftar."
+            searchEmptyMessage="Data unit usaha tidak ditemukan dari kata kunci pencarian."
+            // Features
+            enableSorting
+            enablePagination
+            defaultPageSize={10}
+          />
+        </CardContent>
+      </Card>
+
+      {/* ── Create dialog ── */}
+      <UnitFormDialog
+        title="Tambah Unit Usaha"
+        description="Isi form di bawah untuk menambah unit usaha baru."
+        submitLabel="Tambah"
+        open={p.isCreateOpen}
+        onOpenChange={p.setIsCreateOpen}
+        isPending={p.create.isPending}
+        errorMessage={p.create.error}
+        onSubmit={p.create.handle}
+      />
+
+      {/* ── Edit dialog ── */}
+      <UnitFormDialog
+        title="Edit Unit Usaha"
+        description="Perbarui informasi unit usaha yang dipilih."
+        submitLabel="Simpan Perubahan"
+        open={Boolean(p.editingUnit)}
+        onOpenChange={(open) => {
+          if (!open) p.setEditingUnit(null);
+        }}
+        initialValues={p.editInitialValues}
+        isPending={p.update.isPending}
+        errorMessage={p.update.error}
+        onSubmit={p.update.handle}
+      />
+
+      {/* ── View dialog ── */}
+      <UnitDetailDialog
+        unit={p.viewingUnit}
+        open={Boolean(p.viewingUnit)}
+        onOpenChange={(open) => {
+          if (!open) p.setViewingUnit(null);
+        }}
+      />
+
+      {/* ── Delete dialog ── */}
+      <ConfirmDeleteDialog
+        open={Boolean(p.deletingUnit)}
+        onOpenChange={(open) => {
+          if (!open) p.setDeletingUnit(null);
+        }}
+        title="Hapus Unit Usaha"
+        description={
+          <>
+            Tindakan ini tidak dapat dibatalkan. Unit{" "}
+            <strong>{p.deletingUnit?.unit_name ?? "unit usaha"}</strong> akan
+            dihapus permanen.
+          </>
+        }
+        isPending={p.delete.isPending}
+        errorMessage={p.delete.error}
+        onConfirm={p.delete.handle}
+      />
+    </div>
+  );
+}
