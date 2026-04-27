@@ -17,6 +17,7 @@ import { getErrorMessage } from "@/lib/api/client";
 import { UnitFormDialog } from "@/components/unit/unit-form-dialog";
 import { buildUnitColumns } from "@/components/unit/unit-table-columns";
 import { useUnitPage } from "@/lib/unit/use-unit-page";
+import { UnitDetailDialog } from "@/components/unit/unit-detail-dialog";
 
 export default function Page() {
   const p = useUnitPage();
@@ -26,9 +27,9 @@ export default function Page() {
       buildUnitColumns({
         onEdit: p.setEditingUnit,
         onDelete: p.setDeletingUnit,
+        onView: p.setViewingUnit,
       }),
-    // setEditingUnit / setDeletingUnit are stable setState refs — safe deps
-    [p.setEditingUnit, p.setDeletingUnit],
+    [p.setEditingUnit, p.setDeletingUnit, p.setViewingUnit],
   );
 
   return (
@@ -113,6 +114,15 @@ export default function Page() {
         isPending={p.update.isPending}
         errorMessage={p.update.error}
         onSubmit={p.update.handle}
+      />
+
+      {/* ── View dialog ── */}
+      <UnitDetailDialog
+        unit={p.viewingUnit}
+        open={Boolean(p.viewingUnit)}
+        onOpenChange={(open) => {
+          if (!open) p.setViewingUnit(null);
+        }}
       />
 
       {/* ── Delete dialog ── */}

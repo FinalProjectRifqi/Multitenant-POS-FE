@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { useCrudPageController } from "@/lib/crud/use-crud-page-controller";
 import {
   useCreateUnitMutation,
   useDeleteUnitMutation,
@@ -13,82 +14,69 @@ import { DEFAULT_UNIT_FORM_VALUES } from "./constants";
 import { buildUnitStats } from "./stats";
 
 export function useUnitPage() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingUnit, setEditingUnit] = useState<UnitEntity | null>(null);
-  const [deletingUnit, setDeletingUnit] = useState<UnitEntity | null>(null);
+  const [viewingUnit, setViewingUnit] = useState<UnitEntity | null>(null);
 
   const unitsQuery = useUnitsQuery();
   const createMutation = useCreateUnitMutation();
   const updateMutation = useUpdateUnitMutation();
   const deleteMutation = useDeleteUnitMutation();
 
-  const units = useMemo(() => unitsQuery.data ?? [], [unitsQuery.data]);
-  const stats = useMemo(() => buildUnitStats(units), [units]);
-
-  const editInitialValues = useMemo<CreateUnitRequest>(() => {
-    if (!editingUnit) return DEFAULT_UNIT_FORM_VALUES;
-    const { unit_name, unit_address, phone_number, status } = editingUnit;
-    return { unit_name, unit_address, phone_number, status };
-  }, [editingUnit]);
-
-  // ── Handlers ────────────────────────────────────────────────────────────────
-
-  async function handleCreate(values: CreateUnitRequest) {
-    await createMutation.createUnit(values);
-    setIsCreateOpen(false);
-  }
-
-  async function handleUpdate(values: CreateUnitRequest) {
-    if (!editingUnit) return;
-    await updateMutation.updateUnit({
-      unit_id: editingUnit.unit_id,
-      payload: values,
-    });
-    setEditingUnit(null);
-  }
-
-  async function handleDelete() {
-    if (!deletingUnit) return;
-    await deleteMutation.deleteUnit({ unit_id: deletingUnit.unit_id });
-    setDeletingUnit(null);
-  }
-
-  return {
-    // Raw data — pass the full list to DataTable; TanStack filters internally
-    units,
-    stats,
-    editInitialValues,
-
-    // Query meta
-    query: {
+  const controller = useCrudPageController({
+    defaultFormValues: DEFAULT_UNIT_FORM_VALUES,
+    listQuery: {
+      data: unitsQuery.data,
       isLoading: unitsQuery.isLoading,
       isError: unitsQuery.isError,
       error: unitsQuery.error,
     },
-
-    // Dialog state
-    isCreateOpen,
-    setIsCreateOpen,
-    editingUnit,
-    setEditingUnit,
-    deletingUnit,
-    setDeletingUnit,
-
-    // Mutations — grouped so page.tsx destructures cleanly
-    create: {
+    createMutation: {
+      execute: createMutation.createUnit,
       isPending: createMutation.isPending,
       error: createMutation.error,
-      handle: handleCreate,
     },
-    update: {
+    updateMutation: {
+      execute: updateMutation.updateUnit,
       isPending: updateMutation.isPending,
       error: updateMutation.error,
-      handle: handleUpdate,
     },
-    delete: {
+    deleteMutation: {
+      execute: deleteMutation.deleteUnit,
       isPending: deleteMutation.isPending,
       error: deleteMutation.error,
-      handle: handleDelete,
     },
+    mapEntityToFormValues: (unit: UnitEntity): CreateUnitRequest => {
+      const { unit_name, unit_address, phone_number, status } = unit;
+      return { unit_name, unit_address, phone_number, status };
+    },
+    toUpdateInput: ({ entity, values }) => ({
+      unit_id: entity.unit_id,
+      payload: values,
+    }),
+    toDeleteInput: (entity) => ({
+      unit_id: entity.unit_id,
+    }),
+  });
+
+  const stats = useMemo(
+    () => buildUnitStats(controller.items),
+    [controller.items],
+  );
+
+  return {
+    units: controller.items,
+    stats,
+    editInitialValues: controller.editInitialValues,
+    query: controller.query,
+    isCreateOpen: controller.isCreateOpen,
+    setIsCreateOpen: controller.setIsCreateOpen,
+    editingUnit: controller.editingItem,
+    setEditingUnit: controller.setEditingItem,
+    deletingUnit: controller.deletingItem,
+    setDeletingUnit: controller.setDeletingItem,
+    viewingUnit,
+    setViewingUnit,
+    create: controller.create,
+    update: controller.update,
+    delete: controller.delete,
   };
 }

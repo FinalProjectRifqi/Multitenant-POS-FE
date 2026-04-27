@@ -65,11 +65,30 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
 }
 
 // ─── Role badge ─────────────────────────────────────────────────────────────────
-const ROLE_BADGE: Record<RoleCode, { bg: string; text: string; label: string }> = {
-  [ROLE_CODE.MANAJEMEN_GRUP]: { bg: "bg-amber-100",  text: "text-amber-800",  label: "Manajemen Grup" },
-  [ROLE_CODE.TIM_DAPUR]:      { bg: "bg-orange-100", text: "text-orange-800", label: "Tim Dapur"       },
-  [ROLE_CODE.MANAJER_UNIT]:   { bg: "bg-blue-100",   text: "text-blue-800",   label: "Manajer Unit"    },
-  [ROLE_CODE.STAF_UNIT]:      { bg: "bg-green-100",  text: "text-green-800",  label: "Staf Unit"       },
+const ROLE_BADGE: Record<
+  RoleCode,
+  { bg: string; text: string; label: string }
+> = {
+  [ROLE_CODE.MANAJEMEN_GRUP]: {
+    bg: "bg-amber-100",
+    text: "text-amber-800",
+    label: "Manajemen Grup",
+  },
+  [ROLE_CODE.TIM_DAPUR]: {
+    bg: "bg-orange-100",
+    text: "text-orange-800",
+    label: "Tim Dapur",
+  },
+  [ROLE_CODE.MANAJER_UNIT]: {
+    bg: "bg-blue-100",
+    text: "text-blue-800",
+    label: "Manajer Unit",
+  },
+  [ROLE_CODE.STAF_UNIT]: {
+    bg: "bg-green-100",
+    text: "text-green-800",
+    label: "Staf Unit",
+  },
 };
 
 // ─── Nav item — square active style (image 2) ───────────────────────────────────
@@ -83,7 +102,7 @@ function NavItem({ item }: { item: NavItem }) {
         asChild
         isActive={isActive}
         tooltip={item.label}
-        className="rounded-md data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
+        className="rounded-md data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground group-data-[collapsible=icon]:justify-center!"
       >
         <Link href={item.href}>
           <NavIcon name={item.icon} />
@@ -96,15 +115,20 @@ function NavItem({ item }: { item: NavItem }) {
 
 // ─── App Sidebar ────────────────────────────────────────────────────────────────
 export function AppSidebar() {
-  const router  = useRouter();
-  const user    = useCurrentUser();
+  const router = useRouter();
+  const user = useCurrentUser();
 
   const roleCode = (user?.role?.role_code ?? "") as RoleCode;
   const navItems = ROLE_NAV[roleCode] ?? [];
-  const badge    = ROLE_BADGE[roleCode];
+  const badge = ROLE_BADGE[roleCode];
 
   const initials = user?.full_name
-    ? user.full_name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()
+    ? user.full_name
+        .split(" ")
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
     : "?";
 
   async function handleLogout() {
@@ -114,7 +138,6 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-
       {/* ── Brand header ── */}
       <SidebarHeader className="border-b border-sidebar-border">
         <SidebarMenu>
@@ -128,7 +151,9 @@ export function AppSidebar() {
                 <ShoppingBag className="w-4 h-4 text-primary-foreground" />
               </div> */}
               <div className="flex flex-col gap-1 leading-none min-w-0 px-2">
-                <span className="font-bold text-base truncate">Sistem POS XYZ</span>
+                <span className="font-bold text-base truncate">
+                  Sistem POS XYZ
+                </span>
                 <span className="text-xs text-muted-foreground truncate">
                   {user?.unit?.unit_name ?? "Manajemen Grup XYZ"}
                 </span>

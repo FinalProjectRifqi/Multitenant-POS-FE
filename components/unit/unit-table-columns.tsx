@@ -17,6 +17,7 @@ import { formatDate, STATUS_LABEL } from "@/lib/unit/constants";
 type Actions = {
   onEdit: (unit: UnitEntity) => void;
   onDelete: (unit: UnitEntity) => void;
+  onView: (unit: UnitEntity) => void;
 };
 
 export function buildUnitColumns(
@@ -109,6 +110,13 @@ export function buildUnitColumns(
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-32">
+              <DropdownMenuItem
+                onSelect={() => {
+                  actions.onView(unit);
+                }}
+              >
+                Detail
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => {
                   actions.onEdit(unit);
