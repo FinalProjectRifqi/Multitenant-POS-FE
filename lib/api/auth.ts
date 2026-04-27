@@ -150,15 +150,19 @@ function delay(ms = 800): Promise<void> {
 
 // ─── Login implementations ────────────────────────────────────────────────────
 
-async function loginWithDummy(credentials: LoginRequest): Promise<LoginResponse> {
+async function loginWithDummy(
+  credentials: LoginRequest,
+): Promise<LoginResponse> {
   await delay();
 
   const match = DUMMY_USERS.find(
-    (u) => u.email === credentials.email && u.password === credentials.password,
+    (u) =>
+      u.username === credentials.username &&
+      u.password === credentials.password,
   );
 
   if (!match) {
-    throw new Error("Email atau password salah. Silakan coba lagi.");
+    throw new Error("Username atau password salah. Silakan coba lagi.");
   }
 
   return buildDummyResponse(match);
