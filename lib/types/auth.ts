@@ -62,3 +62,45 @@ export interface LoginResponse {
   token: AuthToken;
   user: User;
 }
+
+// ─── Backend API response contract ────────────────────────────────────────────
+//
+// This interface defines the exact shape the backend /auth/login endpoint must
+// return. Frontend (authorizeWithApi) maps this to the NextAuth User object.
+//
+// Backend developers: align your response to this contract.
+
+export interface LoginApiResponse {
+  token: {
+    /** JWT access token — send as `Authorization: Bearer <access_token>` */
+    access_token: string;
+    token_type: "Bearer";
+    /** Seconds until access_token expires (e.g. 3600 = 1 hour) */
+    expires_in: number;
+  };
+  user: {
+    /** From users table */
+    user_id: string;
+    role_id: string;
+    full_name: string;
+    username: string;
+    email: string;
+    is_active: boolean;
+    /** Joined from roles table */
+    role: {
+      role_id: string;
+      role_code: string;
+      role_name: string;
+      description: string;
+      is_active: boolean;
+    };
+    /**
+     * Joined from units table via user_units (single active unit).
+     * null for Manajemen Grup (cross-unit role).
+     */
+    unit: {
+      unit_id: string;
+      unit_name: string;
+    } | null;
+  };
+}

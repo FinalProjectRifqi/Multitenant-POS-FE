@@ -5,6 +5,7 @@ import axios, {
 } from "axios";
 import type { ZodType } from "zod";
 import { validateSchema } from "@/lib/api/validator";
+import { getSession } from "next-auth/react";
 
 const DEFAULT_TIMEOUT_IN_MS = 15_000;
 
@@ -16,11 +17,25 @@ export const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(async (config) => {
   const headers = AxiosHeaders.from(config.headers);
   headers.set("Accept", "application/json");
-  config.headers = headers;
 
+  // Attach the backend access_token as Bearer token for all API calls.
+  // getSession() reads the NextAuth session (from the httpOnly cookie server-side,
+  // or from the client session cache). Safe to call on every request — it's cached.
+  //
+  // NOTE: This interceptor only runs in the browser (client-side React Query hooks).
+  //       Server-side callers (Server Components / API Routes) must attach the token
+  //       manually using auth() from lib/nextauth/auth.ts.
+  if (typeof window !== "undefined") {
+    const session = await getSession();
+    if (session?.user?.access_token) {
+      headers.set("Authorization", `Bearer ${session.user.access_token}`);
+    }
+  }
+
+  config.headers = headers;
   return config;
 });
 
