@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
-import { logout } from "@/lib/api/auth";
+import { signOut } from "next-auth/react";
 import { ROLE_NAV, type NavItem } from "@/lib/constants/navigation";
 import { ROLE_CODE, type RoleCode } from "@/lib/constants/roles";
 
@@ -117,7 +117,6 @@ function NavItem({ item }: { item: NavItem }) {
 
 // ─── App Sidebar ────────────────────────────────────────────────────────────────
 export function AppSidebar() {
-  const router = useRouter();
   const user = useCurrentUser();
 
   const roleCode = (user?.role?.role_code ?? "") as RoleCode;
@@ -134,8 +133,7 @@ export function AppSidebar() {
     : "?";
 
   async function handleLogout() {
-    await logout();
-    router.push("/login");
+    await signOut({ callbackUrl: "/login" });
   }
 
   return (

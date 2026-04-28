@@ -1,51 +1,85 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/api/auth";
 import { getDashboardRoute } from "@/lib/constants/roles";
-import { getErrorMessage } from "@/lib/api/client";
-import type { LoginRequest } from "@/lib/types/auth";
+import type { LoginFormValues } from "@/lib/schemas/auth";
 import { toast } from "sonner";
 
 /**
- * useLogin — encapsulates the full login mutation lifecycle:
- *   1. Calls auth service (dummy or real based on env)
- *   2. Resolves the role-based dashboard route
- *   3. Redirects the user
+ * useLogin — encapsulates the full login lifecycle using NextAuth Credentials.
  *
- * The consuming form never imports auth service or router directly
- * (Dependency Inversion Principle).
+ *   1. Calls `signIn("credentials")` → NextAuth calls our `authorize()` function
+ *   2. On success: reads the role from the session, redirects to the role dashboard
+ *   3. On failure: shows a toast with the error message
+ *
+ * Using `redirect: false` so we handle the redirect ourselves (role-based routing).
  */
 export function useLogin() {
   const router = useRouter();
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const mutation = useMutation({
-    mutationFn: (credentials: LoginRequest) => login(credentials),
-    onSuccess: (data) => {
-      const roleCode = data.user.role?.role_code ?? "";
+  async function login(credentials: LoginFormValues) {
+    setIsPending(true);
+    setError(null);
+
+    try {
+      const result = await signIn("credentials", {
+        username: credentials.username,
+        password: credentials.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        // NextAuth returns "CredentialsSignin" for failed authorize()
+        const message =
+          result.error === "CredentialsSignin"
+            ? "Username atau password salah. Silakan coba lagi."
+            : result.error;
+
+        setError(message);
+        toast.error(message, {
+          position: "top-right",
+          richColors: true,
+          duration: 3000,
+        });
+        return;
+      }
+
+      // Session updated — fetch the role from the new session to route correctly.
+      // We re-fetch /api/auth/session (NextAuth endpoint) to read the JWT claims.
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+      const roleCode: string = session?.user?.role_code ?? "";
       const route = getDashboardRoute(roleCode);
+
       toast.success("Login berhasil!", {
         description: "Anda berhasil login ke sistem POS.",
         position: "top-right",
         richColors: true,
-        duration: 3000, 
+        duration: 3000,
       });
+
       router.push(route);
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error), {
+    } catch {
+      const message = "Terjadi kesalahan. Silakan coba lagi.";
+      setError(message);
+      toast.error(message, {
         position: "top-right",
         richColors: true,
-        duration: 3000, 
+        duration: 3000,
       });
-    },
-  });
+    } finally {
+      setIsPending(false);
+    }
+  }
 
   return {
-    login: mutation.mutate,
-    isPending: mutation.isPending,
-    error: mutation.error ? getErrorMessage(mutation.error) : null,
-    isError: mutation.isError,
+    login,
+    isPending,
+    error,
+    isError: error !== null,
   };
 }
