@@ -36,7 +36,7 @@ export const ROLE_NAV: Record<RoleCode, NavItem[]> = {
   ],
 
   [ROLE_CODE.MANAJER_UNIT]: [
-    { label: "Dashboard", href: "/unit", icon: "LayoutDashboard" },
+    { label: "Dashboard", href: "/unit", icon: "LayoutDashboard", exact: true },
     { label: "Monitoring Laporan", href: "/unit/laporan", icon: "BarChart3" },
     {
       label: "Kelola Inventaris",
@@ -51,6 +51,7 @@ export const ROLE_NAV: Record<RoleCode, NavItem[]> = {
   ],
 
   [ROLE_CODE.STAF_UNIT]: [
+    { label: "Dashboard", href: "/unit", icon: "LayoutDashboard", exact: true },
     { label: "Kelola Pesanan", href: "/unit/pos", icon: "ShoppingCart" },
     {
       label: "Riwayat Transaksi",
