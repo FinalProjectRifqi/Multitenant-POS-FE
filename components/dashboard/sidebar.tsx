@@ -94,7 +94,9 @@ const ROLE_BADGE: Record<
 // ─── Nav item — square active style (image 2) ───────────────────────────────────
 function NavItem({ item }: { item: NavItem }) {
   const pathname = usePathname();
-  const isActive = pathname === item.href;
+  const isActive = item.exact
+    ? pathname === item.href
+    : pathname === item.href || pathname.startsWith(item.href + "/");
 
   return (
     <SidebarMenuItem>
