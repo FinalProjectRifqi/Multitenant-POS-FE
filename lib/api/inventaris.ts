@@ -10,11 +10,25 @@
  * ───────────────────────────────────────────────────────────────────
  */
 
-import { apiGet } from "@/lib/api/client";
+import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api/client";
+import type { CrudDeleteInput, CrudUpdateInput } from "@/lib/api/crud-types";
 import {
+  inventarisItemSchema,
   inventarisListResponseSchema,
   type InventarisItem,
+  type InventarisItemFormValues,
 } from "@/lib/schemas/inventaris";
+
+// ─── Input types ─────────────────────────────────────────────────────────────
+
+export type CreateInventarisInput = InventarisItemFormValues & {
+  unit_id: string;
+};
+export type UpdateInventarisInput = CrudUpdateInput<
+  InventarisItemFormValues,
+  "inventaris_id"
+>;
+export type DeleteInventarisInput = CrudDeleteInput<"inventaris_id">;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -231,4 +245,116 @@ export async function getInventarisItems(): Promise<InventarisItem[]> {
   return isDummyMode()
     ? getInventarisItemsWithDummy()
     : getInventarisItemsWithApi();
+}
+
+// ─── Create ───────────────────────────────────────────────────────────────────
+
+async function createInventarisItemWithDummy(
+  input: CreateInventarisInput,
+): Promise<InventarisItem> {
+  await delay(DUMMY_NETWORK_DELAY_IN_MS);
+  const items = ensureSeeded();
+  const now = new Date().toISOString();
+  const newItem: InventarisItem = {
+    inventaris_id: crypto.randomUUID(),
+    unit_id: input.unit_id,
+    item_name: input.item_name,
+    unit_of_measurement: input.unit_of_measurement,
+    current_stock: input.current_stock,
+    max_stock: input.max_stock,
+    min_stock: input.min_stock,
+    description: input.description,
+    created_at: now,
+    updated_at: now,
+  };
+  items.push(newItem);
+  if (typeof window !== "undefined") {
+    localStorage.setItem(INVENTARIS_STORAGE_KEY, JSON.stringify(items));
+  }
+  return newItem;
+}
+
+async function createInventarisItemWithApi(
+  input: CreateInventarisInput,
+): Promise<InventarisItem> {
+  return apiPost<InventarisItem>(INVENTARIS_ENDPOINT, input, {
+    schema: inventarisItemSchema,
+  });
+}
+
+export async function createInventarisItem(
+  input: CreateInventarisInput,
+): Promise<InventarisItem> {
+  return isDummyMode()
+    ? createInventarisItemWithDummy(input)
+    : createInventarisItemWithApi(input);
+}
+
+// ─── Update ───────────────────────────────────────────────────────────────────
+
+async function updateInventarisItemWithDummy(
+  input: UpdateInventarisInput,
+): Promise<InventarisItem> {
+  await delay(DUMMY_NETWORK_DELAY_IN_MS);
+  const items = ensureSeeded();
+  const idx = items.findIndex(
+    (item) => item.inventaris_id === input.inventaris_id,
+  );
+  if (idx === -1) throw new Error("Item tidak ditemukan");
+  const updated: InventarisItem = {
+    ...items[idx],
+    ...input.payload,
+    updated_at: new Date().toISOString(),
+  };
+  items[idx] = updated;
+  if (typeof window !== "undefined") {
+    localStorage.setItem(INVENTARIS_STORAGE_KEY, JSON.stringify(items));
+  }
+  return updated;
+}
+
+async function updateInventarisItemWithApi(
+  input: UpdateInventarisInput,
+): Promise<InventarisItem> {
+  return apiPatch<InventarisItem>(
+    `${INVENTARIS_ENDPOINT}/${input.inventaris_id}`,
+    input.payload,
+    { schema: inventarisItemSchema },
+  );
+}
+
+export async function updateInventarisItem(
+  input: UpdateInventarisInput,
+): Promise<InventarisItem> {
+  return isDummyMode()
+    ? updateInventarisItemWithDummy(input)
+    : updateInventarisItemWithApi(input);
+}
+
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
+async function deleteInventarisItemWithDummy(
+  input: DeleteInventarisInput,
+): Promise<void> {
+  await delay(DUMMY_NETWORK_DELAY_IN_MS);
+  const items = ensureSeeded().filter(
+    (item) => item.inventaris_id !== input.inventaris_id,
+  );
+  if (typeof window !== "undefined") {
+    localStorage.setItem(INVENTARIS_STORAGE_KEY, JSON.stringify(items));
+  }
+}
+
+async function deleteInventarisItemWithApi(
+  input: DeleteInventarisInput,
+): Promise<void> {
+  await apiDelete(`${INVENTARIS_ENDPOINT}/${input.inventaris_id}`);
+}
+
+export async function deleteInventarisItem(
+  input: DeleteInventarisInput,
+): Promise<void> {
+  return isDummyMode()
+    ? deleteInventarisItemWithDummy(input)
+    : deleteInventarisItemWithApi(input);
 }
