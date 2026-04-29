@@ -15,6 +15,8 @@ import type { InventarisRow } from "@/lib/inventaris/types";
 
 type Actions = {
   onView: (item: InventarisRow) => void;
+  onEdit?: (item: InventarisRow) => void;
+  onDelete?: (item: InventarisRow) => void;
 };
 
 export function buildInventarisColumns(
@@ -141,6 +143,25 @@ export function buildInventarisColumns(
               >
                 Lihat Detail
               </DropdownMenuItem>
+              {actions.onEdit && (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    actions.onEdit!(item);
+                  }}
+                >
+                  Edit
+                </DropdownMenuItem>
+              )}
+              {actions.onDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onSelect={() => {
+                    actions.onDelete!(item);
+                  }}
+                >
+                  Hapus
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
