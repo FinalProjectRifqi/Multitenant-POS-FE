@@ -26,8 +26,8 @@ export function StatsGrid({ stats, columns = 3 }: StatsGridProps) {
           className="border border-primary/20 bg-primary py-0 text-primary-foreground ring-0"
         >
           <CardContent className="space-y-2 px-4 py-3">
-            <p className="text-2xl font-bold leading-none">{stat.value}</p>
             <p className="text-xl font-semibold leading-none">{stat.label}</p>
+            <p className="text-2xl font-bold leading-none">{stat.value}</p>
             {stat.description && (
               <p className="text-xs text-primary-foreground/80">
                 {stat.description}
