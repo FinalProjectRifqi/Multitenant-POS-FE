@@ -2,11 +2,19 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { CrudFormDialog } from "@/components/shared/crud-form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useUomOptions } from "@/lib/queries/uom";
 import {
   inventarisItemFormSchema,
   type InventarisItemFormValues,
@@ -46,9 +54,16 @@ export function InventarisFormDialog({
   onSubmit,
 }: InventarisFormDialogProps) {
   const {
+    data: uomOptions = [],
+    isLoading: isLoadingUom,
+    isError: isUomError,
+  } = useUomOptions();
+
+  const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<InventarisItemFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,15 +120,46 @@ export function InventarisFormDialog({
       {/* Satuan Pengukuran */}
       <div className="space-y-2">
         <Label htmlFor="unit_of_measurement">Satuan Pengukuran</Label>
-        <Input
-          id="unit_of_measurement"
-          placeholder="Contoh: Kg, Liter, Botol"
-          className={cn(
-            "py-5",
-            errors.unit_of_measurement &&
-              "border-destructive focus-visible:ring-destructive",
+        <Controller
+          name="unit_of_measurement"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={isLoadingUom}
+            >
+              <SelectTrigger
+                id="unit_of_measurement"
+                className={cn(
+                  "h-10",
+                  errors.unit_of_measurement &&
+                    "border-destructive focus-visible:ring-destructive",
+                )}
+              >
+                <SelectValue
+                  placeholder={
+                    isLoadingUom
+                      ? "Memuat pilihan..."
+                      : "Pilih satuan pengukuran"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {isUomError ? (
+                  <div className="px-2 py-3 text-sm text-destructive">
+                    Gagal memuat pilihan. Coba lagi nanti.
+                  </div>
+                ) : (
+                  uomOptions.map((option) => (
+                    <SelectItem key={option.code} value={option.code}>
+                      {option.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           )}
-          {...register("unit_of_measurement")}
         />
         {errors.unit_of_measurement && (
           <p className="text-xs text-destructive">
