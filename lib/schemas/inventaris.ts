@@ -24,15 +24,15 @@ export const inventarisItemFormSchema = z
     item_name: z.string().min(1, "Nama barang wajib diisi"),
     unit_of_measurement: z.string().min(1, "Satuan pengukuran wajib diisi"),
     current_stock: z.coerce
-      .number({ invalid_type_error: "Stok harus berupa angka" })
+      .number({ error: "Stok harus berupa angka" })
       .int("Stok harus bilangan bulat")
       .nonnegative("Stok tidak boleh negatif"),
     max_stock: z.coerce
-      .number({ invalid_type_error: "Batas maksimum harus berupa angka" })
+      .number({ error: "Batas maksimum harus berupa angka" })
       .int("Batas maksimum harus bilangan bulat")
       .positive("Batas maksimum harus lebih dari 0"),
     min_stock: z.coerce
-      .number({ invalid_type_error: "Batas minimum harus berupa angka" })
+      .number({ error: "Batas minimum harus berupa angka" })
       .int("Batas minimum harus bilangan bulat")
       .nonnegative("Batas minimum tidak boleh negatif"),
     description: z.string(),
