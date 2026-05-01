@@ -15,7 +15,7 @@ import {
   ShoppingCart,
   CreditCard,
   LogOut,
-  ShoppingBag,
+  ChevronRight,
   ChevronsUpDown,
 } from "lucide-react";
 
@@ -25,27 +25,28 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
 import { signOut } from "next-auth/react";
 import { ROLE_NAV, type NavItem } from "@/lib/constants/navigation";
 import { ROLE_CODE, type RoleCode } from "@/lib/constants/roles";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from "../ui/dropdown-menu";
 
-// ─── Icon registry ──────────────────────────────────────────────────────────────
+/* ─── Icon registry ─────────────────────────────────────────────────────────── */
 const ICON_MAP: Record<string, React.ElementType> = {
   LayoutDashboard,
   UtensilsCrossed,
@@ -59,39 +60,32 @@ const ICON_MAP: Record<string, React.ElementType> = {
   CreditCard,
 };
 
-function NavIcon({ name, className }: { name: string; className?: string }) {
+function NavIcon({ name }: { name: string }) {
   const Icon = ICON_MAP[name] ?? LayoutDashboard;
-  return <Icon className={className} />;
+  return <Icon />;
 }
 
-// ─── Role badge ─────────────────────────────────────────────────────────────────
-const ROLE_BADGE: Record<
-  RoleCode,
-  { bg: string; text: string; label: string }
-> = {
+/* ─── Role badge — uses globals.css tokens via Tailwind ─────────────────────── */
+const ROLE_BADGE: Record<RoleCode, { className: string; label: string }> = {
   [ROLE_CODE.MANAJEMEN_GRUP]: {
-    bg: "bg-amber-100",
-    text: "text-amber-800",
+    className: "bg-primary/10 text-primary",
     label: "Manajemen Grup",
   },
   [ROLE_CODE.TIM_DAPUR]: {
-    bg: "bg-orange-100",
-    text: "text-orange-800",
+    className: "bg-orange-500/10 text-orange-800",
     label: "Tim Dapur",
   },
   [ROLE_CODE.MANAJER_UNIT]: {
-    bg: "bg-blue-100",
-    text: "text-blue-800",
+    className: "bg-blue-600/10 text-blue-800",
     label: "Manajer Unit",
   },
   [ROLE_CODE.STAF_UNIT]: {
-    bg: "bg-green-100",
-    text: "text-green-800",
+    className: "bg-green-600/10 text-green-800",
     label: "Staf Unit",
   },
 };
 
-// ─── Nav item — square active style (image 2) ───────────────────────────────────
+/* ─── Single nav item ───────────────────────────────────────────────────────── */
 function NavItem({ item }: { item: NavItem }) {
   const pathname = usePathname();
   const isActive = item.exact
@@ -104,24 +98,39 @@ function NavItem({ item }: { item: NavItem }) {
         asChild
         isActive={isActive}
         tooltip={item.label}
-        className="rounded-md data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground group-data-[collapsible=icon]:justify-center!"
+        className={[
+          // base
+          "rounded-md h-auto py-2.5 px-3 transition-colors duration-150",
+          "border-l-4 border-transparent",
+          // text + icon defaults
+          "text-[13px] text-muted-foreground",
+          "[&>svg]:size-3.75 [&>svg]:shrink-0 [&>svg]:stroke-[1.75px]",
+          // hover (not active)
+          "hover:bg-primary/4 hover:text-foreground",
+          // active overrides — data-[active=true] is set by SidebarMenuButton
+          "data-[active=true]:bg-primary/7 data-[active=true]:text-foreground",
+          "data-[active=true]:font-semibold data-[active=true]:border-l-primary",
+          "data-[active=true]:[&>svg]:stroke-[2.2px] data-[active=true]:[&>svg]:text-primary",
+        ].join(" ")}
       >
-        <Link href={item.href}>
+        <Link href={item.href} className="flex items-center gap-3 w-full">
           <NavIcon name={item.icon} />
-          <span>{item.label}</span>
+          <span className="flex-1 text-left">{item.label}</span>
+          {isActive && (
+            <ChevronRight className="size-3! text-primary/50 shrink-0" />
+          )}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
 }
 
-// ─── App Sidebar ────────────────────────────────────────────────────────────────
+/* ─── AppSidebar ────────────────────────────────────────────────────────────── */
 export function AppSidebar() {
   const user = useCurrentUser();
-
   const roleCode = (user?.role?.role_code ?? "") as RoleCode;
   const navItems = ROLE_NAV[roleCode] ?? [];
-  const badge = ROLE_BADGE[roleCode];
+  // const badge = ROLE_BADGE[roleCode];
 
   const initials = user?.full_name
     ? user.full_name
@@ -137,50 +146,48 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar collapsible="icon">
-      {/* ── Brand header ── */}
-      <SidebarHeader className="border-b border-sidebar-border">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              className="pointer-events-none select-none"
-              tooltip="Sistem POS XYZ"
-            >
-              {/* <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-sm shrink-0">
-                <ShoppingBag className="w-4 h-4 text-primary-foreground" />
-              </div> */}
-              <div className="flex flex-col gap-1 leading-none min-w-0 px-2">
-                <span className="font-bold text-base truncate">
-                  Sistem POS XYZ
-                </span>
-                <span className="text-xs text-muted-foreground truncate">
-                  {user?.unit?.unit_name ?? "Manajemen Grup XYZ"}
-                </span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+    <Sidebar collapsible="icon" className="bg-[#F1EEE9]">
+      {/* ── Brand header ──────────────────────────── */}
+      <SidebarHeader className="px-5 pt-7 pb-6">
+        <div className="flex items-center gap-3">
+          {/* Logo mark — bg-primary → var(--primary) #49111C */}
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)]">
+            <UtensilsCrossed size={17} className="text-primary-foreground" />
+          </div>
+
+          <div className="min-w-0">
+            {/* text-foreground → var(--foreground) */}
+            <p className="text-base font-bold text-foreground tracking-tight leading-none">
+              Sistem POS XYZ
+            </p>
+            {/* text-muted-foreground → var(--muted-foreground) */}
+            <p className="text-xs text-muted-foreground mt-2 truncate font-medium">
+              {user?.unit?.unit_name ?? "Manajemen Grup XYZ"}
+            </p>
+          </div>
+        </div>
       </SidebarHeader>
 
-      {/* ── Navigation ── */}
+      {/* ── Navigation ────────────────────────────── */}
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="px-3">
           <SidebarGroupContent>
-            <SidebarMenu className="p-2 flex flex-col gap-2">
-              {navItems.length > 0 ? (
-                navItems.map((item) => <NavItem key={item.href} item={item} />)
-              ) : (
-                <p className="px-3 py-2 text-xs text-muted-foreground">
-                  Tidak ada menu tersedia.
-                </p>
-              )}
-            </SidebarMenu>
+            {navItems.length > 0 ? (
+              <SidebarMenu className="space-y-0.5 gap-0">
+                {navItems.map((item) => (
+                  <NavItem key={item.href} item={item} />
+                ))}
+              </SidebarMenu>
+            ) : (
+              <p className="px-2 py-2 text-[12px] text-muted-foreground">
+                Tidak ada menu tersedia.
+              </p>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      {/* ── Footer: user dropdown (image 3 style) ── */}
+      {/* ── Footer: user info + logout ────────────── */}
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -192,22 +199,23 @@ export function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   {/* Avatar */}
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shrink-0 shadow-sm">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shrink-0 shadow-sm">
                     {initials}
                   </div>
-
-                  {/* Name + badge */}
-                  <div className="flex flex-col gap-0.5 leading-none min-w-0 flex-1">
+                  <div className="flex flex-col gap-0.5 leading-none min-w-0">
                     <span className="text-sm font-semibold truncate">
                       {user?.full_name ?? "—"}
                     </span>
-                    {badge && (
+                    <span className="text-xs font-light truncate">
+                      {user?.role?.role_name ?? "—"}
+                    </span>
+                    {/* {badge && (
                       <span
                         className={`text-[10px] font-semibold px-1.5 py-px rounded-full w-fit ${badge.bg} ${badge.text}`}
                       >
                         {badge.label}
                       </span>
-                    )}
+                    )} */}
                   </div>
 
                   <ChevronsUpDown className="ml-auto w-4 h-4 shrink-0 text-muted-foreground" />
@@ -229,13 +237,16 @@ export function AppSidebar() {
                     <span className="text-sm font-semibold truncate">
                       {user?.full_name ?? "—"}
                     </span>
-                    {badge && (
+                    <span className="text-xs font-light truncate">
+                      {user?.role?.role_name ?? "—"}
+                    </span>
+                    {/* {badge && (
                       <span
                         className={`text-[10px] font-semibold px-1.5 py-px rounded-full w-fit ${badge.bg} ${badge.text}`}
                       >
                         {badge.label}
                       </span>
-                    )}
+                    )} */}
                   </div>
                 </DropdownMenuLabel>
 

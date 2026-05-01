@@ -10,9 +10,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <main className="flex-1 overflow-y-auto bg-[#F1EEE9]">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto bg-[#FAF8F6]">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
