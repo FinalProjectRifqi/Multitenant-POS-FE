@@ -3,10 +3,10 @@
  * When the real backend is integrated, these must match the API's values.
  */
 export const ROLE_CODE = {
-  STAF_UNIT: "STAF_UNIT",
-  TIM_DAPUR: "TIM_DAPUR",
-  MANAJER_UNIT: "MANAJER_UNIT",
-  MANAJEMEN_GRUP: "MANAJEMEN_GRUP",
+  STAF_UNIT: "UNIT_STAFF",
+  TIM_DAPUR: "KITCHEN_TEAM",
+  MANAJER_UNIT: "UNIT_MANAGER",
+  MANAJEMEN_GRUP: "GROUP_MANAGEMENT",
 } as const;
 
 export type RoleCode = (typeof ROLE_CODE)[keyof typeof ROLE_CODE];
