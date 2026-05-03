@@ -68,7 +68,7 @@ export default function Page() {
               <span>
               {p.selectedUnit ? p.selectedUnit.business_unit_name : "Memuat..."}
                 <span className="mx-1.5 text-border">•</span>
-                {p.selectedUnit.unit_address}
+                {p.selectedUnit.business_unit_address}
               </span>
             </div>
           ) : (
@@ -88,7 +88,7 @@ export default function Page() {
           <CardTitle className="text-xl font-semibold">Daftar Menu</CardTitle>
           <CardDescription>
             {p.selectedUnit
-              ? `Menu yang tersedia di ${p.selectedUnit.unit_name}`
+              ? `Menu yang tersedia di ${p.selectedUnit.business_unit_name}`
               : "Daftar menu pada unit terpilih"}
           </CardDescription>
         </CardHeader>

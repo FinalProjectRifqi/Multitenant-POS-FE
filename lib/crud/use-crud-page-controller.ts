@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-type CrudListQuery<TEntity, TMeta = any> = {
+type CrudListQuery<TEntity, TMeta = unknown> = {
   data?: TEntity[];
   meta?: TMeta;
   isLoading: boolean;
@@ -29,7 +29,7 @@ type UseCrudPageControllerOptions<
   TError = string | null,
 > = {
   defaultFormValues: TFormValues;
-  listQuery: CrudListQuery<TEntity, any>;
+  listQuery: CrudListQuery<TEntity, unknown>;
   createMutation: CrudMutation<TFormValues, TError>;
   updateMutation: CrudMutation<TUpdateInput, TError>;
   deleteMutation: CrudMutation<TDeleteInput, TError>;
