@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api/client";
+import { handleApiError } from "@/lib/api/handle-api-error";
+import { formatApiError, parseApiError } from "@/lib/api/parsed-api-error";
 import {
   createUnit,
   deleteUnit,
@@ -12,15 +14,15 @@ import {
   updateUnit,
   type DeleteUnitInput,
 } from "@/lib/api/units";
-import {
-  createCrudQueryKeys,
-  removeEntityByKey,
-  upsertEntityByKey,
-} from "@/lib/queries/crud";
+import { removeEntityByKey, upsertEntityByKey } from "@/lib/queries/crud";
+import { unitQueryKeys } from "@/lib/queries/unit-keys";
 import type { CreateUnitRequest, UnitEntity } from "@/lib/types/unit";
 import type { UnitsListResponse } from "@/lib/schemas/unit";
 
-export const unitQueryKeys = createCrudQueryKeys("units");
+function shouldHandleMutationErrorGlobally(error: unknown): boolean {
+  const { status } = parseApiError(error);
+  return status === 0 || status === 401 || status === 403 || status >= 500;
+}
 
 function useUnitListCache() {
   const queryClient = useQueryClient();
@@ -34,7 +36,7 @@ function useUnitListCache() {
           ...current,
           data: updater(current.data || []),
         };
-      }
+      },
     );
   };
 
@@ -52,13 +54,25 @@ export function useUnitsQuery(page = 1, limit = 10, showInactive = true) {
   return useQuery({
     queryKey: [...unitQueryKeys.lists(), { page, limit, showInactive }],
     queryFn: () => getUnits({ page, limit, show_inactive: showInactive }),
+    meta: {
+      errorTitle: "Gagal Memuat Unit Usaha",
+    },
   });
 }
+
 export function useCreateUnitMutation() {
   const { setListCache, invalidateList } = useUnitListCache();
 
   const mutation = useMutation({
-    mutationFn: (payload: CreateUnitRequest) => createUnit(payload),
+    mutationFn: async (payload: CreateUnitRequest) => {
+      const result = await createUnit(payload);
+
+      if (!result.ok) {
+        throw formatApiError(result.status, result.message);
+      }
+
+      return result.data;
+    },
     onSuccess: (createdUnit) => {
       setListCache((current) =>
         upsertEntityByKey(current, createdUnit, "business_unit_id"),
@@ -72,11 +86,9 @@ export function useCreateUnitMutation() {
       });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
     onSettled: () => {
       invalidateList();
@@ -95,7 +107,15 @@ export function useUpdateUnitMutation() {
   const { queryClient, setListCache, invalidateList } = useUnitListCache();
 
   const mutation = useMutation({
-    mutationFn: (input: UpdateUnitInput) => updateUnit(input),
+    mutationFn: async (input: UpdateUnitInput) => {
+      const result = await updateUnit(input);
+
+      if (!result.ok) {
+        throw formatApiError(result.status, result.message);
+      }
+
+      return result.data;
+    },
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: unitQueryKeys.lists() });
 
@@ -136,11 +156,9 @@ export function useUpdateUnitMutation() {
         });
       }
 
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
     onSettled: () => {
       invalidateList();
@@ -159,7 +177,13 @@ export function useDeleteUnitMutation() {
   const { queryClient, setListCache, invalidateList } = useUnitListCache();
 
   const mutation = useMutation({
-    mutationFn: (input: DeleteUnitInput) => deleteUnit(input),
+    mutationFn: async (input: DeleteUnitInput) => {
+      const result = await deleteUnit(input);
+
+      if (!result.ok) {
+        throw formatApiError(result.status, result.message);
+      }
+    },
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: unitQueryKeys.lists() });
 
@@ -168,7 +192,7 @@ export function useDeleteUnitMutation() {
       });
 
       let target: UnitEntity | undefined;
-      previous.forEach(([_, data]) => {
+      previous.forEach(([, data]) => {
         if (!target && data?.data) {
           target = data.data.find(
             (item) => item.business_unit_id === input.business_unit_id,
@@ -200,11 +224,9 @@ export function useDeleteUnitMutation() {
         });
       }
 
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
     onSettled: () => {
       invalidateList();

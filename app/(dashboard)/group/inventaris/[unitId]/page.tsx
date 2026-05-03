@@ -34,7 +34,7 @@ export default function Page() {
           {p.query.isLoading ? (
             <Skeleton className="h-9 w-72 rounded" />
           ) : (
-            `Kelola Inventaris${p.selectedUnit ? ` ${p.selectedUnit.unit_name}` : ""}`
+            `Kelola Inventaris${p.selectedUnit ? ` ${p.selectedUnit.business_unit_name}` : ""}`
           )}
         </h1>
 
@@ -44,9 +44,9 @@ export default function Page() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Building2 className="h-4 w-4 shrink-0" />
             <span>
-              {p.selectedUnit.unit_name}
+              {p.selectedUnit.business_unit_name}
               <span className="mx-1.5 text-border">•</span>
-              {p.selectedUnit.unit_address}
+              {p.selectedUnit.business_unit_address}
             </span>
           </div>
         ) : (
@@ -64,7 +64,7 @@ export default function Page() {
       title="Daftar Inventaris Unit Usaha"
       description={
         p.selectedUnit
-          ? `Kelola Daftar Inventaris yang Tersedia di ${p.selectedUnit.unit_name}`
+          ? `Kelola Daftar Inventaris yang Tersedia di ${p.selectedUnit.business_unit_name}`
           : "Daftar barang inventaris pada unit terpilih"
       }
       headerSlot={headerSlot}

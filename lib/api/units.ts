@@ -1,8 +1,10 @@
 // ─────────────────────────────────────────────
 // lib/api/units.ts
 // ─────────────────────────────────────────────
+"use server";
 
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api/client";
+import { parseApiError } from "@/lib/api/parsed-api-error";
 import type { CrudDeleteInput, CrudUpdateInput } from "@/lib/api/crud-types";
 import {
   createUnitResponseSchema,
@@ -28,6 +30,9 @@ export type UpdateUnitInput = CrudUpdateInput<
   "business_unit_id"
 >;
 export type DeleteUnitInput = CrudDeleteInput<"business_unit_id">;
+export type UnitMutationResult<TData = void> =
+  | { ok: true; data: TData }
+  | { ok: false; status: number; message: string };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -91,6 +96,16 @@ async function deleteUnitWithApi(input: DeleteUnitInput): Promise<void> {
   await apiDelete<void>(`${UNITS_ENDPOINT}/${payload.business_unit_id}`);
 }
 
+function toUnitMutationError(error: unknown): UnitMutationResult<never> {
+  const parsed = parseApiError(error);
+
+  return {
+    ok: false,
+    status: parsed.status,
+    message: parsed.message,
+  };
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function getUnits(params?: {
@@ -106,14 +121,31 @@ export async function getUnits(params?: {
 
 export async function createUnit(
   payload: CreateUnitRequest,
-): Promise<UnitEntity> {
-  return createUnitWithApi(payload);
+): Promise<UnitMutationResult<UnitEntity>> {
+  try {
+    return { ok: true, data: await createUnitWithApi(payload) };
+  } catch (error) {
+    return toUnitMutationError(error);
+  }
 }
 
-export async function updateUnit(input: UpdateUnitInput): Promise<UnitEntity> {
-  return updateUnitWithApi(input);
+export async function updateUnit(
+  input: UpdateUnitInput,
+): Promise<UnitMutationResult<UnitEntity>> {
+  try {
+    return { ok: true, data: await updateUnitWithApi(input) };
+  } catch (error) {
+    return toUnitMutationError(error);
+  }
 }
 
-export async function deleteUnit(input: DeleteUnitInput): Promise<void> {
-  return deleteUnitWithApi(input);
+export async function deleteUnit(
+  input: DeleteUnitInput,
+): Promise<UnitMutationResult> {
+  try {
+    await deleteUnitWithApi(input);
+    return { ok: true, data: undefined };
+  } catch (error) {
+    return toUnitMutationError(error);
+  }
 }
