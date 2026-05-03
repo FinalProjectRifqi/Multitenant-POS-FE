@@ -12,6 +12,7 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { ROLE_CODE } from "@/lib/constants/roles";
+import { JwtPayload, LoginApiResponse } from "../types/auth";
 
 // ─── Dummy user seed ───────────────────────────────────────────────────────────
 // Remove when real backend is live. See authorizeWithApi() below.
@@ -129,7 +130,6 @@ async function authorizeWithApi(credentials: Partial<Record<string, unknown>>) {
   if (!username || !password) return null;
 
   try {
-    // Use fetch (not axios) — must be edge-compatible (runs on Edge Runtime)
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/auth/login`,
       {
@@ -141,33 +141,46 @@ async function authorizeWithApi(credentials: Partial<Record<string, unknown>>) {
 
     if (!res.ok) return null;
 
-    // Shape defined in LoginApiResponse (lib/types/auth.ts)
-    const data = await res.json();
-    const u = data.user;
+    const data: LoginApiResponse = await res.json();
+    if (!data.accessToken) return null;
 
-    // Deny login if account is deactivated
-    if (!u.is_active) return null;
+    // Decode JWT payload (edge-safe — no library needed)
+    const rawPayload = data.accessToken.split(".")[1];
+    const payload = JSON.parse(
+      atob(rawPayload.replace(/-/g, "+").replace(/_/g, "/"))
+    ) as JwtPayload;
 
     return {
       // NextAuth standard fields
-      id: u.user_id,
-      name: u.full_name,
-      email: u.email,
+      id: payload.sub,               // ✅ required
+      name: payload.full_name,
+      email: payload.email,
       image: null,
+
       // From users table
-      user_id: u.user_id,
-      full_name: u.full_name,
-      username: u.username,
-      is_active: u.is_active as boolean,
-      // From roles table (joined)
-      role_id: u.role?.role_id ?? "",
-      role_code: u.role?.role_code ?? "",
-      role_name: u.role?.role_name ?? "",
-      // From units table via user_units (single active unit, null for cross-unit roles)
-      unit_id: u.unit?.unit_id ?? null,
-      unit_name: u.unit?.unit_name ?? null,
-      // Backend JWT — stored in NextAuth httpOnly cookie, forwarded as Bearer token
-      access_token: data.token.access_token as string,
+      user_id: payload.sub,
+      full_name: payload.full_name,
+      username: username,            // not in JWT, use login credential
+      is_active: true,               // backend already validated this
+
+      // From roles
+      role_id: "",                   // not in JWT
+      role_code: payload.roles,      // e.g. "GROUP_MANAGEMENT"
+      role_name: payload.roles,
+      // TODO: Uncomment code below if backend returns the role object in the JWT
+      // role_id: payload.roles.role_id,                   // not in JWT
+      // role_code: payload.roles.role_code,      
+      // role_name: payload.roles.role_name,
+
+      // From units (empty array = cross-unit role)
+      unit_id: payload.units?.[0] ?? null,
+      unit_name: null,               // not in JWT
+      // TODO: Uncomment code below if backend returns the unit object in the JWT
+      // unit_id: payload.units?.[0]?.unit_id ?? null,
+      // unit_name: payload.units?.[0]?.unit_name ?? null,               // not in JWT
+
+      // Backend JWT for API calls
+      access_token: data.accessToken,
     };
   } catch {
     return null;
@@ -184,13 +197,6 @@ export const authConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // ── Dummy mode (default) ─────────────────────────────────────────
-        if (process.env.NEXT_PUBLIC_AUTH_MODE !== "real") {
-          return authorizeDummy(credentials);
-        }
-
-        // ── Real API mode ────────────────────────────────────────────────
-        // Set NEXT_PUBLIC_AUTH_MODE=real in .env.local when backend is ready.
         return authorizeWithApi(credentials);
       },
     }),

@@ -71,36 +71,23 @@ export interface LoginResponse {
 // Backend developers: align your response to this contract.
 
 export interface LoginApiResponse {
-  token: {
-    /** JWT access token — send as `Authorization: Bearer <access_token>` */
-    access_token: string;
-    token_type: "Bearer";
-    /** Seconds until access_token expires (e.g. 3600 = 1 hour) */
-    expires_in: number;
-  };
-  user: {
-    /** From users table */
-    user_id: string;
-    role_id: string;
-    full_name: string;
-    username: string;
-    email: string;
-    is_active: boolean;
-    /** Joined from roles table */
-    role: {
-      role_id: string;
-      role_code: string;
-      role_name: string;
-      description: string;
-      is_active: boolean;
-    };
-    /**
-     * Joined from units table via user_units (single active unit).
-     * null for Manajemen Grup (cross-unit role).
-     */
-    unit: {
-      unit_id: string;
-      unit_name: string;
-    } | null;
-  };
+  success: boolean;
+  status: number;
+  message: string;
+  accessToken: string; // JWT string — must be decoded to get user info
+}
+
+// Shape of the decoded JWT payload
+export interface JwtPayload {
+  sub: string;           // user_id
+  typ: string;
+  roles: string;         // e.g. "GROUP_MANAGEMENT"
+  permission: string[];
+  full_name: string;
+  email: string;
+  units: string[];       // empty array for cross-unit roles
+  unit_name: string;
+  must_change_password: boolean;
+  iat: number;
+  exp: number;
 }
