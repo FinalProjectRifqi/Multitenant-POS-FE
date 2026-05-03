@@ -67,11 +67,11 @@ export function CrudFormDialog({
         <form className={cn("space-y-3", formClassName)} onSubmit={onSubmit}>
           {children}
 
-          {errorMessage && (
+          {/* {errorMessage && (
             <Alert variant="destructive">
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
-          )}
+          )} */}
 
           <DialogFooter>
             <Button

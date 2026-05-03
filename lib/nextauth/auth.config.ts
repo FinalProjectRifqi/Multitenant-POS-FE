@@ -130,14 +130,11 @@ async function authorizeWithApi(credentials: Partial<Record<string, unknown>>) {
   if (!username || !password) return null;
 
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/auth/login`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      },
-    );
+    const res = await fetch(`${process.env.API_BASE_URL ?? ""}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
 
     if (!res.ok) return null;
 
@@ -147,12 +144,12 @@ async function authorizeWithApi(credentials: Partial<Record<string, unknown>>) {
     // Decode JWT payload (edge-safe — no library needed)
     const rawPayload = data.accessToken.split(".")[1];
     const payload = JSON.parse(
-      atob(rawPayload.replace(/-/g, "+").replace(/_/g, "/"))
+      atob(rawPayload.replace(/-/g, "+").replace(/_/g, "/")),
     ) as JwtPayload;
 
     return {
       // NextAuth standard fields
-      id: payload.sub,               // ✅ required
+      id: payload.sub, // ✅ required
       name: payload.full_name,
       email: payload.email,
       image: null,
@@ -160,21 +157,21 @@ async function authorizeWithApi(credentials: Partial<Record<string, unknown>>) {
       // From users table
       user_id: payload.sub,
       full_name: payload.full_name,
-      username: username,            // not in JWT, use login credential
-      is_active: true,               // backend already validated this
+      username: username, // not in JWT, use login credential
+      is_active: true, // backend already validated this
 
       // From roles
-      role_id: "",                   // not in JWT
-      role_code: payload.roles,      // e.g. "GROUP_MANAGEMENT"
+      role_id: "", // not in JWT
+      role_code: payload.roles, // e.g. "GROUP_MANAGEMENT"
       role_name: payload.roles,
       // TODO: Uncomment code below if backend returns the role object in the JWT
       // role_id: payload.roles.role_id,                   // not in JWT
-      // role_code: payload.roles.role_code,      
+      // role_code: payload.roles.role_code,
       // role_name: payload.roles.role_name,
 
       // From units (empty array = cross-unit role)
       unit_id: payload.units?.[0] ?? null,
-      unit_name: null,               // not in JWT
+      unit_name: null, // not in JWT
       // TODO: Uncomment code below if backend returns the unit object in the JWT
       // unit_id: payload.units?.[0]?.unit_id ?? null,
       // unit_name: payload.units?.[0]?.unit_name ?? null,               // not in JWT
@@ -185,6 +182,23 @@ async function authorizeWithApi(credentials: Partial<Record<string, unknown>>) {
   } catch {
     return null;
   }
+}
+
+// ─── JWT claims type ──────────────────────────────────────────────────────────
+// Mirrors the custom fields written to the JWT token in the jwt callback.
+// Kept here (not in auth.ts) so the edge middleware (proxy.ts) can also use it.
+
+interface AuthJWT {
+  user_id: string;
+  username: string;
+  full_name: string;
+  is_active: boolean;
+  role_id: string;
+  role_code: string;
+  role_name: string;
+  unit_id: string | null;
+  unit_name: string | null;
+  access_token: string;
 }
 
 // ─── NextAuth config ──────────────────────────────────────────────────────────
@@ -208,4 +222,52 @@ export const authConfig = {
   },
 
   session: { strategy: "jwt" },
+
+  callbacks: {
+    /**
+     * jwt — runs on every JWT creation / refresh.
+     * On sign-in, copies custom fields from authorize() result → JWT payload.
+     * On subsequent requests only `token` is provided (user is undefined).
+     *
+     * Lives here (not only in auth.ts) so the edge proxy can also apply it.
+     */
+    jwt({ token, user }) {
+      if (user) {
+        const t = token as typeof token & AuthJWT;
+        const u = user as typeof user & AuthJWT;
+        t.user_id = u.user_id;
+        t.username = u.username;
+        t.full_name = u.full_name;
+        t.is_active = u.is_active;
+        t.role_id = u.role_id;
+        t.role_code = u.role_code;
+        t.role_name = u.role_name;
+        t.unit_id = u.unit_id;
+        t.unit_name = u.unit_name;
+        t.access_token = u.access_token;
+      }
+      return token;
+    },
+
+    /**
+     * session — maps JWT claims → session.user so client and edge middleware
+     * can read role_code, access_token, etc. from request.auth / useSession().
+     *
+     * Lives here so both the edge proxy and the full Node.js auth instance
+     * expose the same session shape.
+     */
+    session({ session, token }) {
+      const t = token as typeof token & AuthJWT;
+      session.user.user_id = t.user_id;
+      session.user.username = t.username;
+      session.user.full_name = t.full_name;
+      session.user.role_id = t.role_id;
+      session.user.role_code = t.role_code;
+      session.user.role_name = t.role_name;
+      session.user.unit_id = t.unit_id;
+      session.user.unit_name = t.unit_name;
+      session.user.access_token = t.access_token;
+      return session;
+    },
+  },
 } satisfies NextAuthConfig;

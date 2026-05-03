@@ -37,7 +37,7 @@ export const unitWritePayloadSchema = z.object({
   business_unit_phone: z
     .string()
     .trim()
-    .min(8, "Nomor telepon minimal 8 karakter")
+    .min(10, "Nomor telepon minimal 10 karakter")
     .max(20, "Nomor telepon maksimal 20 karakter")
     .regex(/^[0-9+\-()\s]+$/, "Format nomor telepon tidak valid"),
   is_active: isActiveSchema,

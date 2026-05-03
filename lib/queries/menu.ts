@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api/client";
+import { handleApiError } from "@/lib/api/handle-api-error";
 import {
   createMenuItem,
   deleteMenuItem,
@@ -83,11 +84,7 @@ export function useCreateMenuItemMutation() {
       });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      handleApiError(error);
     },
     onSettled: () => {
       invalidateList();
@@ -146,11 +143,7 @@ export function useUpdateMenuItemMutation() {
         queryClient.setQueryData(menuItemQueryKeys.lists(), context.previous);
       }
 
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      handleApiError(error);
     },
     onSettled: () => {
       invalidateList();
@@ -202,11 +195,7 @@ export function useDeleteMenuItemMutation() {
         queryClient.setQueryData(menuItemQueryKeys.lists(), context.previous);
       }
 
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      handleApiError(error);
     },
     onSettled: () => {
       invalidateList();
