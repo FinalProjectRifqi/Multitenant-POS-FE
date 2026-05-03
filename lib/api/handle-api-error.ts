@@ -138,3 +138,8 @@ export function handleApiError(
   // ── Catch-all (403, 409, etc.) ──────────────────────────────────────────────
   showErrorToast(status, options?.title ?? "Permintaan gagal", message);
 }
+
+export function shouldHandleMutationErrorGlobally(error: unknown): boolean {
+  const { status } = parseApiError(error);
+  return status === 0 || status === 401 || status === 403 || status >= 500;
+}

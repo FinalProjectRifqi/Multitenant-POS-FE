@@ -1,153 +1,37 @@
-"use client";
-
-import { useMemo } from "react";
-
-import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
-import { DataTable } from "@/components/shared/data-table";
-import { StatsGrid } from "@/components/shared/stats-grid";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { UserDetailDialog } from "@/components/user/user-detail-dialog";
-import { UserFormDialog } from "@/components/user/user-form-dialog";
-import { UserCredentialsDialog } from "@/components/user/user-credentials-dialog";
-import { buildUserColumns } from "@/components/user/user-table-columns";
-import { getErrorMessage } from "@/lib/api/client";
-import { useUserPage } from "@/lib/user/use-user-page";
-import { PaginationMeta } from "@/lib/types/user/user";
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { UserPageContent } from "@/components/user/user-page-content";
+import { getUsers } from "@/lib/api/users";
+import { userQueryKeys } from "@/lib/queries/user-keys";
 
-export default function Page() {
-  const p = useUserPage();
+export default async function GroupUserPage() {
+  // Create a new QueryClient for this request (server-side)
+  const queryClient = new QueryClient();
 
-  const columns = useMemo(
-    () =>
-      buildUserColumns({
-        onEdit: p.setEditingUser,
-        onDelete: p.setDeletingUser,
-        onView: p.setViewingUser,
-      }),
-    [p.setEditingUser, p.setDeletingUser, p.setViewingUser],
-  );
+  // Prefetch the main query data
+  // We only prefetch the default params (page: 1, limit: 10, showInactive: true)
+  // If prefetch fails (e.g., 401), the error is captured in the cache
+  // and will be displayed by the client component's error handling
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: [...userQueryKeys.lists(), { page: 1, limit: 100 }],
+      queryFn: () => getUsers({ page: 1, limit: 10 }),
+    });
+  } catch (error) {
+    // Silently catch prefetch errors
+    // The client will receive the error state and handleApiError will process it
+    console.error("Failed to prefetch users:", error);
+  }
+
+  // Dehydrate the query client state and pass to client
+  const dehydratedState = dehydrate(queryClient);
 
   return (
-    <div className="space-y-5 p-8">
-      <section className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          Kelola Pengguna
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Kelola semua pengguna dalam sistem Anda
-        </p>
-      </section>
-
-      <StatsGrid stats={p.stats} columns={3} />
-
-      <Card className="bg-primary-foreground ring-1 ring-border/90">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-xl font-semibold">
-            Daftar Pengguna
-          </CardTitle>
-          <CardDescription>
-            Kelola semua pengguna dalam sistem Anda
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-5">
-          {p.query.isError && (
-            <Alert variant="destructive">
-              <AlertTitle>Gagal memuat data pengguna</AlertTitle>
-              <AlertDescription>
-                {getErrorMessage(p.query.error)}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <DataTable
-            columns={columns}
-            data={p.users}
-            isLoading={p.query.isLoading}
-            searchColumn="full_name"
-            searchPlaceholder="Cari nama, username, email, role, unit, status..."
-            actionLabel="Tambah Pengguna"
-            onActionClick={() => p.setIsCreateOpen(true)}
-            emptyMessage="Belum ada pengguna yang terdaftar."
-            searchEmptyMessage="Data pengguna tidak ditemukan dari kata kunci pencarian."
-            enableSorting
-            enablePagination
-            defaultPageSize={10}
-            meta={p.query.meta as PaginationMeta | undefined}
-            pagination={p.pagination}
-            onPaginationChange={p.setPagination}
-          />
-        </CardContent>
-      </Card>
-
-      <UserFormDialog
-        title="Tambah Pengguna"
-        description="Isi form di bawah untuk menambah pengguna baru."
-        submitLabel="Tambah"
-        open={p.isCreateOpen}
-        onOpenChange={p.setIsCreateOpen}
-        isPending={p.create.isPending}
-        errorMessage={p.create.error}
-        onSubmit={p.create.handle}
-      />
-
-      <UserFormDialog
-        title="Edit Pengguna"
-        description="Perbarui informasi pengguna yang dipilih."
-        submitLabel="Simpan Perubahan"
-        open={Boolean(p.editingUser)}
-        onOpenChange={(open) => {
-          if (!open) p.setEditingUser(null);
-        }}
-        initialValues={p.editInitialValues}
-        isPending={p.update.isPending}
-        errorMessage={p.update.error}
-        requirePassword={false}
-        onSubmit={p.update.handle}
-      />
-
-      <UserDetailDialog
-        user={p.viewingUser}
-        open={Boolean(p.viewingUser)}
-        onOpenChange={(open) => {
-          if (!open) p.setViewingUser(null);
-        }}
-      />
-
-      <ConfirmDeleteDialog
-        open={Boolean(p.deletingUser)}
-        onOpenChange={(open) => {
-          if (!open) p.setDeletingUser(null);
-        }}
-        title="Hapus Pengguna"
-        description={
-          <>
-            Tindakan ini tidak dapat dibatalkan. Pengguna{" "}
-            <strong>{p.deletingUser?.user_name ?? "pengguna"}</strong> akan
-            dihapus permanen.
-          </>
-        }
-        isPending={p.delete.isPending}
-        errorMessage={p.delete.error}
-        onConfirm={p.delete.handle}
-      />
-
-      <UserCredentialsDialog
-        open={Boolean(p.createdCredentials)}
-        onOpenChange={(open) => {
-          if (!open) p.setCreatedCredentials(null);
-        }}
-        credentials={p.createdCredentials}
-      />
-    </div>
+    <HydrationBoundary state={dehydratedState}>
+      <UserPageContent />
+    </HydrationBoundary>
   );
 }

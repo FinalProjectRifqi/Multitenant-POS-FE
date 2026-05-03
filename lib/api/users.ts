@@ -1,3 +1,5 @@
+"use server";
+
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import type { CrudDeleteInput, CrudUpdateInput } from "@/lib/api/crud-types";
 
@@ -17,10 +19,14 @@ import {
   UsersListResponse,
   usersListResponseSchema,
 } from "../schemas/user";
+import { parseApiError } from "./parsed-api-error";
 
 const USERS_ENDPOINT = "/users";
 export type DeleteUserInput = CrudDeleteInput<"user_id">;
 export type UpdateUserInput = CrudUpdateInput<UpdateUserRequest, "user_id">;
+export type UserMutationResult<TData = void> =
+  | { ok: true; data: TData }
+  | { ok: false; status: number; message: string };
 
 function assertValidUserId(id: string): string {
   return userIdSchema.parse(id);
@@ -78,6 +84,16 @@ async function deleteUserWithApi(input: DeleteUserInput): Promise<void> {
   await apiDelete<void>(`${USERS_ENDPOINT}/${payload.user_id}`);
 }
 
+function toUserMutationError(error: unknown): UserMutationResult<never> {
+  const parsed = parseApiError(error);
+
+  return {
+    ok: false,
+    status: parsed.status,
+    message: parsed.message,
+  };
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function getUsers(params?: {
@@ -101,14 +117,33 @@ export async function getUsers(params?: {
 
 export async function createUser(
   payload: CreateUserRequest,
-): Promise<UserEntity> {
-  return createUserWithApi(payload);
+): Promise<UserMutationResult<UserEntity>> {
+  try {
+    const result = await createUserWithApi(payload);
+    return { ok: true, data: result };
+  } catch (error) {
+    return toUserMutationError(error);
+  }
 }
 
-export async function updateUser(input: UpdateUserInput): Promise<UserEntity> {
-  return updateUserWithApi(input);
+export async function updateUser(
+  input: UpdateUserInput,
+): Promise<UserMutationResult<UserEntity>> {
+  try {
+    const result = await updateUserWithApi(input);
+    return { ok: true, data: result };
+  } catch (error) {
+    return toUserMutationError(error);
+  }
 }
 
-export async function deleteUser(input: DeleteUserInput): Promise<void> {
-  return deleteUserWithApi(input);
+export async function deleteUser(
+  input: DeleteUserInput,
+): Promise<UserMutationResult<void>> {
+  try {
+    await deleteUserWithApi(input);
+    return { ok: true, data: undefined };
+  } catch (error) {
+    return toUserMutationError(error);
+  }
 }

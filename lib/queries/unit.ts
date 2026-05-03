@@ -4,25 +4,23 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api/client";
-import { handleApiError } from "@/lib/api/handle-api-error";
-import { formatApiError, parseApiError } from "@/lib/api/parsed-api-error";
+import {
+  handleApiError,
+  shouldHandleMutationErrorGlobally,
+} from "@/lib/api/handle-api-error";
+import { formatApiError } from "@/lib/api/parsed-api-error";
 import {
   createUnit,
   deleteUnit,
   getUnits,
-  type UpdateUnitInput,
   updateUnit,
   type DeleteUnitInput,
+  type UpdateUnitInput,
 } from "@/lib/api/units";
 import { removeEntityByKey, upsertEntityByKey } from "@/lib/queries/crud";
 import { unitQueryKeys } from "@/lib/queries/unit-keys";
-import type { CreateUnitRequest, UnitEntity } from "@/lib/types/unit";
 import type { UnitsListResponse } from "@/lib/schemas/unit";
-
-function shouldHandleMutationErrorGlobally(error: unknown): boolean {
-  const { status } = parseApiError(error);
-  return status === 0 || status === 401 || status === 403 || status >= 500;
-}
+import type { CreateUnitRequest, UnitEntity } from "@/lib/types/unit";
 
 function useUnitListCache() {
   const queryClient = useQueryClient();

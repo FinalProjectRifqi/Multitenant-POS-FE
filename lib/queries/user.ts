@@ -6,22 +6,22 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api/client";
 
 import {
-  createCrudQueryKeys,
-  removeEntityByKey,
-  upsertEntityByKey,
-} from "@/lib/queries/crud";
-import {
-  getUsers,
-  createUser,
-  UpdateUserInput,
-  updateUser,
   DeleteUserInput,
+  UpdateUserInput,
+  createUser,
   deleteUser,
+  getUsers,
+  updateUser,
 } from "@/lib/api/users";
+import { removeEntityByKey, upsertEntityByKey } from "@/lib/queries/crud";
 import { UsersListResponse } from "@/lib/schemas/user";
-import { UserEntity, CreateUserRequest } from "@/lib/types/user";
-
-export const userQueryKeys = createCrudQueryKeys("users");
+import { CreateUserRequest, UserEntity } from "@/lib/types/user";
+import { formatApiError } from "../api/parsed-api-error";
+import { userQueryKeys } from "./user-keys";
+import {
+  shouldHandleMutationErrorGlobally,
+  handleApiError,
+} from "../api/handle-api-error";
 
 function useUserListCache() {
   const queryClient = useQueryClient();
@@ -68,6 +68,9 @@ export function useUsersQuery(
       { page, limit, sortBy, sortType, search },
     ],
     queryFn: () => getUsers({ page, limit, sortBy, sortType, search }),
+    meta: {
+      errorTitle: "Gagal Memuat User",
+    },
   });
 }
 
@@ -75,7 +78,14 @@ export function useCreateUserMutation() {
   const { setListCache, invalidateList } = useUserListCache();
 
   const mutation = useMutation({
-    mutationFn: (payload: CreateUserRequest) => createUser(payload),
+    mutationFn: async (payload: CreateUserRequest) => {
+      const result = await createUser(payload);
+
+      if (!result.ok) {
+        throw formatApiError(result.status, result.message);
+      }
+      return result.data;
+    },
     onSuccess: (createdUser) => {
       setListCache((current) =>
         upsertEntityByKey(current, createdUser, "user_id"),
@@ -89,11 +99,9 @@ export function useCreateUserMutation() {
       });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
     onSettled: () => {
       invalidateList();
@@ -112,7 +120,14 @@ export function useUpdateUserMutation() {
   const { queryClient, setListCache, invalidateList } = useUserListCache();
 
   const mutation = useMutation({
-    mutationFn: (input: UpdateUserInput) => updateUser(input),
+    mutationFn: async (input: UpdateUserInput) => {
+      const result = await updateUser(input);
+
+      if (!result.ok) {
+        throw formatApiError(result.status, result.message);
+      }
+      return result.data;
+    },
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: userQueryKeys.lists() });
 
@@ -152,11 +167,9 @@ export function useUpdateUserMutation() {
         });
       }
 
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
     onSettled: () => {
       invalidateList();
@@ -175,7 +188,13 @@ export function useDeleteUserMutation() {
   const { queryClient, setListCache, invalidateList } = useUserListCache();
 
   const mutation = useMutation({
-    mutationFn: (input: DeleteUserInput) => deleteUser(input),
+    mutationFn: async (input: DeleteUserInput) => {
+      const result = await deleteUser(input);
+
+      if (!result.ok) {
+        throw formatApiError(result.status, result.message);
+      }
+    },
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: userQueryKeys.lists() });
 
@@ -214,11 +233,9 @@ export function useDeleteUserMutation() {
         });
       }
 
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
     onSettled: () => {
       invalidateList();
