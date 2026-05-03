@@ -5,22 +5,22 @@ import {
   DetailDialog,
   type DetailFieldDef,
 } from "@/components/shared/detail-dialog";
-import type { UnitEntity } from "@/lib/schemas/unit";
+import type { UnitEntity } from "@/lib/types/unit";
 import { STATUS_LABEL } from "@/lib/unit/constants";
 import { formatDate } from "@/lib/unit/constants";
 
 const UNIT_DETAIL_FIELDS: DetailFieldDef<UnitEntity>[] = [
   {
     label: "Nama Unit Usaha",
-    render: (u) => u.unit_name,
+    render: (u) => u.business_unit_name,
   },
   {
     label: "Alamat",
-    render: (u) => u.unit_address,
+    render: (u) => u.business_unit_address,
   },
   {
     label: "Nomor Telepon",
-    render: (u) => u.phone_number,
+    render: (u) => u.business_unit_phone,
   },
   {
     label: "Status Keaktifan Unit Usaha",
@@ -28,19 +28,19 @@ const UNIT_DETAIL_FIELDS: DetailFieldDef<UnitEntity>[] = [
       <Badge
         variant="outline"
         className={
-          u.status === "active"
+          u.business_unit_status === true
             ? "border-green-200 bg-green-100 text-green-700"
             : "border-zinc-200 bg-zinc-100 text-zinc-600"
         }
       >
-        {STATUS_LABEL[u.status]}
+        {STATUS_LABEL[u.business_unit_status === true ? "active" : "inactive"]}
       </Badge>
     ),
   },
-  {
-    label: "Dibuat",
-    render: (u) => formatDate(u.created_at),
-  },
+  // {
+  //   label: "Dibuat",
+  //   render: (u) => formatDate(u.created_at ?? ""),
+  // },
 ];
 
 type UnitDetailDialogProps = {

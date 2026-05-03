@@ -8,6 +8,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type PaginationState,
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
@@ -26,6 +27,7 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
+import type { PaginationMeta } from "@/lib/schemas/unit";
 
 type DataTableProps<T> = {
   columns: ColumnDef<T, unknown>[];
@@ -48,6 +50,9 @@ type DataTableProps<T> = {
   enableRowSelection?: boolean;
   defaultPageSize?: number;
   initialVisibility?: VisibilityState;
+  meta?: PaginationMeta;
+  pagination?: PaginationState;
+  onPaginationChange?: (updater: any) => void;
 };
 
 export function DataTable<T>({
@@ -67,6 +72,9 @@ export function DataTable<T>({
   enableRowSelection = false,
   defaultPageSize = 10,
   initialVisibility = {},
+  meta,
+  pagination,
+  onPaginationChange,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] =
@@ -76,12 +84,20 @@ export function DataTable<T>({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnVisibility, rowSelection },
+    state: { 
+      sorting, 
+      columnVisibility, 
+      rowSelection, 
+      ...(pagination && { pagination }) 
+    },
     initialState: { pagination: { pageSize: defaultPageSize } },
     enableRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    ...(onPaginationChange && { onPaginationChange }),
+    manualPagination: !!pagination,
+    pageCount: meta?.totalPages ?? -1,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -190,7 +206,7 @@ export function DataTable<T>({
         </Table>
       </div>
 
-      {enablePagination && <DataTablePagination table={table} />}
+      {enablePagination && <DataTablePagination table={table} meta={meta} />}
     </div>
   );
 }

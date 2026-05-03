@@ -14,10 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  createUnitRequestSchema,
-  type CreateUnitRequest,
-} from "@/lib/schemas/unit";
+import { createUnitRequestSchema } from "@/lib/schemas/unit";
+import type { CreateUnitRequest } from "@/lib/types/unit";
 import { cn } from "@/lib/utils";
 import { DEFAULT_UNIT_FORM_VALUES } from "@/lib/unit/constants";
 
@@ -51,7 +49,7 @@ export function UnitFormDialog({
     reset,
     formState: { errors },
   } = useForm<CreateUnitRequest>({
-    resolver: zodResolver(createUnitRequestSchema),
+    resolver: zodResolver(createUnitRequestSchema as any),
     defaultValues: initialValues,
   });
 
@@ -84,71 +82,73 @@ export function UnitFormDialog({
       }}
     >
       <div className="space-y-2">
-        <Label htmlFor="unit_name">Nama Unit Usaha</Label>
+        <Label htmlFor="business_unit_name">Nama Unit Usaha</Label>
         <Input
-          id="unit_name"
+          id="business_unit_name"
           placeholder="Masukkan nama unit usaha"
           className={cn(
             "py-5",
-            errors.unit_name &&
+            errors.business_unit_name &&
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("unit_name")}
+          {...register("business_unit_name")}
         />
-        {errors.unit_name && (
-          <p className="text-xs text-destructive">{errors.unit_name.message}</p>
+        {errors.business_unit_name && (
+          <p className="text-xs text-destructive">
+            {errors.business_unit_name.message}
+          </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="unit_address">Alamat</Label>
+        <Label htmlFor="business_unit_address">Alamat</Label>
         <Input
-          id="unit_address"
+          id="business_unit_address"
           placeholder="Masukkan alamat unit usaha"
           className={cn(
             "py-5",
-            errors.unit_address &&
+            errors.business_unit_address &&
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("unit_address")}
+          {...register("business_unit_address")}
         />
-        {errors.unit_address && (
+        {errors.business_unit_address && (
           <p className="text-xs text-destructive">
-            {errors.unit_address.message}
+            {errors.business_unit_address.message}
           </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone_number">Nomor Telepon</Label>
+        <Label htmlFor="business_unit_phone">Nomor Telepon</Label>
         <Input
-          id="phone_number"
+          id="business_unit_phone"
           placeholder="Masukkan nomor telepon"
           className={cn(
             "py-5",
-            errors.phone_number &&
+            errors.business_unit_phone &&
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("phone_number")}
+          {...register("business_unit_phone")}
         />
-        {errors.phone_number && (
+        {errors.business_unit_phone && (
           <p className="text-xs text-destructive">
-            {errors.phone_number.message}
+            {errors.business_unit_phone.message}
           </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="status">Status Keaktifan Unit Usaha</Label>
+        <Label htmlFor="is_active">Status Keaktifan Unit Usaha</Label>
         <Controller
           control={control}
-          name="status"
+          name="is_active"
           render={({ field }) => (
             <Select
-              value={field.value}
+              value={String(field.value)}
               onValueChange={field.onChange}
               disabled={isPending}
             >
@@ -156,21 +156,21 @@ export function UnitFormDialog({
                 id="status"
                 className={cn(
                   "w-full bg-background py-5",
-                  errors.status &&
+                  errors.is_active &&
                     "border-destructive focus-visible:ring-destructive",
                 )}
               >
                 <SelectValue placeholder="Pilih status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Aktif</SelectItem>
-                <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                <SelectItem value="true">Aktif</SelectItem>
+                <SelectItem value="false">Tidak Aktif</SelectItem>
               </SelectContent>
             </Select>
           )}
         />
-        {errors.status && (
-          <p className="text-xs text-destructive">{errors.status.message}</p>
+        {errors.is_active && (
+          <p className="text-xs text-destructive">{errors.is_active.message}</p>
         )}
       </div>
     </CrudFormDialog>

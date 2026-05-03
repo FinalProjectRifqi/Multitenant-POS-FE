@@ -9,7 +9,7 @@ export default function Page() {
   const unitsQuery = useUnitsQuery();
 
   const activeUnits = useMemo(
-    () => (unitsQuery.data ?? []).filter((unit) => unit.status === "active"),
+    () => (unitsQuery.data?.data ?? []).filter((unit) => unit.business_unit_status),
     [unitsQuery.data],
   );
 

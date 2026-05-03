@@ -21,9 +21,7 @@ const menuItemWritePayloadSchema = z.object({
     .max(500, "URL gambar maksimal 500 karakter")
     .optional(),
   item_price: z.coerce
-    .number({
-      invalid_type_error: "Harga menu wajib diisi",
-    })
+    .number()
     .positive("Harga menu harus lebih dari 0")
     .max(1_000_000_000, "Harga menu terlalu besar"),
   is_available: z.boolean(),

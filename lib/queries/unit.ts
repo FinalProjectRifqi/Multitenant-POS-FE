@@ -17,19 +17,24 @@ import {
   removeEntityByKey,
   upsertEntityByKey,
 } from "@/lib/queries/crud";
-import type { CreateUnitRequest, UnitEntity } from "@/lib/schemas/unit";
+import type { CreateUnitRequest, UnitEntity } from "@/lib/types/unit";
+import type { UnitsListResponse } from "@/lib/schemas/unit";
 
 export const unitQueryKeys = createCrudQueryKeys("units");
-
-type UnitListCache = UnitEntity[];
 
 function useUnitListCache() {
   const queryClient = useQueryClient();
 
-  const setListCache = (updater: (current: UnitListCache) => UnitListCache) => {
-    queryClient.setQueryData<UnitEntity[]>(
-      unitQueryKeys.lists(),
-      (current = []) => updater(current),
+  const setListCache = (updater: (current: UnitEntity[]) => UnitEntity[]) => {
+    queryClient.setQueriesData<UnitsListResponse>(
+      { queryKey: unitQueryKeys.lists() },
+      (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          data: updater(current.data || []),
+        };
+      }
     );
   };
 
@@ -43,13 +48,12 @@ function useUnitListCache() {
   };
 }
 
-export function useUnitsQuery() {
+export function useUnitsQuery(page = 1, limit = 10, showInactive = true) {
   return useQuery({
-    queryKey: unitQueryKeys.lists(),
-    queryFn: getUnits,
+    queryKey: [...unitQueryKeys.lists(), { page, limit, showInactive }],
+    queryFn: () => getUnits({ page, limit, show_inactive: showInactive }),
   });
 }
-
 export function useCreateUnitMutation() {
   const { setListCache, invalidateList } = useUnitListCache();
 
@@ -57,11 +61,11 @@ export function useCreateUnitMutation() {
     mutationFn: (payload: CreateUnitRequest) => createUnit(payload),
     onSuccess: (createdUnit) => {
       setListCache((current) =>
-        upsertEntityByKey(current, createdUnit, "unit_id"),
+        upsertEntityByKey(current, createdUnit, "business_unit_id"),
       );
 
       toast.success("Unit usaha berhasil ditambahkan.", {
-        description: `${createdUnit.unit_name} siap digunakan.`,
+        description: `${createdUnit.business_unit_name} siap digunakan.`,
         position: "top-right",
         richColors: true,
         duration: 3000,
@@ -95,12 +99,13 @@ export function useUpdateUnitMutation() {
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: unitQueryKeys.lists() });
 
-      const previous =
-        queryClient.getQueryData<UnitEntity[]>(unitQueryKeys.lists()) ?? [];
+      const previous = queryClient.getQueriesData<UnitsListResponse>({
+        queryKey: unitQueryKeys.lists(),
+      });
 
       setListCache((current) =>
         current.map((unit) =>
-          unit.unit_id === input.unit_id
+          unit.business_unit_id === input.business_unit_id
             ? {
                 ...unit,
                 ...input.payload,
@@ -114,11 +119,11 @@ export function useUpdateUnitMutation() {
     },
     onSuccess: (updatedUnit) => {
       setListCache((current) =>
-        upsertEntityByKey(current, updatedUnit, "unit_id"),
+        upsertEntityByKey(current, updatedUnit, "business_unit_id"),
       );
 
       toast.success("Unit usaha berhasil diperbarui.", {
-        description: `${updatedUnit.unit_name} telah diperbarui.`,
+        description: `${updatedUnit.business_unit_name} telah diperbarui.`,
         position: "top-right",
         richColors: true,
         duration: 3000,
@@ -126,7 +131,9 @@ export function useUpdateUnitMutation() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(unitQueryKeys.lists(), context.previous);
+        context.previous.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
 
       toast.error(getErrorMessage(error), {
@@ -156,17 +163,26 @@ export function useDeleteUnitMutation() {
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: unitQueryKeys.lists() });
 
-      const previous =
-        queryClient.getQueryData<UnitEntity[]>(unitQueryKeys.lists()) ?? [];
-      const target = previous.find((item) => item.unit_id === input.unit_id);
+      const previous = queryClient.getQueriesData<UnitsListResponse>({
+        queryKey: unitQueryKeys.lists(),
+      });
+
+      let target: UnitEntity | undefined;
+      previous.forEach(([_, data]) => {
+        if (!target && data?.data) {
+          target = data.data.find(
+            (item) => item.business_unit_id === input.business_unit_id,
+          );
+        }
+      });
 
       setListCache((current) =>
-        removeEntityByKey(current, "unit_id", input.unit_id),
+        removeEntityByKey(current, "business_unit_id", input.business_unit_id),
       );
 
       return {
         previous,
-        deletedName: target?.unit_name ?? "Unit usaha",
+        deletedName: target?.business_unit_name ?? "Unit usaha",
       };
     },
     onSuccess: (_result, _input, context) => {
@@ -179,7 +195,9 @@ export function useDeleteUnitMutation() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(unitQueryKeys.lists(), context.previous);
+        context.previous.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
 
       toast.error(getErrorMessage(error), {

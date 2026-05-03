@@ -17,7 +17,7 @@ import type {
   CreateMenuItemRequest,
   MenuCategoryEntity,
 } from "@/lib/schemas/menu";
-import type { UnitEntity } from "@/lib/schemas/unit";
+import type { UnitEntity } from "@/lib/types/unit";
 import { DEFAULT_MENU_ITEM_FORM_VALUES } from "./constants";
 import { buildMenuStats } from "./stats";
 import type { MenuItemRow } from "./types";
@@ -64,12 +64,12 @@ export function useGroupMenuPage() {
   const [viewingItem, setViewingItem] = useState<MenuItemRow | null>(null);
 
   const units = useMemo(
-    () => (unitsQuery.data ?? []).filter((unit) => unit.status === "active"),
+    () => (unitsQuery.data?.data ?? []).filter((unit) => unit.business_unit_status),
     [unitsQuery.data],
   );
 
   const selectedUnit = useMemo(
-    () => units.find((unit) => unit.unit_id === selectedUnitId) ?? null,
+    () => units.find((unit) => unit.business_unit_id === selectedUnitId) ?? null,
     [selectedUnitId, units],
   );
 
