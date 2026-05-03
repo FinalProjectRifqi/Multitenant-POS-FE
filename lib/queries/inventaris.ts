@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api/client";
+import { handleApiError } from "@/lib/api/handle-api-error";
 import {
   createInventarisItem,
   deleteInventarisItem,
@@ -70,12 +71,7 @@ export function useCreateInventarisMutation() {
       });
     },
     onError: (error) => {
-      toast.error("Barang Inventaris Gagal Ditambahkan", {
-        description: getErrorMessage(error),
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      handleApiError(error, { title: "Barang Inventaris Gagal Ditambahkan" });
     },
     onSettled: () => invalidateList(),
   });
@@ -128,12 +124,8 @@ export function useUpdateInventarisMutation() {
       if (context?.previous) {
         queryClient.setQueryData(inventarisQueryKeys.lists(), context.previous);
       }
-      toast.error("Barang Inventaris Gagal Diperbarui", {
-        description: getErrorMessage(error),
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      console.log("Gagal memperbarui barang inventaris:", { error });
+      handleApiError(error, { title: "Barang Inventaris Gagal Diperbarui" });
     },
     onSettled: () => invalidateList(),
   });
@@ -179,12 +171,7 @@ export function useDeleteInventarisMutation() {
       if (context?.previous) {
         queryClient.setQueryData(inventarisQueryKeys.lists(), context.previous);
       }
-      toast.error("Barang Inventaris Gagal Dihapus", {
-        description: getErrorMessage(error),
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      handleApiError(error, { title: "Barang Inventaris Gagal Dihapus" });
     },
     onSettled: () => invalidateList(),
   });

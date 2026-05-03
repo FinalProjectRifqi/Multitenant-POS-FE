@@ -1,16 +1,25 @@
-import axios, {
-  AxiosError,
-  AxiosHeaders,
-  type AxiosRequestConfig,
-} from "axios";
+/**
+ * client.ts — Server-side HTTP client for use inside Server Actions.
+ *
+ *
+ * ⚠️  Import this file ONLY from files marked "use ".
+ *     For client-side React Query hooks, keep using lib/api/client.ts.
+ */
+
+import axios, { AxiosHeaders, type AxiosRequestConfig } from "axios";
 import type { ZodType } from "zod";
 import { validateSchema } from "@/lib/api/validator";
-import { getSession } from "next-auth/react";
+import { auth } from "@/lib/nextauth/auth";
 
 const DEFAULT_TIMEOUT_IN_MS = 15_000;
 
-export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api",
+// Backend base URL — strip trailing slash to keep endpoint paths clean.
+const BASE_URL = (process.env.API_BASE_URL ?? "").replace(/\/$/, "");
+
+// ─── Axios instance ────────────────────────────────────────────────────────────
+
+const apiClient = axios.create({
+  baseURL: BASE_URL,
   timeout: DEFAULT_TIMEOUT_IN_MS,
   headers: {
     "Content-Type": "application/json",
@@ -21,23 +30,92 @@ apiClient.interceptors.request.use(async (config) => {
   const headers = AxiosHeaders.from(config.headers);
   headers.set("Accept", "application/json");
 
-  // Attach the backend access_token as Bearer token for all API calls.
-  // getSession() reads the NextAuth session (from the httpOnly cookie server-side,
-  // or from the client session cache). Safe to call on every request — it's cached.
-  //
-  // NOTE: This interceptor only runs in the browser (client-side React Query hooks).
-  //       Server-side callers (Server Components / API Routes) must attach the token
-  //       manually using auth() from lib/nextauth/auth.ts.
-  if (typeof window !== "undefined") {
-    const session = await getSession();
-    if (session?.user?.access_token) {
-      headers.set("Authorization", `Bearer ${session.user.access_token}`);
-    }
+  // auth() reads the JWT session from the httpOnly cookie -side.
+  // Safe to call inside Server Actions — Next.js caches the call per request.
+  const session = await auth();
+  if (session?.user?.access_token) {
+    headers.set("Authorization", `Bearer ${session.user.access_token}`);
   }
 
   config.headers = headers;
   return config;
 });
+
+/**
+ * Extracts a human-readable message from a backend error payload.
+ * Backend standard envelope: { success: false, error: { code, message, details } }
+ */
+function extractPayloadMessage(payload: unknown): string | null {
+  if (typeof payload === "string" && payload.trim()) {
+    return payload.trim();
+  }
+
+  if (payload !== null && typeof payload === "object") {
+    const p = payload as Record<string, unknown>;
+    const errorObj = p.error;
+
+    if (errorObj && typeof errorObj === "object") {
+      const e = errorObj as Record<string, unknown>;
+
+      // Validation error: extract all constraint messages from details[]
+      const details = e.details;
+      if (Array.isArray(details) && details.length > 0) {
+        const msgs = details.flatMap((d: unknown) => {
+          if (!d || typeof d !== "object") return [];
+          const constraints = (d as Record<string, unknown>).constraints;
+          if (!constraints || typeof constraints !== "object") return [];
+          return Object.values(constraints).filter(
+            (v): v is string => typeof v === "string",
+          );
+        });
+        if (msgs.length > 0) return msgs.join(", ");
+      }
+
+      // Non-validation / generic error: use error.message from envelope
+      if (typeof e.message === "string") return e.message;
+    }
+
+    // Defensive fallback: flat { message: "..." } format
+    if (typeof p.message === "string") return p.message;
+  }
+
+  return null;
+}
+
+// Convert Axios/HTTP errors into plain Error objects.
+// Server Actions must throw serialisable values — AxiosError is not serialisable.
+// Status code is encoded as a "[STATUS]" prefix so client-side handlers can
+// branch on it (e.g. show a logout toast on 401) without needing AxiosError.
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 0;
+      const payload = error.response?.data;
+
+      // 0 = no response (network error, timeout, CORS, etc.)
+      if (status === 0 || !error.response) {
+        throw new Error(
+          "[0] Tidak dapat terhubung ke server. Periksa koneksi internet Anda.",
+        );
+      }
+
+      // Extract human-readable message from response body
+      const bodyMessage = extractPayloadMessage(payload);
+      // Fallback to Axios generic message if body has no readable message
+      const message = bodyMessage ?? error.message;
+
+      // Prefix with [STATUS] so client handlers can detect status without
+      // needing AxiosError (which is not serialisable across Server Action boundary)
+      throw new Error(`[${status}] ${message}`);
+    }
+
+    // Re-throw non-Axios errors as-is (already serialisable)
+    throw error;
+  },
+);
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -55,15 +133,14 @@ export type ApiRequestWithSchemaOptions<
   schema?: ZodType<TData>;
 };
 
+// ─── Internal request helper ───────────────────────────────────────────────────
+
 function parseResponseData<TData>(
   payload: unknown,
   schema?: ZodType<TData>,
   url?: string,
 ): TData {
-  if (!schema) {
-    return payload as TData;
-  }
-
+  if (!schema) return payload as TData;
   return validateSchema(schema, payload, `Response from ${url ?? "endpoint"}`);
 }
 
@@ -89,14 +166,16 @@ async function request<
   return parseResponseData(response.data, schema, url);
 }
 
-export function apiGet<TData, TParams = Record<string, unknown>>(
+// ─── Public helpers ────────────────────────────────────────────────────────────
+
+export async function apiGet<TData, TParams = Record<string, unknown>>(
   url: string,
   options?: ApiRequestWithSchemaOptions<TData, TParams>,
 ): Promise<TData> {
   return request<TData, never, TParams>("GET", url, undefined, options);
 }
 
-export function apiPost<
+export async function apiPost<
   TData,
   TBody = unknown,
   TParams = Record<string, unknown>,
@@ -108,7 +187,7 @@ export function apiPost<
   return request<TData, TBody, TParams>("POST", url, body, options);
 }
 
-export function apiPut<
+export async function apiPut<
   TData,
   TBody = unknown,
   TParams = Record<string, unknown>,
@@ -120,7 +199,7 @@ export function apiPut<
   return request<TData, TBody, TParams>("PUT", url, body, options);
 }
 
-export function apiPatch<
+export async function apiPatch<
   TData,
   TBody = unknown,
   TParams = Record<string, unknown>,
@@ -132,40 +211,33 @@ export function apiPatch<
   return request<TData, TBody, TParams>("PATCH", url, body, options);
 }
 
-export function apiDelete<TData, TParams = Record<string, unknown>>(
+export async function apiDelete<TData, TParams = Record<string, unknown>>(
   url: string,
   options?: ApiRequestWithSchemaOptions<TData, TParams>,
 ): Promise<TData> {
   return request<TData, never, TParams>("DELETE", url, undefined, options);
 }
 
+/**
+ * Strips the "[STATUS]" prefix (added by the server-side interceptor) and
+ * returns the human-readable message. Safe to call on any error type.
+ *
+ * Examples:
+ *   "[401] Token telah kadaluarsa" → "Token telah kadaluarsa"
+ *   "[404] Unit tidak ditemukan"   → "Unit tidak ditemukan"
+ *   "Something went wrong"         → "Something went wrong" (no prefix, unchanged)
+ */
 export function getErrorMessage(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    const responsePayload = error.response?.data;
-
-    if (typeof responsePayload === "string" && responsePayload.trim()) {
-      return responsePayload;
-    }
-
-    if (
-      responsePayload &&
-      typeof responsePayload === "object" &&
-      "message" in responsePayload &&
-      typeof responsePayload.message === "string"
-    ) {
-      return responsePayload.message;
-    }
-
-    return error.message;
-  }
-
   if (error instanceof Error) {
-    return error.message;
+    // Strip [STATUS] prefix if present
+    return error.message.replace(/^\[\d+\]\s*/, "");
   }
 
-  return "Unexpected error";
+  if (typeof error === "string") return error;
+
+  return "Terjadi kesalahan yang tidak diketahui.";
 }
 
-export function isAxiosApiError(error: unknown): error is AxiosError {
+export async function isAxiosApiError(error: unknown): Promise<boolean> {
   return axios.isAxiosError(error);
 }

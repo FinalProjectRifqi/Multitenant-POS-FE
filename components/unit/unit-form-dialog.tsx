@@ -18,6 +18,7 @@ import { createUnitRequestSchema } from "@/lib/schemas/unit";
 import type { CreateUnitRequest } from "@/lib/types/unit";
 import { cn } from "@/lib/utils";
 import { DEFAULT_UNIT_FORM_VALUES } from "@/lib/unit/constants";
+import { z } from "zod";
 
 type UnitFormDialogProps = {
   title: string;
@@ -30,6 +31,33 @@ type UnitFormDialogProps = {
   errorMessage?: string | null;
   onSubmit: (values: CreateUnitRequest) => Promise<void>;
 };
+
+function mapServerErrorToUnitField(
+  message: string,
+): keyof CreateUnitRequest | null {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("telepon") || normalized.includes("phone")) {
+    return "business_unit_phone";
+  }
+
+  if (normalized.includes("alamat") || normalized.includes("address")) {
+    return "business_unit_address";
+  }
+
+  if (normalized.includes("nama unit") || normalized.includes("name")) {
+    return "business_unit_name";
+  }
+
+  if (normalized.includes("status") || normalized.includes("aktif")) {
+    return "is_active";
+  }
+
+  return null;
+}
+
+type UnitFormInput = z.input<typeof createUnitRequestSchema>;
+type UnitFormOutput = z.output<typeof createUnitRequestSchema>;
 
 export function UnitFormDialog({
   title,
@@ -47,15 +75,29 @@ export function UnitFormDialog({
     control,
     handleSubmit,
     reset,
+    setError,
+    clearErrors,
     formState: { errors },
-  } = useForm<CreateUnitRequest>({
-    resolver: zodResolver(createUnitRequestSchema) as Resolver<CreateUnitRequest>,
+  } = useForm<UnitFormInput, unknown, UnitFormOutput>({
+    resolver: zodResolver(createUnitRequestSchema),
     defaultValues: initialValues,
   });
 
   useEffect(() => {
     if (open) reset(initialValues);
   }, [initialValues, open, reset]);
+
+  useEffect(() => {
+    if (!open || !errorMessage) return;
+
+    const field = mapServerErrorToUnitField(errorMessage);
+    if (!field) return;
+
+    setError(field, {
+      type: "server",
+      message: errorMessage,
+    });
+  }, [errorMessage, open, setError]);
 
   const onFormSubmit = handleSubmit(async (values) => {
     try {
@@ -92,7 +134,9 @@ export function UnitFormDialog({
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("business_unit_name")}
+          {...register("business_unit_name", {
+            onChange: () => clearErrors("business_unit_name"),
+          })}
         />
         {errors.business_unit_name && (
           <p className="text-xs text-destructive">
@@ -112,7 +156,9 @@ export function UnitFormDialog({
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("business_unit_address")}
+          {...register("business_unit_address", {
+            onChange: () => clearErrors("business_unit_address"),
+          })}
         />
         {errors.business_unit_address && (
           <p className="text-xs text-destructive">
@@ -132,7 +178,9 @@ export function UnitFormDialog({
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("business_unit_phone")}
+          {...register("business_unit_phone", {
+            onChange: () => clearErrors("business_unit_phone"),
+          })}
         />
         {errors.business_unit_phone && (
           <p className="text-xs text-destructive">
@@ -149,7 +197,10 @@ export function UnitFormDialog({
           render={({ field }) => (
             <Select
               value={String(field.value)}
-              onValueChange={field.onChange}
+              onValueChange={(value) => {
+                clearErrors("is_active");
+                field.onChange(value);
+              }}
               disabled={isPending}
             >
               <SelectTrigger

@@ -66,9 +66,13 @@ export default function Page() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Building2 className="h-4 w-4 shrink-0" />
               <span>
-              {p.selectedUnit ? p.selectedUnit.business_unit_name : "Memuat..."}
+                {p.selectedUnit
+                  ? p.selectedUnit.business_unit_name
+                  : "Memuat..."}
                 <span className="mx-1.5 text-border">•</span>
-                {p.selectedUnit.business_unit_address}
+                {p.selectedUnit
+                  ? p.selectedUnit.business_unit_address
+                  : "Memuat..."}
               </span>
             </div>
           ) : (

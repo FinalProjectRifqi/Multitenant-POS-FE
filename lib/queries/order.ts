@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api/client";
+import { handleApiError } from "@/lib/api/handle-api-error";
 import { getOrders, updateOrderStatus } from "@/lib/api/orders";
 import { createCrudQueryKeys, upsertEntityByKey } from "@/lib/queries/crud";
 import type {
@@ -122,11 +123,7 @@ export function useUpdateOrderStatusMutation() {
         queryClient.setQueryData(orderQueryKeys.lists(), context.previous);
       }
 
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      handleApiError(error);
     },
 
     onSettled: () => {
