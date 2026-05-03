@@ -53,11 +53,10 @@ export function useUnitMenuPage(unitId: string) {
 
   const [viewingItem, setViewingItem] = useState<MenuItemRow | null>(null);
 
-  const selectedUnit = useMemo(
-    () =>
-      (unitsQuery.data ?? []).find((unit) => unit.unit_id === unitId) ?? null,
-    [unitId, unitsQuery.data],
-  );
+  const selectedUnit = useMemo(() => {
+    const unitsList = unitsQuery.data?.data ?? [];
+    return unitsList.find((unit) => unit.business_unit_id === unitId) ?? null;
+  }, [unitId, unitsQuery.data]);
 
   const categories = useMemo(
     () => categoriesQuery.data ?? [],

@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 import { DataTable } from "@/components/shared/data-table";
 import { StatsGrid } from "@/components/shared/stats-grid";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -73,7 +75,7 @@ export default function Page() {
             data={p.units}
             isLoading={p.query.isLoading}
             // Search — points to the column whose filterFn handles all fields
-            searchColumn="unit_name"
+            searchColumn="business_unit_name"
             searchPlaceholder="Cari nama, alamat, telepon, status..."
             // Toolbar CTA
             actionLabel="Tambah Unit Usaha"
@@ -81,10 +83,25 @@ export default function Page() {
             // Empty states
             emptyMessage="Belum ada unit usaha yang terdaftar."
             searchEmptyMessage="Data unit usaha tidak ditemukan dari kata kunci pencarian."
+            extraControls={
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="show-inactive"
+                  checked={p.showInactive}
+                  onCheckedChange={p.setShowInactive}
+                />
+                <Label htmlFor="show-inactive" className="cursor-pointer">
+                  Tampilkan Nonaktif
+                </Label>
+              </div>
+            }
             // Features
             enableSorting
             enablePagination
             defaultPageSize={10}
+            meta={p.query.meta}
+            pagination={p.pagination}
+            onPaginationChange={p.setPagination}
           />
         </CardContent>
       </Card>
@@ -135,8 +152,10 @@ export default function Page() {
         description={
           <>
             Tindakan ini tidak dapat dibatalkan. Unit{" "}
-            <strong>{p.deletingUnit?.unit_name ?? "unit usaha"}</strong> akan
-            dihapus permanen.
+            <strong>
+              {p.deletingUnit?.business_unit_name ?? "unit usaha"}
+            </strong>{" "}
+            akan dihapus permanen.
           </>
         }
         isPending={p.delete.isPending}

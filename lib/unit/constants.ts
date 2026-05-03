@@ -1,4 +1,4 @@
-import type { CreateUnitRequest, UnitStatus } from "@/lib/schemas/unit";
+import type { CreateUnitRequest, UnitStatus } from "@/lib/types/unit";
 
 export const STATUS_LABEL: Record<UnitStatus, string> = {
   active: "Aktif",
@@ -6,10 +6,10 @@ export const STATUS_LABEL: Record<UnitStatus, string> = {
 };
 
 export const DEFAULT_UNIT_FORM_VALUES: CreateUnitRequest = {
-  unit_name: "",
-  unit_address: "",
-  phone_number: "",
-  status: "active",
+  business_unit_name: "",
+  business_unit_address: "",
+  business_unit_phone: "",
+  is_active: true,
 };
 
 export function formatDate(value: string): string {

@@ -15,7 +15,7 @@ export function createCrudQueryKeys(resource: string): CrudQueryKeys {
 }
 
 export function upsertEntityByKey<
-  TEntity extends Record<string, unknown>,
+  TEntity extends Record<string, any>,
   TKey extends keyof TEntity,
 >(
   current: TEntity[],
@@ -37,7 +37,7 @@ export function upsertEntityByKey<
 }
 
 export function removeEntityByKey<
-  TEntity extends Record<string, unknown>,
+  TEntity extends Record<string, any>,
   TKey extends keyof TEntity,
 >(current: TEntity[], key: TKey, value: TEntity[TKey]): TEntity[] {
   return current.filter((item) => item[key] !== value);

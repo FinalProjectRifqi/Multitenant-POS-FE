@@ -24,7 +24,7 @@ export function useGroupInventarisPage() {
   const inventarisQuery = useInventarisItemsQuery();
 
   const units = useMemo(
-    () => (unitsQuery.data ?? []).filter((unit) => unit.status === "active"),
+    () => (unitsQuery.data?.data ?? []).filter((unit) => unit.business_unit_status),
     [unitsQuery.data],
   );
 
@@ -44,10 +44,10 @@ export function useGroupInventarisUnitPage(unitId: string) {
 
   const [viewingItem, setViewingItem] = useState<InventarisRow | null>(null);
 
-  const units = useMemo(() => unitsQuery.data ?? [], [unitsQuery.data]);
+  const units = useMemo(() => unitsQuery.data?.data ?? [], [unitsQuery.data]);
 
   const selectedUnit = useMemo(
-    () => units.find((unit) => unit.unit_id === unitId) ?? null,
+    () => units.find((unit) => unit.business_unit_id === unitId) ?? null,
     [units, unitId],
   );
 

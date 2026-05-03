@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-function formatIssuePath(path: Array<string | number>): string {
-  return path.length > 0 ? path.join(".") : "root";
+function formatIssuePath(path: PropertyKey[]): string {
+  return path.length > 0 ? path.map(String).join(".") : "root";
 }
 
 export function validateSchema<TData>(

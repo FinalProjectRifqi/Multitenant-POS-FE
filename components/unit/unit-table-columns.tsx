@@ -10,9 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { UnitEntity } from "@/lib/schemas/unit";
+import type { UnitEntity } from "@/lib/types/unit";
 import { cn } from "@/lib/utils";
-import { formatDate, STATUS_LABEL } from "@/lib/unit/constants";
+import { STATUS_LABEL } from "@/lib/unit/constants";
 
 type Actions = {
   onEdit: (unit: UnitEntity) => void;
@@ -25,73 +25,75 @@ export function buildUnitColumns(
 ): ColumnDef<UnitEntity, unknown>[] {
   return [
     {
-      accessorKey: "unit_name",
+      accessorKey: "business_unit_name",
       header: "Nama Unit",
       // Multi-field search: this single filterFn covers all searchable fields
       filterFn: (row, _colId, filterValue: string) => {
         const u = row.original;
         const query = filterValue.toLowerCase();
         return [
-          u.unit_name,
-          u.unit_address,
-          u.phone_number,
-          STATUS_LABEL[u.status],
+          u.business_unit_name,
+          u.business_unit_address,
+          u.business_unit_phone,
+          STATUS_LABEL[u.business_unit_status === true ? "active" : "inactive"],
         ].some((field) => field.toLowerCase().includes(query));
       },
       cell: ({ row }) => (
         <span className="font-medium text-foreground">
-          {row.getValue("unit_name")}
+          {row.getValue("business_unit_name")}
         </span>
       ),
     },
     {
-      accessorKey: "unit_address",
+      accessorKey: "business_unit_address",
       header: "Alamat",
       enableSorting: false,
       cell: ({ row }) => (
         <span className="max-w-md text-foreground/85">
-          {row.getValue("unit_address")}
+          {row.getValue("business_unit_address")}
         </span>
       ),
     },
     {
-      accessorKey: "phone_number",
+      accessorKey: "business_unit_phone",
       header: "Nomor Telepon",
       enableSorting: false,
       cell: ({ row }) => (
         <span className="text-foreground/85">
-          {row.getValue("phone_number")}
+          {row.getValue("business_unit_phone")}
         </span>
       ),
     },
     {
-      accessorKey: "status",
+      accessorKey: "business_unit_status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue<UnitEntity["status"]>("status");
+        const status = row.getValue<UnitEntity["business_unit_status"]>(
+          "business_unit_status",
+        );
         return (
           <span
             className={cn(
               "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
-              status === "active"
+              status === true
                 ? "bg-green-100 text-green-700"
                 : "bg-zinc-200 text-zinc-700",
             )}
           >
-            {STATUS_LABEL[status]}
+            {STATUS_LABEL[status === true ? "active" : "inactive"]}
           </span>
         );
       },
     },
-    {
-      accessorKey: "created_at",
-      header: "Dibuat",
-      cell: ({ row }) => (
-        <span className="text-foreground/85">
-          {formatDate(row.getValue("created_at"))}
-        </span>
-      ),
-    },
+    // {
+    //   accessorKey: "created_at",
+    //   header: "Dibuat",
+    //   cell: ({ row }) => (
+    //     <span className="text-foreground/85">
+    //       {formatDate(row.getValue("created_at"))}
+    //     </span>
+    //   ),
+    // },
     {
       id: "actions",
       enableSorting: false,
@@ -104,7 +106,7 @@ export function buildUnitColumns(
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={`Aksi untuk ${unit.unit_name}`}
+                aria-label={`Aksi untuk ${unit.business_unit_name}`}
               >
                 <MoreHorizontal className="size-4" />
               </Button>
