@@ -98,6 +98,7 @@ export function handleApiError(
 
   // ── Network / no response ───────────────────────────────────────────────────
   if (status === 0) {
+    console.error("Network error or no response from server:", error);
     showErrorToast(status, options?.title ?? "Tidak dapat terhubung", message);
     return;
   }
@@ -137,4 +138,9 @@ export function handleApiError(
 
   // ── Catch-all (403, 409, etc.) ──────────────────────────────────────────────
   showErrorToast(status, options?.title ?? "Permintaan gagal", message);
+}
+
+export function shouldHandleMutationErrorGlobally(error: unknown): boolean {
+  const { status } = parseApiError(error);
+  return status === 0 || status === 401 || status === 403 || status >= 500;
 }

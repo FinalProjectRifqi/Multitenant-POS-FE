@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, type Resolver, useForm } from "react-hook-form";
 
 import { CrudFormDialog } from "@/components/shared/crud-form-dialog";
 import { Input } from "@/components/ui/input";

@@ -8,6 +8,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type OnChangeFn,
   type PaginationState,
   type SortingState,
   type VisibilityState,
@@ -52,7 +53,7 @@ type DataTableProps<T> = {
   initialVisibility?: VisibilityState;
   meta?: PaginationMeta;
   pagination?: PaginationState;
-  onPaginationChange?: (updater: any) => void;
+  onPaginationChange?: OnChangeFn<PaginationState>;
 };
 
 export function DataTable<T>({
