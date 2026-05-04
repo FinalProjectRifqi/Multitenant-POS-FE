@@ -1,8 +1,8 @@
 import axios, { AxiosHeaders, type AxiosRequestConfig } from "axios";
 import type { ZodType } from "zod";
 import { validateSchema } from "@/lib/api/validator";
-import { auth } from "@/lib/nextauth/auth";
-// import { getSession } from "next-auth/react";
+// import { auth } from "@/lib/nextauth/auth";
+import { getSession } from "next-auth/react";
 // import { toast } from "sonner";
 // import { redirect } from "next/navigation";
 
@@ -30,7 +30,7 @@ apiClient.interceptors.request.use(async (config) => {
   //       Server-side callers (Server Components / API Routes) must attach the token
   //       manually using auth() from lib/nextauth/auth.ts.
   if (typeof window !== "undefined") {
-    const session = await auth();
+    const session = await getSession();
     if (session?.user?.access_token) {
       headers.set("Authorization", `Bearer ${session.user.access_token}`);
     }

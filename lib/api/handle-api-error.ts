@@ -98,6 +98,7 @@ export function handleApiError(
 
   // ── Network / no response ───────────────────────────────────────────────────
   if (status === 0) {
+    console.error("Network error or no response from server:", error);
     showErrorToast(status, options?.title ?? "Tidak dapat terhubung", message);
     return;
   }

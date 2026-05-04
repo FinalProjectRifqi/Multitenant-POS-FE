@@ -6,7 +6,7 @@
  *     For client-side React Query hooks, keep using lib/api/client.ts.
  */
 
-import axios, { AxiosHeaders, type AxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import type { ZodType } from "zod";
 import { validateSchema } from "@/lib/api/validator";
 import { auth } from "@/lib/nextauth/auth";
@@ -26,20 +26,6 @@ const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use(async (config) => {
-  const headers = AxiosHeaders.from(config.headers);
-  headers.set("Accept", "application/json");
-
-  // auth() reads the JWT session from the httpOnly cookie -side.
-  // Safe to call inside Server Actions — Next.js caches the call per request.
-  const session = await auth();
-  if (session?.user?.access_token) {
-    headers.set("Authorization", `Bearer ${session.user.access_token}`);
-  }
-
-  config.headers = headers;
-  return config;
-});
 
 /**
  * Extracts a human-readable message from a backend error payload.
@@ -156,10 +142,32 @@ async function request<
 ): Promise<TData> {
   const { schema, ...requestOptions } = options ?? {};
 
+  // Resolve auth token in the caller's async context (Server Component / Server
+  // Action scope) so that headers() is called within a valid request scope.
+  // auth() is cached per-request by Next.js, so multiple calls in the same
+  // render are cheap.
+  //
+  // If auth() throws (e.g. called outside a request scope), we degrade
+  // gracefully to an unauthenticated request and log a warning.
+  const authHeaders: Record<string, string> = {};
+  try {
+    const session = await auth();
+    if (session?.user?.access_token) {
+      authHeaders["Authorization"] = `Bearer ${session.user.access_token}`;
+    }
+  } catch (error) {
+    console.warn(
+      "[client.ts] auth() failed — sending request without Authorization header.",
+      "Ensure the calling module has \"use server\" if it imports from client.ts.",
+      error instanceof Error ? error.message : error,
+    );
+  }
+
   const response = await apiClient.request<unknown>({
     method,
     url,
     data: body,
+    headers: authHeaders,
     ...requestOptions,
   });
 
@@ -172,7 +180,7 @@ export async function apiGet<TData, TParams = Record<string, unknown>>(
   url: string,
   options?: ApiRequestWithSchemaOptions<TData, TParams>,
 ): Promise<TData> {
-  return request<TData, never, TParams>("GET", url, undefined, options);
+  return await request<TData, never, TParams>("GET", url, undefined, options);
 }
 
 export async function apiPost<

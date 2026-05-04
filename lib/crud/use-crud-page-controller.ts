@@ -102,7 +102,12 @@ export function useCrudPageController<
       isLoading: listQuery.isLoading,
       isError: listQuery.isError,
       error: listQuery.error,
-      meta: listQuery.meta,
+      meta: listQuery.meta as unknown as {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      },
     },
 
     isCreateOpen,
