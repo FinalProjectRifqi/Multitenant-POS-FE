@@ -12,15 +12,17 @@ export const currentUserQueryKeys = {
  * useCurrentUserQuery — fetches /auth/me and returns the full profile of the
  * currently authenticated user.
  *
- * - staleTime: 5 minutes — avoids repeated fetches on quick navigation
+ * - staleTime: 0 — keep data stale so focus-triggered sync is always fresh
  * - retry: 1 — one retry on transient failure
- * - enabled: always enabled when the hook is mounted
+ * - refetchOnWindowFocus: true — sync profile/role when user returns to tab
  */
 export function useCurrentUserQuery() {
   return useQuery<CurrentUserData, Error>({
     queryKey: currentUserQueryKeys.currentUser(),
     queryFn: fetchCurrentUser,
-    staleTime: 5 * 60 * 1_000,
+    staleTime: 0,
     retry: 1,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }

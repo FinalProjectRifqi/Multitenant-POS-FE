@@ -200,9 +200,10 @@ export const authConfig = {
      *
      * Lives here (not only in auth.ts) so the edge proxy can also apply it.
      */
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
+      const t = token as typeof token & AuthJWT;
+
       if (user) {
-        const t = token as typeof token & AuthJWT;
         const u = user as typeof user & AuthJWT;
         t.user_id = u.user_id;
         t.role_code = u.role_code;
@@ -225,6 +226,23 @@ export const authConfig = {
           // Ignore decode failure — token will use default NextAuth maxAge
         }
       }
+
+      if (trigger === "update" && session) {
+        const updated = session as Partial<AuthJWT>;
+
+        if (typeof updated.role_code === "string") {
+          t.role_code = updated.role_code;
+        }
+
+        if (updated.unit_id === null || typeof updated.unit_id === "string") {
+          t.unit_id = updated.unit_id;
+        }
+
+        if (typeof updated.user_id === "string") {
+          t.user_id = updated.user_id;
+        }
+      }
+
       return token;
     },
 

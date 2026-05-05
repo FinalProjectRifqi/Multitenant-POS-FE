@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -25,18 +25,19 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
-import { signOut } from "next-auth/react";
+import { useCurrentUserContextState } from "@/components/dashboard/current-user-context";
+import { signOut, useSession } from "next-auth/react";
 import { ROLE_NAV, type NavItem } from "@/lib/constants/navigation";
-import { ROLE_CODE, type RoleCode } from "@/lib/constants/roles";
+import { getDashboardRoute, type RoleCode } from "@/lib/constants/roles";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -64,26 +65,6 @@ function NavIcon({ name }: { name: string }) {
   const Icon = ICON_MAP[name] ?? LayoutDashboard;
   return <Icon />;
 }
-
-/* ─── Role badge — uses globals.css tokens via Tailwind ─────────────────────── */
-const ROLE_BADGE: Record<RoleCode, { className: string; label: string }> = {
-  [ROLE_CODE.MANAJEMEN_GRUP]: {
-    className: "bg-primary/10 text-primary",
-    label: "Manajemen Grup",
-  },
-  [ROLE_CODE.TIM_DAPUR]: {
-    className: "bg-orange-500/10 text-orange-800",
-    label: "Tim Dapur",
-  },
-  [ROLE_CODE.MANAJER_UNIT]: {
-    className: "bg-blue-600/10 text-blue-800",
-    label: "Manajer Unit",
-  },
-  [ROLE_CODE.STAF_UNIT]: {
-    className: "bg-green-600/10 text-green-800",
-    label: "Staf Unit",
-  },
-};
 
 /* ─── Single nav item ───────────────────────────────────────────────────────── */
 function NavItem({ item }: { item: NavItem }) {
@@ -125,12 +106,81 @@ function NavItem({ item }: { item: NavItem }) {
   );
 }
 
+function SidebarLoadingSkeleton() {
+  const menuSkeletonWidths = [
+    "w-[72%]",
+    "w-[64%]",
+    "w-[58%]",
+    "w-[82%]",
+    "w-[67%]",
+    "w-[74%]",
+  ];
+
+  return (
+    <Sidebar collapsible="icon" className="bg-[#F1EEE9]">
+      <SidebarHeader className="px-5 pt-7 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)]">
+            <UtensilsCrossed size={17} className="text-primary-foreground" />
+          </div>
+
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-3 w-36" />
+          </div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup className="px-3">
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-0.5 gap-0">
+              {menuSkeletonWidths.map((widthClass, index) => (
+                <SidebarMenuItem key={index}>
+                  <div className="flex h-8 items-center gap-2 rounded-md px-2">
+                    <Skeleton className="size-4 rounded-md" />
+                    <Skeleton className={`h-4 ${widthClass}`} />
+                  </div>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="flex h-12 items-center gap-3 px-2">
+              <Skeleton className="h-9 w-9 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+
+      <SidebarRail />
+    </Sidebar>
+  );
+}
+
 /* ─── AppSidebar ────────────────────────────────────────────────────────────── */
 export function AppSidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isLoading, isError, refetchCurrentUser } =
+    useCurrentUserContextState();
+  const { data: session } = useSession();
   const user = useCurrentUser();
-  const roleCode = (user?.role?.role_code ?? "") as RoleCode;
-  const navItems = ROLE_NAV[roleCode] ?? [];
-  // const badge = ROLE_BADGE[roleCode];
+  const roleCode =
+    user?.role?.role_code ?? (session?.user?.role_code as RoleCode | undefined);
+  const resolvedRoleCode = roleCode as RoleCode | undefined;
+  const navItems: NavItem[] = resolvedRoleCode
+    ? (ROLE_NAV[resolvedRoleCode] ?? [])
+    : [];
 
   const initials = user?.full_name
     ? user.full_name
@@ -143,6 +193,80 @@ export function AppSidebar() {
 
   async function handleLogout() {
     await signOut({ callbackUrl: "/login" });
+  }
+
+  useEffect(() => {
+    refetchCurrentUser();
+  }, [pathname, refetchCurrentUser]);
+
+  useEffect(() => {
+    if (!roleCode) return;
+
+    const dashboardPath = getDashboardRoute(roleCode);
+    const isGroupPath = pathname.startsWith("/group");
+    const isUnitPath = pathname.startsWith("/unit");
+    const isGroupDashboard = dashboardPath.startsWith("/group");
+    const isUnitDashboard = dashboardPath.startsWith("/unit");
+
+    if (
+      (isGroupPath && !isGroupDashboard) ||
+      (isUnitPath && !isUnitDashboard)
+    ) {
+      router.replace(dashboardPath);
+    }
+  }, [pathname, roleCode, router]);
+
+  if (isLoading && !user) {
+    return <SidebarLoadingSkeleton />;
+  }
+
+  if (isError && !user && !session?.user?.role_code) {
+    return (
+      <Sidebar collapsible="icon" className="bg-[#F1EEE9]">
+        <SidebarHeader className="px-5 pt-7 pb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)]">
+              <UtensilsCrossed size={17} className="text-primary-foreground" />
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-base font-bold text-foreground tracking-tight leading-none">
+                Sistem POS XYZ
+              </p>
+              <p className="text-xs text-muted-foreground mt-2 truncate font-medium">
+                Gagal memuat profil pengguna
+              </p>
+            </div>
+          </div>
+        </SidebarHeader>
+
+        <SidebarContent>
+          <SidebarGroup className="px-3">
+            <SidebarGroupContent>
+              <p className="px-2 py-2 text-[12px] text-muted-foreground">
+                Menu tidak tersedia sementara.
+              </p>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarFooter className="border-t border-sidebar-border">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={handleLogout}
+                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <LogOut className="w-4 h-4 mr-2 shrink-0" />
+                Logout
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+
+        <SidebarRail />
+      </Sidebar>
+    );
   }
 
   return (
