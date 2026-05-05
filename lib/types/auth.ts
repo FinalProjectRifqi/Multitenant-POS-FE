@@ -1,4 +1,69 @@
-// ─── Domain Models (mirrors ERD tables) ──────────────────────────────────────
+// ─── getUserById API response contract ────────────────────────────────────────
+
+export interface GetUserByIdApiResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    user_id: string;
+    full_name: string;
+    user_name: string;
+    email: string;
+    role_id: string | null;
+    role_name: string | null;
+    role_code: string | null;
+    status: "active" | "inactive";
+    last_login: string | null;
+    business_units: Array<{
+      business_unit_id: string;
+      business_unit_name: string;
+    }>;
+  };
+}
+
+// ─── /auth/me API response contract ───────────────────────────────────────────
+
+export interface CurrentUserApiResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    user_id: string;
+    full_name: string;
+    user_name: string;
+    email: string;
+    role_id: string | null;
+    role_name: string | null;
+    role_code: string;
+    status: "active" | "inactive";
+    last_login: string | null;
+    business_units: Array<{
+      business_unit_id: string;
+      business_unit_name: string;
+    }>;
+    permissions: string[];
+    must_change_password: boolean;
+  };
+}
+
+/** Normalised /auth/me data shape used in app UI */
+export interface CurrentUserData {
+  user_id: string;
+  full_name: string;
+  user_name: string;
+  email: string;
+  role_id: string | null;
+  role_name: string | null;
+  role_code: string;
+  status: "active" | "inactive";
+  last_login: string | null;
+  business_units: Array<{
+    business_unit_id: string;
+    business_unit_name: string;
+  }>;
+  permissions: string[];
+  must_change_password: boolean;
+}
 
 export interface Role {
   role_id: string;
@@ -79,13 +144,13 @@ export interface LoginApiResponse {
 
 // Shape of the decoded JWT payload
 export interface JwtPayload {
-  sub: string;           // user_id
+  sub: string; // user_id
   typ: string;
-  roles: string;         // e.g. "GROUP_MANAGEMENT"
+  roles: string; // e.g. "GROUP_MANAGEMENT"
   permission: string[];
   full_name: string;
   email: string;
-  units: string[];       // empty array for cross-unit roles
+  units: string[]; // empty array for cross-unit roles
   unit_name: string;
   must_change_password: boolean;
   iat: number;

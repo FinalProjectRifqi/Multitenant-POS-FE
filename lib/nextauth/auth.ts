@@ -20,16 +20,10 @@ declare module "next-auth" {
   interface User {
     /** From users table */
     user_id: string;
-    username: string;
-    full_name: string;
-    is_active: boolean;
-    /** From roles table (joined) */
-    role_id: string;
+    /** From roles (JWT `roles` claim) */
     role_code: string;
-    role_name: string;
-    /** From units table via user_units (single active unit, nullable) */
+    /** First unit from JWT units[] (nullable — group management has no unit) */
     unit_id: string | null;
-    unit_name: string | null;
     /** Backend access token — used for Authorization: Bearer on API calls */
     access_token: string;
   }
@@ -40,17 +34,10 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      /** From users table */
+      /** Minimal fields — full profile is fetched via GET /auth/me (useMe hook) */
       user_id: string;
-      username: string;
-      full_name: string;
-      /** From roles table */
-      role_id: string;
       role_code: string;
-      role_name: string;
-      /** From units table (nullable) */
       unit_id: string | null;
-      unit_name: string | null;
       /** Backend access token for client-side API calls */
       access_token: string;
     };

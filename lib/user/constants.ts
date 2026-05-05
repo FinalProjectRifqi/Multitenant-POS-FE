@@ -7,7 +7,7 @@ export const STATUS_LABEL: Record<UserStatus, string> = {
 
 export const DEFAULT_USER_FORM_VALUES: CreateUserRequest = {
   full_name: "",
-  username: "",
+  user_name: "",
   email: "",
   password: "",
   role_id: "",

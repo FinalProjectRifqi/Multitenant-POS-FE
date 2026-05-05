@@ -1,53 +1,50 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useCurrentUserContext } from "@/components/dashboard/current-user-context";
 import type { User } from "@/lib/types/auth";
 
 /**
- * useCurrentUser — returns the authenticated user reconstructed from the
- * NextAuth JWT session.
+ * useCurrentUser — returns the authenticated user reconstructed from /auth/me.
+ *
+ * This hook is a thin adapter over useMe() that maps the flat MeData shape
+ * to the nested User shape expected by existing components
+ * (sidebar uses user?.role?.role_code and user?.unit?.unit_name).
  *
  * Returns null when:
- *   - Session is still loading  (status === "loading")
- *   - User is not authenticated (status === "unauthenticated")
- *
- * Because NextAuth's SessionProvider initialises with `data = null` on both
- * server AND client, this hook is fully hydration-safe — no more
- * "server/client mismatch" errors from localStorage reads.
+ *   - /auth/me is still loading
+ *   - /auth/me request failed
  */
 export function useCurrentUser(): User | null {
-  const { data: session } = useSession();
+  const currentUser = useCurrentUserContext();
 
-  if (!session?.user) return null;
+  if (!currentUser) return null;
 
-  const u = session.user;
   const now = new Date().toISOString();
+  const primaryUnit = currentUser.business_units?.[0] ?? null;
 
-  // Re-construct the nested User shape expected by existing components
-  // (sidebar uses user?.role?.role_code and user?.unit?.unit_name)
   return {
-    user_id: u.user_id,
-    role_id: u.role_id,
-    full_name: u.full_name,
-    username: u.username,
-    email: u.email ?? "",
-    last_login_at: null,
-    is_active: true,
+    user_id: currentUser.user_id,
+    role_id: currentUser.role_id ?? "",
+    full_name: currentUser.full_name,
+    username: currentUser.user_name,
+    email: currentUser.email,
+    last_login_at: currentUser.last_login,
+    is_active: currentUser.status === "active",
     created_at: now,
     updated_at: now,
     role: {
-      role_id: u.role_id,
-      role_name: u.role_name,
-      role_code: u.role_code,
+      role_id: currentUser.role_id ?? "",
+      role_name: currentUser.role_name ?? "",
+      role_code: currentUser.role_code,
       description: "",
       is_active: true,
       created_at: now,
       updated_at: now,
     },
-    unit: u.unit_name
+    unit: primaryUnit
       ? {
-          unit_id: u.unit_id ?? "",
-          unit_name: u.unit_name,
+          unit_id: primaryUnit.business_unit_id,
+          unit_name: primaryUnit.business_unit_name,
           unit_address: "",
           phone_number: "",
           status: "active",
