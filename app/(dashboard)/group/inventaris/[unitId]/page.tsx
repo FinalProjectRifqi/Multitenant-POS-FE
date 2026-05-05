@@ -1,78 +1,47 @@
-"use client";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
 
-import { ArrowLeft, Building2 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { GroupInventarisUnitPageContent } from "@/components/inventaris/group-inventaris-unit-page-content";
+import { getInventarisItems, getInventarisStats } from "@/lib/api/inventaris";
+import { inventarisQueryKeys } from "@/lib/queries/inventaris-keys";
 
-import { InventarisView } from "@/components/inventaris/inventaris-view";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useGroupInventarisUnitPage } from "@/lib/inventaris/use-group-inventaris-page";
+type PageProps = {
+  params: Promise<{ unitId: string }>;
+};
 
-export default function Page() {
-  const router = useRouter();
-  const params = useParams<{ unitId: string }>();
-  const unitId = params.unitId;
+export const dynamic = "force-dynamic";
 
-  const p = useGroupInventarisUnitPage(unitId);
+export default async function Page({ params }: PageProps) {
+  const { unitId } = await params;
 
-  const headerSlot = (
-    <section className="space-y-3">
-      {/* Back button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ml-2 gap-1.5 text-muted-foreground hover:text-foreground"
-        onClick={() => router.push("/group/inventaris")}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Kembali ke Pilih Unit
-      </Button>
+  const queryClient = new QueryClient();
 
-      {/* Page heading + unit info */}
-      <div className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          {p.query.isLoading ? (
-            <Skeleton className="h-9 w-72 rounded" />
-          ) : (
-            `Kelola Inventaris${p.selectedUnit ? ` ${p.selectedUnit.business_unit_name}` : ""}`
-          )}
-        </h1>
-
-        {p.query.isLoading ? (
-          <Skeleton className="h-5 w-64 rounded" />
-        ) : p.selectedUnit ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Building2 className="h-4 w-4 shrink-0" />
-            <span>
-              {p.selectedUnit.business_unit_name}
-              <span className="mx-1.5 text-border">•</span>
-              {p.selectedUnit.business_unit_address}
-            </span>
-          </div>
-        ) : (
-          <p className="text-sm text-destructive">
-            Unit usaha tidak ditemukan.
-          </p>
-        )}
-      </div>
-    </section>
-  );
+  if (unitId) {
+    try {
+      await Promise.all([
+        queryClient.prefetchQuery({
+          queryKey: [
+            ...inventarisQueryKeys.lists(unitId),
+            { page: 1, limit: 10 },
+          ],
+          queryFn: () => getInventarisItems(unitId, { page: 1, limit: 10 }),
+        }),
+        queryClient.prefetchQuery({
+          queryKey: inventarisQueryKeys.stats(unitId),
+          queryFn: () => getInventarisStats(unitId),
+        }),
+      ]);
+    } catch (error) {
+      console.error("Failed to prefetch group inventaris:", error);
+    }
+  }
 
   return (
-    <InventarisView
-      canEdit={false}
-      title="Daftar Inventaris Unit Usaha"
-      description={
-        p.selectedUnit
-          ? `Kelola Daftar Inventaris yang Tersedia di ${p.selectedUnit.business_unit_name}`
-          : "Daftar barang inventaris pada unit terpilih"
-      }
-      headerSlot={headerSlot}
-      items={p.items}
-      stats={p.stats}
-      query={p.query}
-      viewingItem={p.viewingItem}
-      setViewingItem={p.setViewingItem}
-    />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <GroupInventarisUnitPageContent unitId={unitId} />
+    </HydrationBoundary>
   );
 }

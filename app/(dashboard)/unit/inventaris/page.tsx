@@ -1,45 +1,45 @@
-"use client";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
 
-import { InventarisView } from "@/components/inventaris/inventaris-view";
-import { useCurrentUser } from "@/lib/hooks/use-current-user";
-import { useUnitInventarisPage } from "@/lib/inventaris/use-unit-inventaris-page";
+import { UnitInventarisPageContent } from "@/components/inventaris/unit-inventaris-page-content";
+import { getInventarisItems, getInventarisStats } from "@/lib/api/inventaris";
+import { auth } from "@/lib/nextauth/auth";
+import { inventarisQueryKeys } from "@/lib/queries/inventaris-keys";
 
-export default function Page() {
-  const currentUser = useCurrentUser();
-  const unitId = currentUser?.unit?.unit_id ?? "";
+export const dynamic = "force-dynamic";
 
-  const p = useUnitInventarisPage(unitId);
+export default async function Page() {
+  const session = await auth();
+  const unitId = session?.user?.unit_id ?? "";
+
+  const queryClient = new QueryClient();
+
+  if (unitId) {
+    try {
+      await Promise.all([
+        queryClient.prefetchQuery({
+          queryKey: [
+            ...inventarisQueryKeys.lists(unitId),
+            { page: 1, limit: 10 },
+          ],
+          queryFn: () => getInventarisItems(unitId, { page: 1, limit: 10 }),
+        }),
+        queryClient.prefetchQuery({
+          queryKey: inventarisQueryKeys.stats(unitId),
+          queryFn: () => getInventarisStats(unitId),
+        }),
+      ]);
+    } catch (error) {
+      console.error("Failed to prefetch inventaris:", error);
+    }
+  }
 
   return (
-    <InventarisView
-      canEdit={true}
-      title="Daftar Inventaris Unit Usaha"
-      description="Seluruh barang inventaris yang terdaftar pada unit usaha Anda"
-      headerSlot={
-        <section className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-            Kelola Inventaris
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Manajemen inventaris barang pada unit usaha Anda
-          </p>
-        </section>
-      }
-      items={p.items}
-      stats={p.stats}
-      query={p.query}
-      viewingItem={p.viewingItem}
-      setViewingItem={p.setViewingItem}
-      isCreateOpen={p.isCreateOpen}
-      setIsCreateOpen={p.setIsCreateOpen}
-      editingItem={p.editingItem}
-      setEditingItem={p.setEditingItem}
-      deletingItem={p.deletingItem}
-      setDeletingItem={p.setDeletingItem}
-      editInitialValues={p.editInitialValues}
-      create={p.create}
-      update={p.update}
-      delete={p.delete}
-    />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <UnitInventarisPageContent />
+    </HydrationBoundary>
   );
 }

@@ -12,6 +12,7 @@ import { validateSchema } from "@/lib/api/validator";
 import { auth } from "@/lib/nextauth/auth";
 
 const DEFAULT_TIMEOUT_IN_MS = 15_000;
+const IS_PRODUCTION_BUILD = process.env.NEXT_PHASE === "phase-production-build";
 
 // Backend base URL — strip trailing slash to keep endpoint paths clean.
 const BASE_URL = (process.env.API_BASE_URL ?? "").replace(/\/$/, "");
@@ -25,7 +26,6 @@ const apiClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 
 /**
  * Extracts a human-readable message from a backend error payload.
@@ -156,11 +156,13 @@ async function request<
       authHeaders["Authorization"] = `Bearer ${session.user.access_token}`;
     }
   } catch (error) {
-    console.warn(
-      "[client.ts] auth() failed — sending request without Authorization header.",
-      "Ensure the calling module has \"use server\" if it imports from client.ts.",
-      error instanceof Error ? error.message : error,
-    );
+    if (!IS_PRODUCTION_BUILD) {
+      console.warn(
+        "[client.ts] auth() failed — sending request without Authorization header.",
+        'Ensure the calling module has "use server" if it imports from client.ts.',
+        error instanceof Error ? error.message : error,
+      );
+    }
   }
 
   const response = await apiClient.request<unknown>({

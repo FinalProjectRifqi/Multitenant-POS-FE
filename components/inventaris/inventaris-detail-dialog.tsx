@@ -10,11 +10,11 @@ import type { InventarisRow } from "@/lib/inventaris/types";
 const INVENTARIS_DETAIL_FIELDS: DetailFieldDef<InventarisRow>[] = [
   {
     label: "Nama Barang",
-    render: (item) => item.item_name,
+    render: (item) => item.inventory_item_name,
   },
   {
     label: "Satuan Pengukuran",
-    render: (item) => item.unit_of_measurement,
+    render: (item) => item.unit_of_measure,
   },
   {
     label: "Stok Saat Ini",
@@ -24,11 +24,11 @@ const INVENTARIS_DETAIL_FIELDS: DetailFieldDef<InventarisRow>[] = [
   },
   {
     label: "Batas Maksimum Stok",
-    render: (item) => item.max_stock,
+    render: (item) => item.max_threshold,
   },
   {
     label: "Batas Minimum Stok",
-    render: (item) => item.min_stock,
+    render: (item) => item.min_threshold,
   },
   {
     label: "Deskripsi Barang Inventaris",
