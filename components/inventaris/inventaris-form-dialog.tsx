@@ -22,11 +22,11 @@ import {
 import { cn } from "@/lib/utils";
 
 const DEFAULT_VALUES: InventarisItemFormValues = {
-  item_name: "",
-  unit_of_measurement: "",
+  inventory_item_name: "",
+  unit_of_measure: "",
   current_stock: 0,
-  max_stock: 1,
-  min_stock: 0,
+  max_threshold: 1,
+  min_threshold: 0,
   description: "",
 };
 
@@ -37,10 +37,64 @@ type InventarisFormDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialValues?: InventarisItemFormValues;
+  showCurrentStockField?: boolean;
   isPending: boolean;
   errorMessage?: string | null;
   onSubmit: (values: InventarisItemFormValues) => Promise<void>;
 };
+
+function mapServerErrorToInventarisField(
+  message: string,
+  showCurrentStockField: boolean,
+): keyof InventarisItemFormValues | null {
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("nama item") ||
+    normalized.includes("nama barang") ||
+    normalized.includes("conflict") ||
+    normalized.includes("sudah digunakan")
+  ) {
+    return "inventory_item_name";
+  }
+
+  if (normalized.includes("satuan") || normalized.includes("unit of measure")) {
+    return "unit_of_measure";
+  }
+
+  if (
+    normalized.includes("minimum") ||
+    normalized.includes("min threshold") ||
+    normalized.includes("batas minimum")
+  ) {
+    return "min_threshold";
+  }
+
+  if (
+    normalized.includes("maksimum") ||
+    normalized.includes("maximum") ||
+    normalized.includes("max threshold") ||
+    normalized.includes("batas maksimum")
+  ) {
+    return "max_threshold";
+  }
+
+  if (
+    showCurrentStockField &&
+    (normalized.includes("stok saat ini") ||
+      (normalized.includes("stok") &&
+        !normalized.includes("minimum") &&
+        !normalized.includes("maksimum")))
+  ) {
+    return "current_stock";
+  }
+
+  if (normalized.includes("deskripsi") || normalized.includes("description")) {
+    return "description";
+  }
+
+  return null;
+}
 
 export function InventarisFormDialog({
   title,
@@ -49,6 +103,7 @@ export function InventarisFormDialog({
   open,
   onOpenChange,
   initialValues = DEFAULT_VALUES,
+  showCurrentStockField = true,
   isPending,
   errorMessage,
   onSubmit,
@@ -64,6 +119,8 @@ export function InventarisFormDialog({
     handleSubmit,
     reset,
     control,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<InventarisItemFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,6 +131,27 @@ export function InventarisFormDialog({
   useEffect(() => {
     if (open) reset(initialValues);
   }, [initialValues, open, reset]);
+
+  const mappedServerField =
+    open && errorMessage
+      ? mapServerErrorToInventarisField(errorMessage, showCurrentStockField)
+      : null;
+
+  const generalErrorMessage =
+    errorMessage && !mappedServerField ? errorMessage : null;
+
+  useEffect(() => {
+    if (!open || !errorMessage || !mappedServerField) return;
+
+    setError(mappedServerField, {
+      type: "server",
+      message: errorMessage,
+    });
+  }, [errorMessage, mappedServerField, open, setError]);
+
+  function clearServerFeedback(field: keyof InventarisItemFormValues): void {
+    clearErrors(field);
+  }
 
   const onFormSubmit = handleSubmit(async (values) => {
     try {
@@ -93,7 +171,7 @@ export function InventarisFormDialog({
       submitLabel={submitLabel}
       submitPendingLabel="Menyimpan..."
       isPending={isPending}
-      errorMessage={errorMessage}
+      errorMessage={generalErrorMessage}
       contentClassName="w-120"
       onSubmit={(event) => {
         void onFormSubmit(event);
@@ -101,39 +179,46 @@ export function InventarisFormDialog({
     >
       {/* Nama Barang */}
       <div className="space-y-2">
-        <Label htmlFor="item_name">Nama Barang</Label>
+        <Label htmlFor="inventory_item_name">Nama Barang</Label>
         <Input
-          id="item_name"
+          id="inventory_item_name"
           placeholder="Masukkan nama barang"
           className={cn(
             "py-5",
-            errors.item_name &&
+            errors.inventory_item_name &&
               "border-destructive focus-visible:ring-destructive",
           )}
-          {...register("item_name")}
+          {...register("inventory_item_name", {
+            onChange: () => clearServerFeedback("inventory_item_name"),
+          })}
         />
-        {errors.item_name && (
-          <p className="text-xs text-destructive">{errors.item_name.message}</p>
+        {errors.inventory_item_name && (
+          <p className="text-xs text-destructive">
+            {errors.inventory_item_name.message}
+          </p>
         )}
       </div>
 
       {/* Satuan Pengukuran */}
       <div className="space-y-2">
-        <Label htmlFor="unit_of_measurement">Satuan Pengukuran</Label>
+        <Label htmlFor="unit_of_measure">Satuan Pengukuran</Label>
         <Controller
-          name="unit_of_measurement"
+          name="unit_of_measure"
           control={control}
           render={({ field }) => (
             <Select
               value={field.value}
-              onValueChange={field.onChange}
+              onValueChange={(value) => {
+                clearServerFeedback("unit_of_measure");
+                field.onChange(value);
+              }}
               disabled={isLoadingUom}
             >
               <SelectTrigger
-                id="unit_of_measurement"
+                id="unit_of_measure"
                 className={cn(
                   "h-10",
-                  errors.unit_of_measurement &&
+                  errors.unit_of_measure &&
                     "border-destructive focus-visible:ring-destructive",
                 )}
               >
@@ -161,72 +246,83 @@ export function InventarisFormDialog({
             </Select>
           )}
         />
-        {errors.unit_of_measurement && (
+        {errors.unit_of_measure && (
           <p className="text-xs text-destructive">
-            {errors.unit_of_measurement.message}
+            {errors.unit_of_measure.message}
           </p>
         )}
       </div>
 
-      {/* Stok Saat Ini */}
-      <div className="space-y-2">
-        <Label htmlFor="current_stock">Stok Saat Ini</Label>
-        <Input
-          id="current_stock"
-          type="number"
-          min={0}
-          placeholder="0"
-          className={cn(
-            "py-5",
-            errors.current_stock &&
-              "border-destructive focus-visible:ring-destructive",
+      {showCurrentStockField && (
+        <div className="space-y-2">
+          <Label htmlFor="current_stock">Stok Saat Ini</Label>
+          <Input
+            id="current_stock"
+            type="number"
+            min={0}
+            placeholder="0"
+            className={cn(
+              "py-5",
+              errors.current_stock &&
+                "border-destructive focus-visible:ring-destructive",
+            )}
+            {...register("current_stock", {
+              onChange: () => clearServerFeedback("current_stock"),
+            })}
+          />
+          {errors.current_stock && (
+            <p className="text-xs text-destructive">
+              {errors.current_stock.message}
+            </p>
           )}
-          {...register("current_stock")}
-        />
-        {errors.current_stock && (
-          <p className="text-xs text-destructive">
-            {errors.current_stock.message}
-          </p>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Batas Maksimum Stok */}
       <div className="space-y-2">
-        <Label htmlFor="max_stock">Batas Maksimum Stok</Label>
+        <Label htmlFor="max_threshold">Batas Maksimum Stok</Label>
         <Input
-          id="max_stock"
+          id="max_threshold"
           type="number"
           min={1}
           placeholder="100"
           className={cn(
             "py-5",
-            errors.max_stock &&
+            errors.max_threshold &&
               "border-destructive focus-visible:ring-destructive",
           )}
-          {...register("max_stock")}
+          {...register("max_threshold", {
+            onChange: () => clearServerFeedback("max_threshold"),
+          })}
         />
-        {errors.max_stock && (
-          <p className="text-xs text-destructive">{errors.max_stock.message}</p>
+        {errors.max_threshold && (
+          <p className="text-xs text-destructive">
+            {errors.max_threshold.message}
+          </p>
         )}
       </div>
 
       {/* Batas Minimum Stok */}
       <div className="space-y-2">
-        <Label htmlFor="min_stock">Batas Minimum Stok</Label>
+        <Label htmlFor="min_threshold">Batas Minimum Stok</Label>
         <Input
-          id="min_stock"
+          id="min_threshold"
           type="number"
           min={0}
           placeholder="10"
           className={cn(
             "py-5",
-            errors.min_stock &&
+            errors.min_threshold &&
               "border-destructive focus-visible:ring-destructive",
           )}
-          {...register("min_stock")}
+          {...register("min_threshold", {
+            onChange: () => clearServerFeedback("min_threshold"),
+          })}
         />
-        {errors.min_stock && (
-          <p className="text-xs text-destructive">{errors.min_stock.message}</p>
+        {errors.min_threshold && (
+          <p className="text-xs text-destructive">
+            {errors.min_threshold.message}
+          </p>
         )}
       </div>
 
@@ -237,9 +333,15 @@ export function InventarisFormDialog({
           id="description"
           placeholder="Deskripsi barang (opsional)"
           className="py-5"
-          {...register("description")}
+          {...register("description", {
+            onChange: () => clearServerFeedback("description"),
+          })}
         />
       </div>
+
+      {generalErrorMessage && (
+        <p className="text-sm text-destructive">{generalErrorMessage}</p>
+      )}
     </CrudFormDialog>
   );
 }

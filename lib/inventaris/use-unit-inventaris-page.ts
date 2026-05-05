@@ -7,7 +7,10 @@ import {
   useCreateInventarisMutation,
   useDeleteInventarisMutation,
   useInventarisItemsQuery,
+  useInventarisStatsQuery,
   useUpdateInventarisMutation,
+  type UpdateInventarisInput,
+  type DeleteInventarisInput,
 } from "@/lib/queries/inventaris";
 import type {
   InventarisItem,
@@ -17,59 +20,67 @@ import { buildInventarisStats } from "./stats";
 import type { InventarisRow } from "./types";
 
 const DEFAULT_FORM_VALUES: InventarisItemFormValues = {
-  item_name: "",
-  unit_of_measurement: "",
+  inventory_item_name: "",
+  unit_of_measure: "",
   current_stock: 0,
-  max_stock: 1,
-  min_stock: 0,
+  max_threshold: 1,
+  min_threshold: 0,
   description: "",
 };
 
-function toInventarisRow(
-  unitId: string,
-  items: InventarisItem[] | undefined,
-): InventarisRow[] {
+function toInventarisRow(items: InventarisItem[] | undefined): InventarisRow[] {
   if (!items) return [];
-  return items
-    .filter((item) => item.unit_id === unitId)
-    .map((item) => ({
-      ...item,
-      is_low_stock: item.current_stock <= item.min_stock,
-    }));
+  return items.map((item) => ({
+    ...item,
+    is_low_stock: item.current_stock <= item.min_threshold,
+  }));
 }
 
-export function useUnitInventarisPage(unitId: string) {
-  const inventarisQuery = useInventarisItemsQuery();
+export function useUnitInventarisPage(businessId: string, unitName?: string) {
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [search, setSearch] = useState("");
+
+  const params = {
+    page: pagination.pageIndex + 1,
+    limit: pagination.pageSize,
+    search: search || undefined,
+  };
+
+  const inventarisQuery = useInventarisItemsQuery(businessId, params);
+  const statsQuery = useInventarisStatsQuery(businessId);
 
   const [viewingItem, setViewingItem] = useState<InventarisRow | null>(null);
 
   const items = useMemo(
-    () => toInventarisRow(unitId, inventarisQuery.data),
-    [unitId, inventarisQuery.data],
+    () => toInventarisRow(inventarisQuery.data?.data),
+    [inventarisQuery.data],
   );
 
-  const stats = useMemo(() => buildInventarisStats(items), [items]);
+  const stats = useMemo(
+    () => buildInventarisStats(statsQuery.data, unitName),
+    [statsQuery.data, unitName],
+  );
 
-  const createMutation = useCreateInventarisMutation();
-  const updateMutation = useUpdateInventarisMutation();
-  const deleteMutation = useDeleteInventarisMutation();
+  const createMutation = useCreateInventarisMutation(businessId);
+  const updateMutation = useUpdateInventarisMutation(businessId);
+  const deleteMutation = useDeleteInventarisMutation(businessId);
 
   const controller = useCrudPageController<
     InventarisRow,
     InventarisItemFormValues,
-    { inventaris_id: string; payload: InventarisItemFormValues },
-    { inventaris_id: string }
+    UpdateInventarisInput,
+    DeleteInventarisInput
   >({
     defaultFormValues: DEFAULT_FORM_VALUES,
     listQuery: {
       data: items,
+      meta: inventarisQuery.data?.meta,
       isLoading: inventarisQuery.isLoading,
       isError: inventarisQuery.isError,
       error: inventarisQuery.error,
     },
     createMutation: {
-      execute: (values) =>
-        createMutation.createInventaris({ ...values, unit_id: unitId }),
+      execute: (values) => createMutation.createInventaris(values),
       isPending: createMutation.isPending,
       error: createMutation.error,
     },
@@ -84,25 +95,29 @@ export function useUnitInventarisPage(unitId: string) {
       error: deleteMutation.error,
     },
     mapEntityToFormValues: (item): InventarisItemFormValues => ({
-      item_name: item.item_name,
-      unit_of_measurement: item.unit_of_measurement,
+      inventory_item_name: item.inventory_item_name,
+      unit_of_measure: item.unit_of_measure,
       current_stock: item.current_stock,
-      max_stock: item.max_stock,
-      min_stock: item.min_stock,
+      max_threshold: item.max_threshold,
+      min_threshold: item.min_threshold,
       description: item.description,
     }),
     toUpdateInput: ({ entity, values }) => ({
-      inventaris_id: entity.inventaris_id,
       payload: values,
+      inventoryItemId: entity.inventory_item_id,
     }),
     toDeleteInput: (entity) => ({
-      inventaris_id: entity.inventaris_id,
+      inventoryItemId: entity.inventory_item_id,
     }),
   });
 
   return {
     items: controller.items,
     stats,
+    pagination,
+    setPagination,
+    search,
+    setSearch,
 
     query: controller.query,
     isCreateOpen: controller.isCreateOpen,

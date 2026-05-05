@@ -7,6 +7,8 @@ import { UnitPageContent } from "../../../../components/unit/unit-page-content";
 import { getUnits } from "@/lib/api/units";
 import { unitQueryKeys } from "@/lib/queries/unit-keys";
 
+export const dynamic = "force-dynamic";
+
 export default async function GroupUnitPage() {
   // Create a new QueryClient for this request (server-side)
   const queryClient = new QueryClient();

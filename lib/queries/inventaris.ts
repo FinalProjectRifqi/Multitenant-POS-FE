@@ -4,65 +4,102 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api/client";
-import { handleApiError } from "@/lib/api/handle-api-error";
+import {
+  handleApiError,
+  shouldHandleMutationErrorGlobally,
+} from "@/lib/api/handle-api-error";
+import { formatApiError } from "@/lib/api/parsed-api-error";
 import {
   createInventarisItem,
   deleteInventarisItem,
   getInventarisItems,
+  getInventarisStats,
   updateInventarisItem,
-  type CreateInventarisInput,
-  type DeleteInventarisInput,
-  type UpdateInventarisInput,
+  type ListInventarisParams,
 } from "@/lib/api/inventaris";
 import { removeEntityByKey, upsertEntityByKey } from "@/lib/queries/crud";
-import type { InventarisItem } from "@/lib/schemas/inventaris";
-
-// ─── Query keys ───────────────────────────────────────────────────────────────
-
-export const inventarisQueryKeys = {
-  all: ["inventaris"] as const,
-  lists: () => [...inventarisQueryKeys.all, "list"] as const,
-};
+import { inventarisQueryKeys } from "@/lib/queries/inventaris-keys";
+import type {
+  InventarisItem,
+  InventarisListResponse,
+} from "@/lib/schemas/inventaris";
+import type { InventarisItemFormValues } from "@/lib/schemas/inventaris";
 
 // ─── Cache helpers ────────────────────────────────────────────────────────────
 
-function useInventarisListCache() {
+function useInventarisListCache(businessId: string) {
   const queryClient = useQueryClient();
 
   const setListCache = (
     updater: (current: InventarisItem[]) => InventarisItem[],
   ) => {
-    queryClient.setQueryData<InventarisItem[]>(
-      inventarisQueryKeys.lists(),
-      (current = []) => updater(current),
+    queryClient.setQueriesData<InventarisListResponse>(
+      { queryKey: inventarisQueryKeys.lists(businessId) },
+      (current) => {
+        if (!current) return current;
+        return { ...current, data: updater(current.data ?? []) };
+      },
     );
   };
 
   const invalidateList = () =>
-    queryClient.invalidateQueries({ queryKey: inventarisQueryKeys.lists() });
+    queryClient.invalidateQueries({
+      queryKey: inventarisQueryKeys.lists(businessId),
+    });
 
-  return { queryClient, setListCache, invalidateList };
+  const invalidateStats = () =>
+    queryClient.invalidateQueries({
+      queryKey: inventarisQueryKeys.stats(businessId),
+    });
+
+  return { queryClient, setListCache, invalidateList, invalidateStats };
 }
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
-export function useInventarisItemsQuery() {
+export function useInventarisItemsQuery(
+  businessId: string,
+  params?: ListInventarisParams,
+) {
   return useQuery({
-    queryKey: inventarisQueryKeys.lists(),
-    queryFn: getInventarisItems,
+    queryKey: [...inventarisQueryKeys.lists(businessId), params],
+    queryFn: () => getInventarisItems(businessId, params),
+    enabled: !!businessId,
+    meta: { errorTitle: "Gagal Memuat Data Inventaris" },
+  });
+}
+
+export function useInventarisStatsQuery(businessId: string) {
+  return useQuery({
+    queryKey: inventarisQueryKeys.stats(businessId),
+    queryFn: () => getInventarisStats(businessId),
+    enabled: !!businessId,
+    meta: { errorTitle: "Gagal Memuat Statistik Inventaris" },
   });
 }
 
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
-export function useCreateInventarisMutation() {
-  const { setListCache, invalidateList } = useInventarisListCache();
+export type CreateInventarisInput = InventarisItemFormValues;
+export type UpdateInventarisInput = {
+  inventoryItemId: string;
+  payload: InventarisItemFormValues;
+};
+export type DeleteInventarisInput = { inventoryItemId: string };
+
+export function useCreateInventarisMutation(businessId: string) {
+  const { setListCache, invalidateList, invalidateStats } =
+    useInventarisListCache(businessId);
 
   const mutation = useMutation({
-    mutationFn: (input: CreateInventarisInput) => createInventarisItem(input),
+    mutationFn: async (payload: InventarisItemFormValues) => {
+      const result = await createInventarisItem(businessId, payload);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+      return result.data;
+    },
     onSuccess: (created) => {
       setListCache((current) =>
-        upsertEntityByKey(current, created, "inventaris_id"),
+        upsertEntityByKey(current, created, "inventory_item_id"),
       );
       toast.success("Barang Inventaris Berhasil Ditambahkan", {
         position: "top-right",
@@ -71,9 +108,14 @@ export function useCreateInventarisMutation() {
       });
     },
     onError: (error) => {
-      handleApiError(error, { title: "Barang Inventaris Gagal Ditambahkan" });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
-    onSettled: () => invalidateList(),
+    onSettled: () => {
+      invalidateList();
+      invalidateStats();
+    },
   });
 
   return {
@@ -83,23 +125,30 @@ export function useCreateInventarisMutation() {
   };
 }
 
-export function useUpdateInventarisMutation() {
-  const { queryClient, setListCache, invalidateList } =
-    useInventarisListCache();
+export function useUpdateInventarisMutation(businessId: string) {
+  const { queryClient, setListCache, invalidateList, invalidateStats } =
+    useInventarisListCache(businessId);
 
   const mutation = useMutation({
-    mutationFn: (input: UpdateInventarisInput) => updateInventarisItem(input),
+    mutationFn: async (input: UpdateInventarisInput) => {
+      const result = await updateInventarisItem(
+        businessId,
+        input.inventoryItemId,
+        input.payload,
+      );
+      if (!result.ok) throw formatApiError(result.status, result.message);
+      return result.data;
+    },
     onMutate: async (input) => {
       await queryClient.cancelQueries({
-        queryKey: inventarisQueryKeys.lists(),
+        queryKey: inventarisQueryKeys.lists(businessId),
       });
-      const previous =
-        queryClient.getQueryData<InventarisItem[]>(
-          inventarisQueryKeys.lists(),
-        ) ?? [];
+      const previous = queryClient.getQueriesData<InventarisListResponse>({
+        queryKey: inventarisQueryKeys.lists(businessId),
+      });
       setListCache((current) =>
         current.map((item) =>
-          item.inventaris_id === input.inventaris_id
+          item.inventory_item_id === input.inventoryItemId
             ? {
                 ...item,
                 ...input.payload,
@@ -112,7 +161,7 @@ export function useUpdateInventarisMutation() {
     },
     onSuccess: (updated) => {
       setListCache((current) =>
-        upsertEntityByKey(current, updated, "inventaris_id"),
+        upsertEntityByKey(current, updated, "inventory_item_id"),
       );
       toast.success("Barang Inventaris Berhasil Diperbarui", {
         position: "top-right",
@@ -122,12 +171,18 @@ export function useUpdateInventarisMutation() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(inventarisQueryKeys.lists(), context.previous);
+        context.previous.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
-      console.log("Gagal memperbarui barang inventaris:", { error });
-      handleApiError(error, { title: "Barang Inventaris Gagal Diperbarui" });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
-    onSettled: () => invalidateList(),
+    onSettled: () => {
+      invalidateList();
+      invalidateStats();
+    },
   });
 
   return {
@@ -137,27 +192,38 @@ export function useUpdateInventarisMutation() {
   };
 }
 
-export function useDeleteInventarisMutation() {
-  const { queryClient, setListCache, invalidateList } =
-    useInventarisListCache();
+export function useDeleteInventarisMutation(businessId: string) {
+  const { queryClient, setListCache, invalidateList, invalidateStats } =
+    useInventarisListCache(businessId);
 
   const mutation = useMutation({
-    mutationFn: (input: DeleteInventarisInput) => deleteInventarisItem(input),
+    mutationFn: async (input: DeleteInventarisInput) => {
+      const result = await deleteInventarisItem(
+        businessId,
+        input.inventoryItemId,
+      );
+      if (!result.ok) throw formatApiError(result.status, result.message);
+    },
     onMutate: async (input) => {
       await queryClient.cancelQueries({
-        queryKey: inventarisQueryKeys.lists(),
+        queryKey: inventarisQueryKeys.lists(businessId),
       });
-      const previous =
-        queryClient.getQueryData<InventarisItem[]>(
-          inventarisQueryKeys.lists(),
-        ) ?? [];
-      const target = previous.find(
-        (item) => item.inventaris_id === input.inventaris_id,
-      );
+      const previous = queryClient.getQueriesData<InventarisListResponse>({
+        queryKey: inventarisQueryKeys.lists(businessId),
+      });
+      let deletedName = "Barang";
+      previous.forEach(([, data]) => {
+        if (data?.data) {
+          const found = data.data.find(
+            (item) => item.inventory_item_id === input.inventoryItemId,
+          );
+          if (found) deletedName = found.inventory_item_name;
+        }
+      });
       setListCache((current) =>
-        removeEntityByKey(current, "inventaris_id", input.inventaris_id),
+        removeEntityByKey(current, "inventory_item_id", input.inventoryItemId),
       );
-      return { previous, deletedName: target?.item_name ?? "Barang" };
+      return { previous, deletedName };
     },
     onSuccess: (_result, _input, context) => {
       toast.success("Barang Inventaris Berhasil Dihapus", {
@@ -169,11 +235,18 @@ export function useDeleteInventarisMutation() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(inventarisQueryKeys.lists(), context.previous);
+        context.previous.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
-      handleApiError(error, { title: "Barang Inventaris Gagal Dihapus" });
+      if (shouldHandleMutationErrorGlobally(error)) {
+        handleApiError(error);
+      }
     },
-    onSettled: () => invalidateList(),
+    onSettled: () => {
+      invalidateList();
+      invalidateStats();
+    },
   });
 
   return {

@@ -1,24 +1,31 @@
 import type { StatItem } from "@/components/shared/stats-grid";
-import type { InventarisRow } from "@/lib/inventaris/types";
+import type { InventarisStats } from "@/lib/schemas/inventaris";
 
-export function buildInventarisStats(items: InventarisRow[]): StatItem[] {
-  const lowStockCount = items.filter((item) => item.is_low_stock).length;
-
+export function buildInventarisStats(
+  stats: InventarisStats | undefined,
+  unitName?: string,
+): StatItem[] {
+  const unitLabel = unitName ? `pada ${unitName}` : "yang terdaftar";
   return [
     {
-      label: "Total Item Inventaris",
-      value: items.length,
-      description: "Seluruh item yang terdaftar di sistem",
+      label: "Total Inventaris",
+      value: stats?.total_inventory_item ?? 0,
+      description: `Semua Inventaris yang terdaftar ${unitLabel}`,
     },
     {
-      label: "Inventaris Tersedia",
-      value: items.length - lowStockCount,
-      description: "Item dengan stok mencukupi",
+      label: "Jumlah Stok Inventaris Tersedia",
+      value: stats?.inventory_item_normal_stock ?? 0,
+      description: "Inventaris yang dapat dipakai",
     },
     {
-      label: "Inventaris Menipis",
-      value: lowStockCount,
-      description: "Item yang perlu segera direstok",
+      label: "Jumlah Inventaris Stok Rendah",
+      value: stats?.inventory_item_low_stock ?? 0,
+      description: "Inventaris yang perlu restok",
+    },
+    {
+      label: "Jumlah Inventaris Stok Habis",
+      value: stats?.inventory_item_out_of_stock ?? 0,
+      description: "Inventaris yang tidak tersedia",
     },
   ];
 }
