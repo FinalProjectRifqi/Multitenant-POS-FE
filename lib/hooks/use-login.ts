@@ -8,15 +8,32 @@ import type { LoginFormValues } from "@/lib/schemas/auth";
 import { toast } from "sonner";
 
 /**
+ * Validates that a callbackUrl is safe to redirect to:
+ * - must be a relative path starting with "/"
+ * - must NOT start with "//" (prevents open redirect to //evil.com)
+ * - must NOT be the login page itself (prevents infinite loop)
+ */
+function isSafeCallbackUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  return (
+    url.startsWith("/") &&
+    !url.startsWith("//") &&
+    !url.startsWith("/login") &&
+    url.length <= 500
+  );
+}
+
+/**
  * useLogin — encapsulates the full login lifecycle using NextAuth Credentials.
  *
  *   1. Calls `signIn("credentials")` → NextAuth calls our `authorize()` function
- *   2. On success: reads the role from the session, redirects to the role dashboard
+ *   2. On success: redirects to callbackUrl (if safe) or role dashboard
  *   3. On failure: shows a toast with the error message
  *
- * Using `redirect: false` so we handle the redirect ourselves (role-based routing).
+ * @param callbackUrl - Optional URL to redirect to after successful login.
+ *   Pass the raw value from the URL search params; this hook validates it.
  */
-export function useLogin() {
+export function useLogin(callbackUrl?: string) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,13 +65,6 @@ export function useLogin() {
         return;
       }
 
-      // Session updated — fetch the role from the new session to route correctly.
-      // We re-fetch /api/auth/session (NextAuth endpoint) to read the JWT claims.
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
-      const roleCode: string = session?.user?.role_code ?? "";
-      const route = getDashboardRoute(roleCode);
-
       toast.success("Login berhasil!", {
         description: "Anda berhasil login ke sistem POS.",
         position: "top-right",
@@ -62,6 +72,17 @@ export function useLogin() {
         duration: 3000,
       });
 
+      // Redirect to callbackUrl if it's safe, otherwise to the role dashboard.
+      if (isSafeCallbackUrl(callbackUrl)) {
+        router.push(callbackUrl);
+        return;
+      }
+
+      // Session updated — fetch role to determine the correct dashboard route.
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+      const roleCode: string = session?.user?.role_code ?? "";
+      const route = getDashboardRoute(roleCode);
       router.push(route);
     } catch {
       const message = "Terjadi kesalahan. Silakan coba lagi.";

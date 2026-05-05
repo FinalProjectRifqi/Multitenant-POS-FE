@@ -129,8 +129,21 @@ export const proxy = auth((request) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // ── 3. Authenticated + /login → role-appropriate dashboard ─────────────────
+  // ── 3. Authenticated + /login → callbackUrl or role-appropriate dashboard ──
   if (pathname === LOGIN_PATH && isAuthenticated && isTokenValid) {
+    const rawCallback = request.nextUrl.searchParams.get("callbackUrl");
+    // Validate callback URL: must be a relative path starting with "/" but NOT
+    // starting with "//" (prevents open redirect to //evil.com) and not /login itself.
+    const isValidCallback =
+      rawCallback &&
+      rawCallback.startsWith("/") &&
+      !rawCallback.startsWith("//") &&
+      !rawCallback.startsWith(LOGIN_PATH);
+    if (isValidCallback) {
+      return NextResponse.redirect(
+        new URL(rawCallback, request.nextUrl.origin),
+      );
+    }
     const dashboardPath = getDashboardRoute(roleCode ?? "");
     const dashboardUrl = new URL(dashboardPath, request.nextUrl.origin);
     return NextResponse.redirect(dashboardUrl);

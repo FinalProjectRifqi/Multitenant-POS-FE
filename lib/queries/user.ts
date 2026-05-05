@@ -17,6 +17,7 @@ import { removeEntityByKey, upsertEntityByKey } from "@/lib/queries/crud";
 import { UsersListResponse } from "@/lib/schemas/user";
 import { CreateUserRequest, UserEntity } from "@/lib/types/user";
 import { formatApiError } from "../api/parsed-api-error";
+import { currentUserQueryKeys } from "./current-user";
 import { userQueryKeys } from "./user-keys";
 import {
   shouldHandleMutationErrorGlobally,
@@ -41,11 +42,16 @@ function useUserListCache() {
 
   const invalidateList = () =>
     queryClient.invalidateQueries({ queryKey: userQueryKeys.lists() });
+  const invalidateCurrentUser = () =>
+    queryClient.invalidateQueries({
+      queryKey: currentUserQueryKeys.currentUser(),
+    });
 
   return {
     queryClient,
     setListCache,
     invalidateList,
+    invalidateCurrentUser,
   };
 }
 
@@ -75,7 +81,8 @@ export function useUsersQuery(
 }
 
 export function useCreateUserMutation() {
-  const { setListCache, invalidateList } = useUserListCache();
+  const { setListCache, invalidateList, invalidateCurrentUser } =
+    useUserListCache();
 
   const mutation = useMutation({
     mutationFn: async (payload: CreateUserRequest) => {
@@ -105,6 +112,7 @@ export function useCreateUserMutation() {
     },
     onSettled: () => {
       invalidateList();
+      void invalidateCurrentUser();
     },
   });
 
@@ -117,7 +125,8 @@ export function useCreateUserMutation() {
 }
 
 export function useUpdateUserMutation() {
-  const { queryClient, setListCache, invalidateList } = useUserListCache();
+  const { queryClient, setListCache, invalidateList, invalidateCurrentUser } =
+    useUserListCache();
 
   const mutation = useMutation({
     mutationFn: async (input: UpdateUserInput) => {
@@ -173,6 +182,7 @@ export function useUpdateUserMutation() {
     },
     onSettled: () => {
       invalidateList();
+      void invalidateCurrentUser();
     },
   });
 
@@ -185,7 +195,8 @@ export function useUpdateUserMutation() {
 }
 
 export function useDeleteUserMutation() {
-  const { queryClient, setListCache, invalidateList } = useUserListCache();
+  const { queryClient, setListCache, invalidateList, invalidateCurrentUser } =
+    useUserListCache();
 
   const mutation = useMutation({
     mutationFn: async (input: DeleteUserInput) => {
@@ -239,6 +250,7 @@ export function useDeleteUserMutation() {
     },
     onSettled: () => {
       invalidateList();
+      void invalidateCurrentUser();
     },
   });
 

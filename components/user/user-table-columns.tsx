@@ -38,7 +38,7 @@ export function buildUserColumns(
         const query = filterValue.toLowerCase();
         return [
           user.full_name,
-          user.username,
+          user.user_name,
           user.email,
           user.role_name,
           formatUnits(user),
@@ -51,7 +51,7 @@ export function buildUserColumns(
             {row.original.full_name}
           </p>
           <p className="text-xs text-muted-foreground">
-            {row.original.username}
+            {row.original.user_name}
           </p>
         </div>
       ),
@@ -121,7 +121,7 @@ export function buildUserColumns(
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={`Aksi untuk ${user.username}`}
+                aria-label={`Aksi untuk ${user.user_name}`}
               >
                 <MoreHorizontal className="size-4" />
               </Button>

@@ -7,6 +7,8 @@ import { UserPageContent } from "@/components/user/user-page-content";
 import { getUsers } from "@/lib/api/users";
 import { userQueryKeys } from "@/lib/queries/user-keys";
 
+export const dynamic = "force-dynamic";
+
 export default async function GroupUserPage() {
   // Create a new QueryClient for this request (server-side)
   const queryClient = new QueryClient();
