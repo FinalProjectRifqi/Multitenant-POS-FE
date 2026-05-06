@@ -1,15 +1,15 @@
 import type { StatItem } from "@/components/shared/stats-grid";
 import { formatCurrency } from "@/lib/menu/constants";
-import type { MenuItemRow } from "@/lib/menu/types";
+import type { MenuRow } from "@/lib/menu/types";
 
-export function buildMenuStats(items: MenuItemRow[]): StatItem[] {
+export function buildMenuStats(items: MenuRow[]): StatItem[] {
   const availableCount = items.filter((item) => item.is_available).length;
 
   const averagePrice =
     items.length === 0
       ? 0
       : Math.round(
-          items.reduce((total, item) => total + item.item_price, 0) /
+          items.reduce((total, item) => total + item.menu_price, 0) /
             items.length,
         );
 

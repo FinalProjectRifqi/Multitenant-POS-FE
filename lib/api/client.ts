@@ -169,7 +169,13 @@ async function request<
     method,
     url,
     data: body,
-    headers: authHeaders,
+    headers: {
+      ...authHeaders,
+      "Content-Type":
+        typeof FormData !== "undefined" && body instanceof FormData
+          ? "multipart/form-data"
+          : "application/json",
+    },
     ...requestOptions,
   });
 
