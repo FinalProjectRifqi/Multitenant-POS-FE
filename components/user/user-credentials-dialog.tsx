@@ -28,7 +28,9 @@ export function UserCredentialsDialog({
   onOpenChange,
   credentials,
 }: UserCredentialsDialogProps) {
-  const [copiedField, setCopiedField] = useState<"user_name" | "password" | null>(null);
+  const [copiedField, setCopiedField] = useState<
+    "user_name" | "password" | null
+  >(null);
 
   if (!credentials) return null;
 
@@ -36,12 +38,15 @@ export function UserCredentialsDialog({
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
-      toast.success(`${field === "user_name" ? "Username" : "Password"} berhasil disalin`, {
-        description: "Teks telah disalin ke clipboard.",
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      toast.success(
+        `${field === "user_name" ? "Username" : "Password"} berhasil disalin`,
+        {
+          description: "Teks telah disalin ke clipboard.",
+          position: "top-right",
+          richColors: true,
+          duration: 3000,
+        },
+      );
       setTimeout(() => setCopiedField(null), 2000);
     } catch {
       toast.error("Gagal menyalin ke clipboard", {
@@ -72,8 +77,8 @@ export function UserCredentialsDialog({
                 value={credentials.user_name}
                 className="pr-10"
               />
-              <button
-                type="button"
+              <Button
+                type="Button"
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted"
                 onClick={() => handleCopy("user_name", credentials.user_name)}
               >
@@ -83,10 +88,10 @@ export function UserCredentialsDialog({
                   <Copy className="size-4 text-muted-foreground" />
                 )}
                 <span className="sr-only">Copy username</span>
-              </button>
+              </Button>
             </div>
           </div>
-          
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="copy-password">Password</Label>
             <div className="relative">
@@ -96,10 +101,12 @@ export function UserCredentialsDialog({
                 value={credentials.password ?? ""}
                 className="pr-10"
               />
-              <button
-                type="button"
+              <Button
+                type="Button"
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted"
-                onClick={() => handleCopy("password", credentials.password ?? "")}
+                onClick={() =>
+                  handleCopy("password", credentials.password ?? "")
+                }
               >
                 {copiedField === "password" ? (
                   <Check className="size-4 text-green-500" />
@@ -107,7 +114,7 @@ export function UserCredentialsDialog({
                   <Copy className="size-4 text-muted-foreground" />
                 )}
                 <span className="sr-only">Copy password</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

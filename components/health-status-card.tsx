@@ -11,14 +11,14 @@ export function HealthStatusCard() {
     <section className="w-full rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-zinc-900">Health Check</h2>
-        <button
-          type="button"
+        <Button
+          type="Button"
           onClick={() => refetch()}
           disabled={isFetching}
           className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
         >
           {isFetching ? "Refreshing..." : "Refetch"}
-        </button>
+        </Button>
       </div>
 
       {isPending && (

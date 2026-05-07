@@ -76,8 +76,8 @@ export default function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
             disabled={isPending}
             {...register("password")}
           />
-          <button
-            type="button"
+          <Button
+            type="Button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
             disabled={isPending}
@@ -87,7 +87,7 @@ export default function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
             ) : (
               <Eye className="h-4 w-4" />
             )}
-          </button>
+          </Button>
         </div>
         {errors.password && (
           <span className="text-xs text-destructive">

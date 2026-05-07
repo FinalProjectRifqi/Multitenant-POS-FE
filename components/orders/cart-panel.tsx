@@ -16,7 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CartItem, OrderTypeEntity } from "@/lib/orders/types";
 import { cn } from "@/lib/utils";
@@ -45,28 +44,23 @@ interface CartPanelProps {
   mode: "create" | "edit";
   orderNumber?: string;
   className?: string;
-  // Order type
   orderTypes: OrderTypeEntity[];
   orderTypeId: string;
   onOrderTypeChange: (id: string) => void;
   isDineIn: boolean;
-  // Customer info
   customerName: string;
   onCustomerNameChange: (v: string) => void;
   tableNumber: string;
   onTableNumberChange: (v: string) => void;
   orderNotes: string;
   onOrderNotesChange: (v: string) => void;
-  // Cart
   cart: CartItem[];
   onUpdateQty: (menuItemId: string, delta: number) => void;
   onRemoveItem: (menuItemId: string) => void;
   onClearCart: () => void;
-  // Totals
   subtotal: number;
   taxAmount: number;
   totalAmount: number;
-  // Submit
   onSubmit: () => void;
   isMutating: boolean;
 }
@@ -103,211 +97,248 @@ export function CartPanel({
   return (
     <aside
       className={cn(
-        "flex flex-col border border-border rounded-2xl bg-card overflow-hidden shrink-0 self-start",
+        "flex flex-col bg-[#FAF8F6] overflow-hidden",
+        "max-lg:border max-lg:border-border max-lg:rounded-2xl",
         className,
       )}
     >
-      {/* ── Header ── */}
-      <div className="px-5 pt-5 pb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <ClipboardList className="h-4 w-4 text-muted-foreground shrink-0" />
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Icon container */}
+          <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+          </div>
           <div className="min-w-0">
-            {orderNumber ? (
-              <>
-                <h2 className="font-semibold text-sm leading-tight">Pesanan</h2>
-                <p className="text-xs text-muted-foreground">{orderNumber}</p>
-              </>
-            ) : (
-              <h2 className="font-semibold text-sm leading-tight">
-                Pesanan Baru
-              </h2>
+            <h2 className="font-bold text-sm leading-tight">
+              {orderNumber ? "Pesanan" : "Pesanan Baru"}
+            </h2>
+            {orderNumber && (
+              <p className="text-xs text-muted-foreground font-medium">
+                {orderNumber}
+              </p>
             )}
           </div>
         </div>
+
+        {/* "Hapus Semua" — pill Button style */}
         {!isEmpty && (
-          <button
-            type="button"
-            className="text-xs text-destructive hover:underline underline-offset-2 shrink-0"
+          <Button
+            type="Button"
             onClick={onClearCart}
+            className="text-xs font-semibold text-destructive border border-destructive/30 bg-destructive/5 hover:bg-destructive/10 rounded-full px-3 py-1.5 transition-colors shrink-0"
           >
             Hapus Semua
-          </button>
+          </Button>
         )}
       </div>
 
-      <Separator />
+      {/* Divider */}
+      <div className="h-px bg-border shrink-0 mx-0" />
 
-      {/* ── Scrollable body ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {/* Order type toggle — shadcn Tabs */}
+      {/* ── Scrollable body ─────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {/* Order type tabs */}
         {orderTypes.length > 0 && (
-          <Tabs value={orderTypeId} onValueChange={onOrderTypeChange}>
-            <TabsList className="w-full h-auto p-1">
-              {orderTypes.map((ot) => (
-                <TabsTrigger
-                  key={ot.order_type_id}
-                  value={ot.order_type_id}
-                  className="flex-1 gap-1.5 py-2 text-xs font-medium"
-                >
-                  {getOrderTypeIcon(ot.order_type_code)}
-                  {ot.order_type_name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        )}
-
-        {/* Customer name */}
-        <div className="space-y-1.5">
-          <Label
-            htmlFor="customer_name"
-            className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-          >
-            Nama Pelanggan
-          </Label>
-          <Input
-            id="customer_name"
-            placeholder="Nama pelanggan..."
-            value={customerName}
-            onChange={(e) => onCustomerNameChange(e.target.value)}
-            className="h-9 text-sm"
-          />
-        </div>
-
-        {/* Table number — only for Dine In */}
-        {isDineIn && (
-          <div className="space-y-1.5">
-            <Label
-              htmlFor="table_number"
-              className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-            >
-              Nomor Meja
-            </Label>
-            <Input
-              id="table_number"
-              placeholder="Nomor meja..."
-              value={tableNumber}
-              onChange={(e) => onTableNumberChange(e.target.value)}
-              className="h-9 text-sm"
-            />
+          <div className="px-4 pt-4 pb-3">
+            <Tabs value={orderTypeId} onValueChange={onOrderTypeChange}>
+              <TabsList className="w-full h-auto p-1.5 bg-muted rounded-xl">
+                {orderTypes.map((ot) => (
+                  <TabsTrigger
+                    key={ot.order_type_id}
+                    value={ot.order_type_id}
+                    className={cn(
+                      "flex-1 gap-2 py-2.5 text-sm font-medium rounded-lg transition-all",
+                      "data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground",
+                      "data-[state=inactive]:text-muted-foreground",
+                    )}
+                  >
+                    {getOrderTypeIcon(ot.order_type_code)}
+                    {ot.order_type_name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
         )}
 
-        {/* Notes */}
-        <div className="space-y-1.5">
-          <Label
-            htmlFor="order_notes"
-            className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-          >
-            Catatan <span className="normal-case font-normal">(opsional)</span>
-          </Label>
-          <Input
-            id="order_notes"
-            placeholder="Catatan pesanan..."
-            value={orderNotes}
-            onChange={(e) => onOrderNotesChange(e.target.value)}
-            className="h-9 text-sm"
-          />
+        {/* Divider */}
+        <div className="h-px bg-border mx-0" />
+
+        {/* Customer fields */}
+        <div className="px-4 py-4 space-y-4">
+          {/* Customer name */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="customer_name"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+            >
+              Nama Pelanggan
+            </Label>
+            <Input
+              id="customer_name"
+              placeholder="Masukkan nama..."
+              value={customerName}
+              onChange={(e) => onCustomerNameChange(e.target.value)}
+              className="h-10 text-sm bg-muted/40 border-muted-foreground/20 rounded-xl"
+            />
+          </div>
+
+          {/* Table number — Dine In only */}
+          {isDineIn && (
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="table_number"
+                className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+              >
+                Nomor Meja
+              </Label>
+              <Input
+                id="table_number"
+                placeholder="Nomor meja..."
+                value={tableNumber}
+                onChange={(e) => onTableNumberChange(e.target.value)}
+                className="h-10 text-sm bg-muted/40 border-muted-foreground/20 rounded-xl"
+              />
+            </div>
+          )}
+
+          {/* Notes */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="order_notes"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+            >
+              Catatan{" "}
+              <span className="normal-case font-normal tracking-normal">
+                (opsional)
+              </span>
+            </Label>
+            <Input
+              id="order_notes"
+              placeholder="Catatan pesanan..."
+              value={orderNotes}
+              onChange={(e) => onOrderNotesChange(e.target.value)}
+              className="h-10 text-sm bg-muted/40 border-muted-foreground/20 rounded-xl"
+            />
+          </div>
         </div>
 
-        <Separator />
+        {/* Divider */}
+        <div className="h-px bg-border mx-0" />
 
-        {/* Cart items */}
+        {/* ── Cart items ─────────────────────────────────────────────────── */}
         {isEmpty ? (
-          <p className="text-center text-sm text-muted-foreground py-6">
+          <p className="text-center text-sm text-muted-foreground py-10 px-4">
             Belum ada item dalam pesanan
           </p>
         ) : (
-          <ul className="space-y-3.5">
-            {cart.map((item) => (
-              <li key={item.menu_item_id} className="flex items-start gap-2">
-                {/* Qty prefix */}
-                <span className="text-xs font-bold text-primary shrink-0 mt-0.5 w-5 text-right">
-                  {item.quantity}×
-                </span>
+          <ul>
+            {cart.map((item, index) => (
+              <>
+                <li
+                  key={item.menu_item_id}
+                  className="flex items-center gap-3 px-4 py-3.5"
+                >
+                  {/* Qty badge */}
+                  <span className="text-xs font-bold text-muted-foreground bg-muted rounded-lg h-7 w-7 flex items-center justify-center shrink-0">
+                    {item.quantity}×
+                  </span>
 
-                {/* Name + controls + total price */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-1.5">
-                    <p className="text-sm font-medium leading-tight truncate">
+                  {/* Name + price */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold leading-tight truncate">
                       {item.menu_item_name}
                     </p>
-                    {/* Controls */}
-                    <div className="flex items-center gap-0.5 shrink-0">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-5 w-5 rounded-full"
-                        onClick={() => onUpdateQty(item.menu_item_id, -1)}
-                      >
-                        <Minus className="h-2.5 w-2.5" />
-                      </Button>
-                      <span className="w-4 text-center text-xs font-medium">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-5 w-5 rounded-full"
-                        onClick={() => onUpdateQty(item.menu_item_id, 1)}
-                      >
-                        <Plus className="h-2.5 w-2.5" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-5 w-5 text-muted-foreground hover:text-destructive"
-                        onClick={() => onRemoveItem(item.menu_item_id)}
-                      >
-                        <Trash2 className="h-2.5 w-2.5" />
-                      </Button>
-                    </div>
+                    <p className="text-xs font-semibold text-primary mt-0.5">
+                      {formatRupiah(item.item_price * item.quantity)}
+                    </p>
                   </div>
-                  {/* Total per item */}
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formatRupiah(item.item_price * item.quantity)}
-                  </p>
-                </div>
-              </li>
+
+                  {/* Controls */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Minus — outline circle */}
+                    <Button
+                      type="Button"
+                      onClick={() => onUpdateQty(item.menu_item_id, -1)}
+                      className="h-7 w-7 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted transition-colors"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+
+                    <span className="w-5 text-center text-sm font-bold">
+                      {item.quantity}
+                    </span>
+
+                    {/* Plus — filled primary */}
+                    <Button
+                      type="Button"
+                      onClick={() => onUpdateQty(item.menu_item_id, 1)}
+                      className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+
+                    {/* Trash */}
+                    <Button
+                      type="Button"
+                      onClick={() => onRemoveItem(item.menu_item_id)}
+                      className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors ml-0.5"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </li>
+
+                {/* Row divider between items */}
+                {index < cart.length - 1 && (
+                  <div
+                    key={`sep-${item.menu_item_id}`}
+                    className="h-px bg-border/60 mx-4"
+                  />
+                )}
+              </>
             ))}
           </ul>
         )}
       </div>
 
-      {/* ── Totals + submit ── */}
-      <div className="px-4 pt-3 pb-4 border-t border-border space-y-3">
-        {/* Subtotal + tax */}
-        <div className="space-y-1.5 text-sm">
-          <div className="flex justify-between text-muted-foreground">
+      {/* ── Footer: totals + submit (always pinned to bottom) ────────────── */}
+      <div className="shrink-0 border-t border-border bg-background">
+        {/* Subtotal rows */}
+        <div className="px-5 pt-4 pb-3 space-y-2">
+          <div className="flex justify-between text-sm text-muted-foreground">
             <span>Subtotal ({totalQty} item)</span>
-            <span>{formatRupiah(subtotal)}</span>
+            <span className="font-medium text-foreground">
+              {formatRupiah(subtotal)}
+            </span>
           </div>
-          <div className="flex justify-between text-muted-foreground">
+          <div className="flex justify-between text-sm text-muted-foreground">
             <span>Pajak (10%)</span>
-            <span>{formatRupiah(taxAmount)}</span>
+            <span className="font-medium text-foreground">
+              {formatRupiah(taxAmount)}
+            </span>
           </div>
         </div>
 
-        {/* Total dark card */}
-        <div className="bg-primary rounded-2xl p-4">
-          <div className="mb-3">
-            <p className="text-[10px] font-semibold text-primary-foreground/70 uppercase tracking-widest mb-0.5">
-              Total Pembayaran
-            </p>
-            <p className="text-2xl font-bold text-primary-foreground">
-              {formatRupiah(totalAmount)}
-            </p>
-          </div>
-          <button
-            type="button"
+        {/* Total card */}
+        <div className="mx-4 mb-4 bg-primary rounded-2xl p-4 overflow-hidden">
+          <p className="text-[10px] font-bold text-primary-foreground/60 uppercase tracking-widest mb-1">
+            Total Pembayaran
+          </p>
+          <p className="text-3xl font-extrabold text-primary-foreground mb-4 tracking-tight">
+            {formatRupiah(totalAmount)}
+          </p>
+          <Button
+            type="Button"
             disabled={isEmpty || isMutating || !customerName.trim()}
             onClick={onSubmit}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/15 hover:bg-white/25 text-primary-foreground border border-white/20 text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 text-primary-foreground border border-white/20 text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isMutating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {isMutating && <Loader2 className="h-4 w-4 animate-spin" />}
             {mode === "create" ? "Tambah Pesanan" : "Simpan Perubahan"}
             {!isMutating && <ArrowRight className="h-4 w-4" />}
-          </button>
+          </Button>
         </div>
       </div>
     </aside>

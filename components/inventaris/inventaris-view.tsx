@@ -208,7 +208,7 @@ export function InventarisView(props: InventarisViewProps) {
 
   return (
     <div className="space-y-6 p-8">
-      {/* ── Optional header slot (back button, unit info, etc.) ── */}
+      {/* ── Optional header slot (back Button, unit info, etc.) ── */}
       {headerSlot}
 
       {/* ── Stats cards ── */}
@@ -241,7 +241,7 @@ export function InventarisView(props: InventarisViewProps) {
             </Alert>
           )}
 
-          {/* ── Search + Add button row ── */}
+          {/* ── Search + Add Button row ── */}
           <div className="flex items-center justify-between gap-4">
             {onSearchChange ? (
               <div className="relative">
@@ -353,7 +353,7 @@ export function InventarisView(props: InventarisViewProps) {
 
               <DialogFooter>
                 <Button
-                  type="button"
+                  type="Button"
                   variant="outline"
                   onClick={() => {
                     setPendingUpdateValues(null);
@@ -365,7 +365,7 @@ export function InventarisView(props: InventarisViewProps) {
                   Batalkan
                 </Button>
                 <Button
-                  type="button"
+                  type="Button"
                   onClick={() => void handleEditConfirm()}
                   disabled={props.update.isPending}
                 >

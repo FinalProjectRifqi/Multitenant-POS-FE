@@ -55,7 +55,7 @@ export function KdsOrderCard({
       <div className={cn("h-1 w-full", meta.accentClass)} />
 
       {/* Clickable body — opens detail dialog */}
-      <button
+      <Button
         className="flex flex-1 flex-col gap-3 px-4 pt-3 pb-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         onClick={() => onCardClick(order)}
         aria-label={`Lihat detail ${order.order_number}`}
@@ -66,7 +66,9 @@ export function KdsOrderCard({
             <p className="text-base font-bold tracking-tight text-foreground">
               {order.order_number}
             </p>
-            <p className="text-xs text-muted-foreground">{order.table_number}</p>
+            <p className="text-xs text-muted-foreground">
+              {order.table_number}
+            </p>
           </div>
           <KdsStatusBadge status={status} />
         </div>
@@ -110,9 +112,9 @@ export function KdsOrderCard({
             </p>
           )}
         </div>
-      </button>
+      </Button>
 
-      {/* Action button — separated by border, hidden for final status */}
+      {/* Action Button — separated by border, hidden for final status */}
       {meta.actionLabel && meta.nextStatus ? (
         <div className="border-t border-border px-4 pb-4 pt-3">
           <Button
@@ -127,7 +129,7 @@ export function KdsOrderCard({
           </Button>
         </div>
       ) : (
-        /* Spacer keeps cards the same height when no action button is rendered */
+        /* Spacer keeps cards the same height when no action Button is rendered */
         <div className="pb-4" />
       )}
     </div>

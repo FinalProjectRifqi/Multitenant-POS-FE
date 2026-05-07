@@ -8,6 +8,7 @@ import Image from "next/image";
 import type { CartItem } from "@/lib/orders/types";
 import type { MenuEntity } from "@/lib/schemas/menu";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -21,112 +22,115 @@ function formatRupiah(n: number): string {
 
 // ─── Menu Card ────────────────────────────────────────────────────────────────
 
-function MenuCard({
-  menu,
-  cartQty,
-  onAdd,
-  onUpdateQty,
-}: {
+interface MenuCardProps {
   menu: MenuEntity;
   cartQty: number;
   onAdd: (menu: MenuEntity) => void;
   onUpdateQty: (menuItemId: string, delta: number) => void;
-}) {
+}
+
+function MenuCard({ menu, cartQty, onAdd, onUpdateQty }: MenuCardProps) {
   const unavailable = !menu.is_available;
 
   return (
     <div
       className={cn(
-        "relative w-56.25 h-75 rounded-2xl overflow-hidden select-none",
+        "relative w-full aspect-[4/5] rounded-2xl overflow-hidden select-none group border border-border/50",
         unavailable && "opacity-60",
       )}
     >
-      {/* Background / image */}
+      {/* Background Image */}
       {menu.menu_image ? (
-        <Image
+        <img
           src={menu.menu_image}
           alt={menu.menu_name}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-muted via-muted to-muted/70 flex items-center justify-center">
-          <ImageOff className="w-8 h-8 text-muted-foreground/50" />
+        <div className="absolute inset-0 flex items-center justify-center bg-muted">
+          <ImageOff className="w-8 h-8 text-muted-foreground/30" />
         </div>
       )}
 
-      {/* Bottom gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+      {/* Gradient overlay so text is legible */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-      {/* Qty badge — top right */}
-      {cartQty > 0 && (
-        <div className="absolute top-2 right-2 min-w-[1.5rem] h-6 bg-primary rounded-full flex items-center justify-center px-1.5 shadow-sm">
-          <span className="text-[11px] text-primary-foreground font-bold leading-none">
+      {/* Unavailable overlay */}
+      {unavailable && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+          <div className="bg-background px-3 py-1.5 rounded-full shadow-sm">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Tidak tersedia
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Badge container (Top Right) */}
+      {cartQty > 0 && !unavailable && (
+        <div className="absolute top-2 right-2 flex justify-end gap-1 pointer-events-none">
+          <div className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full shadow-sm border border-primary/20">
             {cartQty}
-          </span>
+          </div>
         </div>
       )}
 
       {/* Name + price + controls — bottom overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-2.5 flex items-end justify-between gap-2">
+      <div className="absolute bottom-0 left-0 right-0 p-3 flex flex-col gap-2">
         {/* Text info */}
-        <div className="min-w-0 flex-1">
-          <p className="text-white font-semibold text-sm leading-tight line-clamp-1 drop-shadow-sm">
+        <div className="min-w-0">
+          <p className="text-white font-semibold text-sm sm:text-base leading-tight line-clamp-2 drop-shadow-sm">
             {menu.menu_name}
           </p>
-          <p className="text-white/80 text-xs mt-0.5 drop-shadow-sm">
+          <p className="text-white/90 text-xs sm:text-sm font-medium mt-1 drop-shadow-sm">
             {formatRupiah(menu.menu_price)}
           </p>
         </div>
 
-        {/* Add / quantity controls */}
+        {/* Action Controls */}
         {!unavailable && (
-          <>
+          <div className="flex justify-end mt-auto">
             {cartQty === 0 ? (
-              <button
+              <Button
                 type="button"
                 onClick={() => onAdd(menu)}
-                className="shrink-0 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-primary transition-colors group"
+                size="icon"
+                variant="secondary"
+                className="w-8 h-8 rounded-full shadow-md hover:bg-primary hover:text-primary-foreground transition-all duration-300 group/btn"
                 aria-label={`Tambah ${menu.menu_name}`}
               >
-                <Plus className="w-3.5 h-3.5 text-gray-800 group-hover:text-white transition-colors" />
-              </button>
+                <Plus className="w-4 h-4 transition-colors" />
+              </Button>
             ) : (
-              <div className="shrink-0 flex items-center gap-0.5 bg-white rounded-full shadow-md px-1.5 py-1">
-                <button
+              <div className="flex items-center gap-1 bg-background/95 backdrop-blur-sm rounded-full shadow-md p-1 border border-border/50">
+                <Button
                   type="button"
                   onClick={() => onUpdateQty(menu.menu_id, -1)}
-                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  size="icon"
+                  variant="ghost"
+                  className="w-6 h-6 rounded-full hover:bg-muted text-foreground transition-colors"
                   aria-label="Kurang"
                 >
-                  <Minus className="w-3 h-3 text-gray-800" />
-                </button>
-                <span className="text-[11px] font-bold text-gray-900 w-4 text-center leading-none">
+                  <Minus className="w-3 h-3" />
+                </Button>
+                <span className="text-xs font-bold w-4 text-center leading-none text-foreground">
                   {cartQty}
                 </span>
-                <button
+                <Button
                   type="button"
                   onClick={() => onUpdateQty(menu.menu_id, 1)}
-                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                  size="icon"
+                  variant="ghost"
+                  className="w-6 h-6 rounded-full hover:bg-muted text-foreground transition-colors"
                   aria-label="Tambah"
                 >
-                  <Plus className="w-3 h-3 text-gray-800" />
-                </button>
+                  <Plus className="w-3 h-3" />
+                </Button>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
-
-      {/* Unavailable overlay */}
-      {unavailable && (
-        <div className="absolute inset-0 bg-background/30 flex items-center justify-center">
-          <span className="text-xs font-medium bg-background/80 text-foreground px-3 py-1 rounded-full shadow-sm">
-            Tidak tersedia
-          </span>
-        </div>
-      )}
     </div>
   );
 }
@@ -151,7 +155,7 @@ export function MenuGrid({ menus, cart, onAdd, onUpdateQty }: MenuGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
       {menus.map((menu) => {
         const cartQty =
           cart.find((c) => c.menu_item_id === menu.menu_id)?.quantity ?? 0;

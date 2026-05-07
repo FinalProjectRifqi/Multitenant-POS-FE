@@ -10,10 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  formatCurrency,
-  getMenuAvailabilityLabel,
-} from "@/lib/menu/constants";
+import { formatCurrency, getMenuAvailabilityLabel } from "@/lib/menu/constants";
 import type { MenuRow } from "@/lib/menu/types";
 import { cn } from "@/lib/utils";
 

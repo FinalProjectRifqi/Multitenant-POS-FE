@@ -24,7 +24,11 @@ export type KdsFilterTabsProps = {
  * Tab definitions and labels come from KDS_FILTER_TABS (constants.ts) so there
  * is a single source of truth for status labels across the whole module.
  */
-export function KdsFilterTabs({ active, counts, onChange }: KdsFilterTabsProps) {
+export function KdsFilterTabs({
+  active,
+  counts,
+  onChange,
+}: KdsFilterTabsProps) {
   return (
     <div
       role="tablist"
@@ -32,11 +36,12 @@ export function KdsFilterTabs({ active, counts, onChange }: KdsFilterTabsProps) 
       className="flex flex-wrap gap-2"
     >
       {KDS_FILTER_TABS.map((tab) => {
-        const count = tab.value !== "all" ? counts[tab.value as KdsStatus] : null;
+        const count =
+          tab.value !== "all" ? counts[tab.value as KdsStatus] : null;
         const isActive = active === tab.value;
 
         return (
-          <button
+          <Button
             key={tab.value}
             role="tab"
             aria-selected={isActive}
@@ -62,7 +67,7 @@ export function KdsFilterTabs({ active, counts, onChange }: KdsFilterTabsProps) 
                 {count}
               </span>
             )}
-          </button>
+          </Button>
         );
       })}
     </div>

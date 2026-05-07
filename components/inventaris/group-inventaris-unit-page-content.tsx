@@ -21,7 +21,7 @@ export function GroupInventarisUnitPageContent({
 
   const headerSlot = (
     <section className="space-y-3">
-      {/* Back button */}
+      {/* Back Button */}
       <Button
         variant="ghost"
         size="sm"

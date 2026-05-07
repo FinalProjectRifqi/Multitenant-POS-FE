@@ -24,8 +24,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useMenuCategoriesQuery } from "@/lib/queries/menu-categories";
 
-
-
 type MenuFormDialogProps = {
   title: string;
   description: string;
@@ -273,9 +271,9 @@ export function MenuFormDialog({
                 className="h-48 w-full object-contain bg-muted"
                 onError={() => setImagePreview(null)}
               />
-              {/* Remove button overlay */}
+              {/* Remove Button overlay */}
               <Button
-                type="button"
+                type="Button"
                 variant="destructive"
                 size="icon"
                 className="absolute right-2 top-2 h-7 w-7 rounded-full shadow-md"
@@ -335,7 +333,6 @@ export function MenuFormDialog({
               value={field.value ? "true" : "false"}
               onValueChange={(v) => field.onChange(v === "true")}
               disabled={isPending}
-              
             >
               <SelectTrigger
                 id="is_available"
