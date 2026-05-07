@@ -10,10 +10,10 @@ type DataTableToolbarProps<T> = {
   /** The accessorKey of the column whose filterFn handles searching */
   searchColumn?: string;
   searchPlaceholder?: string;
-  /** Pass null to hide the action button entirely */
+  /** Pass null to hide the action Button entirely */
   actionLabel?: string | null;
   onActionClick?: () => void;
-  /** Extra controls rendered between the search box and the action button */
+  /** Extra controls rendered between the search box and the action Button */
   extraControls?: ReactNode;
 };
 

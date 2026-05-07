@@ -12,7 +12,7 @@ import type { KdsStatus } from "@/lib/schemas/order";
 export type KdsStatusMeta = {
   /** Human-readable label shown in badges and toast messages. */
   label: string;
-  /** CTA label on the action button. null = final state, no action available. */
+  /** CTA label on the action Button. null = final state, no action available. */
   actionLabel: string | null;
   /** The status to transition to after the action. null = final state. */
   nextStatus: KdsStatus | null;

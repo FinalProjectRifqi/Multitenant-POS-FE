@@ -15,7 +15,7 @@ export default function DashboardLayout({
         <AppSidebar />
         <SidebarInset>
           <SessionExpiryWatcher />
-          <main className="flex-1 overflow-y-auto bg-[#FAF8F6]">
+          <main className="flex-1 overflow-hidden h-full bg-[#F1EEE9]">
             {children}
           </main>
         </SidebarInset>

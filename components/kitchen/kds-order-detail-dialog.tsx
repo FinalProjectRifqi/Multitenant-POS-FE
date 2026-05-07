@@ -160,13 +160,13 @@ export function KdsOrderDetailDialog({
 
               <div className="flex items-center gap-2">
                 <KdsStatusBadge status={status} />
-                <button
+                <Button
                   aria-label="Tutup"
                   onClick={() => onOpenChange(false)}
                   className="ml-1 flex h-7 w-7 items-center justify-center rounded-md opacity-60 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <X className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
 

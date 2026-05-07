@@ -52,7 +52,7 @@ export function MenuPageContent({ unitId }: MenuPageContentProps) {
 
   return (
     <div className="space-y-6 p-8">
-      {/* ── Back button + Page heading ── */}
+      {/* ── Back Button + Page heading ── */}
       <section className="space-y-3">
         <Button
           variant="ghost"
