@@ -124,7 +124,7 @@ export function CartPanel({
         {/* "Hapus Semua" — pill Button style */}
         {!isEmpty && (
           <Button
-            type="Button"
+            type="button"
             onClick={onClearCart}
             className="text-xs font-semibold text-destructive border border-destructive/30 bg-destructive/5 hover:bg-destructive/10 rounded-full px-3 py-1.5 transition-colors shrink-0"
           >
@@ -259,7 +259,7 @@ export function CartPanel({
                   <div className="flex items-center gap-1.5 shrink-0">
                     {/* Minus — outline circle */}
                     <Button
-                      type="Button"
+                      type="button"
                       onClick={() => onUpdateQty(item.menu_item_id, -1)}
                       className="h-7 w-7 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted transition-colors"
                     >
@@ -272,7 +272,7 @@ export function CartPanel({
 
                     {/* Plus — filled primary */}
                     <Button
-                      type="Button"
+                      type="button"
                       onClick={() => onUpdateQty(item.menu_item_id, 1)}
                       className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
                     >
@@ -281,9 +281,9 @@ export function CartPanel({
 
                     {/* Trash */}
                     <Button
-                      type="Button"
+                      type="button"
                       onClick={() => onRemoveItem(item.menu_item_id)}
-                      className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors ml-0.5"
+                      className="h-7 w-7 rounded-full flex items-center justify-center text-destructive bg-destructive/10 transition-colors ml-0.5"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -330,7 +330,7 @@ export function CartPanel({
             {formatRupiah(totalAmount)}
           </p>
           <Button
-            type="Button"
+            type="button"
             disabled={isEmpty || isMutating || !customerName.trim()}
             onClick={onSubmit}
             className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 text-primary-foreground border border-white/20 text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
