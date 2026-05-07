@@ -38,6 +38,7 @@ export function useOrderListPage() {
   const cancelMutation = useCancelPosOrderMutation(unitId);
 
   function handleStatusChange(statusId: string | undefined) {
+    console.log("tab clicked:", statusId); // add this
     setActiveStatusId(statusId);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
@@ -56,7 +57,7 @@ export function useOrderListPage() {
     total: statsQuery.data?.meta.total ?? 0,
     active: allOrders.filter(
       (o) =>
-        o.order_status_id === ORDER_STATUS.PENDING ||
+        o.order_status_id === ORDER_STATUS.JUST_IN ||
         o.order_status_id === ORDER_STATUS.ON_PROCESS ||
         o.order_status_id === ORDER_STATUS.READY,
     ).length,

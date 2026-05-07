@@ -14,7 +14,7 @@ interface OrderStatusBadgeProps {
 
 function getStatusStyle(statusId: string): string {
   switch (statusId) {
-    case ORDER_STATUS.PENDING:
+    case ORDER_STATUS.JUST_IN:
       return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100";
     case ORDER_STATUS.ON_PROCESS:
       return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100";

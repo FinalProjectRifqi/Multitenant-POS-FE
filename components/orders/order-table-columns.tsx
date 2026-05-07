@@ -61,7 +61,7 @@ function OrderActions({
   const canUpdate =
     order.order_status_id !== ORDER_STATUS.COMPLETE &&
     order.order_status_id !== ORDER_STATUS.CANCEL;
-  const canCancel = order.order_status_id === ORDER_STATUS.PENDING;
+  const canCancel = order.order_status_id === ORDER_STATUS.JUST_IN;
 
   return (
     <DropdownMenu>
@@ -79,10 +79,8 @@ function OrderActions({
             router.push(`/unit/pos/edit/${order.order_id}`);
           }}
         >
-          <Pencil className="mr-2 h-4 w-4" />
-          Update Pesanan
+          Edit
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           className={cn(
             "text-destructive focus:text-destructive",
@@ -93,8 +91,7 @@ function OrderActions({
             onDelete(order);
           }}
         >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Hapus Pesanan
+          Hapus
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

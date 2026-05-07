@@ -3,25 +3,28 @@
 export const TAX_RATE = 0.1;
 
 export const ORDER_STATUS = {
-  PENDING: process.env.NEXT_PUBLIC_ORDER_STATUS_PENDING_ID!,
-  ON_PROCESS: process.env.NEXT_PUBLIC_ORDER_STATUS_ON_PROCESS_ID!,
-  READY: process.env.NEXT_PUBLIC_ORDER_STATUS_READY_ID!,
-  COMPLETE: process.env.NEXT_PUBLIC_ORDER_STATUS_COMPLETE_ID!,
-  CANCEL: process.env.NEXT_PUBLIC_ORDER_STATUS_CANCEL_ID!,
+  JUST_IN: process.env.NEXT_PUBLIC_JUST_IN_ORDER_STATUS_ID!,
+  ON_PROCESS: process.env.NEXT_PUBLIC_ON_PROCESS_ORDER_STATUS_ID!,
+  READY: process.env.NEXT_PUBLIC_READY_ORDER_STATUS_ID!,
+  COMPLETE: process.env.NEXT_PUBLIC_COMPLETE_ORDER_STATUS_ID!,
+  CANCEL: process.env.NEXT_PUBLIC_CANCEL_ORDER_STATUS_ID!,
 } as const;
 
 export const ORDER_STATUS_LABEL: Record<string, string> = {
-  [ORDER_STATUS.PENDING]: "Menunggu",
+  [ORDER_STATUS.JUST_IN]: "Baru Masuk",
   [ORDER_STATUS.ON_PROCESS]: "Diproses",
-  [ORDER_STATUS.READY]: "Siap",
+  [ORDER_STATUS.READY]: "Siap Disajikan",
   [ORDER_STATUS.COMPLETE]: "Selesai",
   [ORDER_STATUS.CANCEL]: "Dibatalkan",
 };
 
+console.log("Loaded order status constants:", ORDER_STATUS);
+
 export const STATUS_FILTER_TABS = [
   { label: "Semua", statusId: undefined },
-  { label: "Menunggu", statusId: ORDER_STATUS.PENDING },
+  { label: "Baru Masuk", statusId: ORDER_STATUS.JUST_IN },
   { label: "Diproses", statusId: ORDER_STATUS.ON_PROCESS },
-  { label: "Siap", statusId: ORDER_STATUS.READY },
+  { label: "Siap Disajikan", statusId: ORDER_STATUS.READY },
   { label: "Selesai", statusId: ORDER_STATUS.COMPLETE },
+  { label: "Dibatalkan", statusId: ORDER_STATUS.CANCEL },
 ] as const;

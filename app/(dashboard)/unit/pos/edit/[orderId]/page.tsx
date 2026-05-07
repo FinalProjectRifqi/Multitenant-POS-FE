@@ -65,9 +65,9 @@ export default function EditPesananPage({ params }: EditPesananPageProps) {
         ← Kembali ke Pesanan
       </Link>
 
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="relative lg:pr-[25.5rem] xl:pr-[27.5rem]">
         {/* ── Menu section ── */}
-        <div className="flex-1 min-w-0 space-y-4">
+        <div className="min-w-0 space-y-4">
           {/* Section header */}
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -139,31 +139,61 @@ export default function EditPesananPage({ params }: EditPesananPageProps) {
           )}
         </div>
 
-        {/* ── Cart panel ── */}
-        <CartPanel
-          mode="edit"
-          orderNumber={orderNumber}
-          className="w-full lg:w-80 xl:w-96 lg:sticky lg:top-6"
-          orderTypes={orderTypesQuery.data?.data ?? []}
-          orderTypeId={orderTypeId}
-          onOrderTypeChange={setOrderTypeId}
-          isDineIn={isDineIn}
-          customerName={customerName}
-          onCustomerNameChange={setCustomerName}
-          tableNumber={tableNumber}
-          onTableNumberChange={setTableNumber}
-          orderNotes={orderNotes}
-          onOrderNotesChange={setOrderNotes}
-          cart={cart}
-          onUpdateQty={updateCartQty}
-          onRemoveItem={removeCartItem}
-          onClearCart={clearCart}
-          subtotal={subtotal}
-          taxAmount={taxAmount}
-          totalAmount={totalAmount}
-          onSubmit={handleSubmit}
-          isMutating={isMutating}
-        />
+        {/* ── Cart panel (mobile flow) ── */}
+        <div className="mt-6 lg:hidden">
+          <CartPanel
+            mode="edit"
+            orderNumber={orderNumber}
+            className="w-full"
+            orderTypes={orderTypesQuery.data?.data ?? []}
+            orderTypeId={orderTypeId}
+            onOrderTypeChange={setOrderTypeId}
+            isDineIn={isDineIn}
+            customerName={customerName}
+            onCustomerNameChange={setCustomerName}
+            tableNumber={tableNumber}
+            onTableNumberChange={setTableNumber}
+            orderNotes={orderNotes}
+            onOrderNotesChange={setOrderNotes}
+            cart={cart}
+            onUpdateQty={updateCartQty}
+            onRemoveItem={removeCartItem}
+            onClearCart={clearCart}
+            subtotal={subtotal}
+            taxAmount={taxAmount}
+            totalAmount={totalAmount}
+            onSubmit={handleSubmit}
+            isMutating={isMutating}
+          />
+        </div>
+
+        {/* ── Cart panel (desktop fixed sidebar) ── */}
+        <div className="hidden lg:block fixed right-6 top-6 z-30">
+          <CartPanel
+            mode="edit"
+            orderNumber={orderNumber}
+            className="w-96 xl:w-[26rem] max-h-[calc(100vh-3rem)]"
+            orderTypes={orderTypesQuery.data?.data ?? []}
+            orderTypeId={orderTypeId}
+            onOrderTypeChange={setOrderTypeId}
+            isDineIn={isDineIn}
+            customerName={customerName}
+            onCustomerNameChange={setCustomerName}
+            tableNumber={tableNumber}
+            onTableNumberChange={setTableNumber}
+            orderNotes={orderNotes}
+            onOrderNotesChange={setOrderNotes}
+            cart={cart}
+            onUpdateQty={updateCartQty}
+            onRemoveItem={removeCartItem}
+            onClearCart={clearCart}
+            subtotal={subtotal}
+            taxAmount={taxAmount}
+            totalAmount={totalAmount}
+            onSubmit={handleSubmit}
+            isMutating={isMutating}
+          />
+        </div>
       </div>
     </div>
   );

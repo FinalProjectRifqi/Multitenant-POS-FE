@@ -20,6 +20,10 @@ export async function getMenuCategories(params: {
 
   return apiGet<MenuCategoriesListResponse>("/menu-categories", {
     schema: menuCategoriesListResponseSchema,
-    params,
+    params: {
+      business_unit_id: unitId,
+      limit: params.limit,
+      page: params.page,
+    },
   });
 }

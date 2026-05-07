@@ -16,9 +16,20 @@ import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { PageHeader, StatsCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { STATUS_FILTER_TABS } from "@/lib/orders/constants";
 import { useOrderListPage } from "@/lib/orders/use-order-list-page";
-import { cn } from "@/lib/utils";
+import { StatsGrid } from "@/components/shared/stats-grid";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { getErrorMessage } from "@/lib/api/client copy";
+import { PaginationMeta } from "@/lib/schemas/unit";
 
 function formatRupiah(n: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -57,22 +68,21 @@ export default function KelolaPesananPage() {
     totalPages: Math.ceil(totalRows / pagination.pageSize),
   };
 
+  const statusTabValue = activeStatusId ?? "all";
+
   return (
-    <div className="p-8">
-      <PageHeader
-        title="Kelola Pesanan"
-        description="Pantau dan kelola semua pesanan aktif restoran Anda"
-      >
-        <Button
-          onClick={() => router.push("/unit/pos/tambah")}
-          className="cursor-pointer hover:backdrop-brightness-50"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Pesanan
-        </Button>
-      </PageHeader>
+    <div className="space-y-5 p-8">
+      <section className="space-y-1">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          Kelola Pesanan
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Kelola semua pesanan dalam sistem Anda
+        </p>
+      </section>
 
       {/* ── Stats row ── */}
+      {/* <StatsGrid stats={stats} columns={4} /> */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard
           icon={ClipboardList}
@@ -97,38 +107,64 @@ export default function KelolaPesananPage() {
       </div>
 
       {/* ── Status filter tabs ── */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {STATUS_FILTER_TABS.map((tab) => (
-          <button
-            key={tab.label}
-            type="button"
-            className={cn(
-              "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors",
-              activeStatusId === tab.statusId
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background border-border text-muted-foreground hover:border-primary/50",
-            )}
-            onClick={() => handleStatusChange(tab.statusId)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Card className="bg-primary-foreground ring-1 ring-border/90">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-xl font-semibold">
+            Daftar Pesanan
+          </CardTitle>
+          <CardDescription>
+            Kelola semua pesanan dalam sistem Anda
+          </CardDescription>
+        </CardHeader>
 
-      {/* ── Orders table ── */}
-      <DataTable
-        columns={columns}
-        data={orders}
-        isLoading={isLoading}
-        emptyMessage="Belum ada pesanan."
-        searchEmptyMessage="Pesanan tidak ditemukan."
-        enablePagination
-        meta={paginationMeta}
-        pagination={pagination}
-        onPaginationChange={setPagination}
-      />
+        <CardContent className="space-y-5">
+          {/* {isLoading && (
+            <Alert variant="destructive">
+              <AlertTitle>Gagal memuat data pengguna</AlertTitle>
+              <AlertDescription>
+                {getErrorMessage(cancelMutation.error)}
+              </AlertDescription>
+            </Alert>
+          )} */}
 
-      {/* ── Cancel confirmation dialog ── */}
+          <DataTable
+            columns={columns}
+            data={orders}
+            isLoading={isLoading}
+            emptyMessage="Belum ada pesanan."
+            actionLabel="Tambah Pesanan"
+            onActionClick={() => router.push("/unit/pos/tambah")}
+            searchEmptyMessage="Pesanan tidak ditemukan."
+            searchColumn="customer_name"
+            searchPlaceholder="Cari pelanggan..."
+            extraControls={
+              <Tabs
+                value={statusTabValue}
+                onValueChange={(v) =>
+                  handleStatusChange(v === "all" ? undefined : v)
+                }
+              >
+                <TabsList className="h-9">
+                  {STATUS_FILTER_TABS.map((tab) => (
+                    <TabsTrigger
+                      key={tab.label}
+                      value={tab.statusId ?? "all"}
+                      className="text-xs data-[state=inactive]:text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-muted data-[state=active]:shadow-sm"
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            }
+            enablePagination
+            meta={paginationMeta}
+            pagination={pagination}
+            onPaginationChange={setPagination}
+          />
+        </CardContent>
+      </Card>
+
       <ConfirmDeleteDialog
         open={Boolean(deletingOrder)}
         onOpenChange={(open) => {
