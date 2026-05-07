@@ -27,6 +27,14 @@ function orderDetailEndpoint(unitId: string, orderId: string): string {
   return `/orders/${unitId}/${orderId}`;
 }
 
+function orderStatusTransitionEndpoint(unitId: string, orderId: string): string {
+  return `/order-status/${unitId}/${orderId}/transition`;
+}
+
+function orderStatusCancelEndpoint(unitId: string, orderId: string): string {
+  return `/order-status/${unitId}/${orderId}/cancel`;
+}
+
 const ORDER_TYPES_ENDPOINT = "/order-types";
 
 // ─── Result types ──────────────────────────────────────────────────────────────
@@ -109,6 +117,44 @@ export async function cancelPosOrder(
 ): Promise<PosOrderMutationResult<void>> {
   try {
     await apiDelete(orderDetailEndpoint(unitId, orderId));
+    return { ok: true, data: undefined };
+  } catch (error: unknown) {
+    const parsed = parseApiError(error);
+    return { ok: false, status: parsed.status, message: parsed.message };
+  }
+}
+
+export async function transitionOrderStatus(
+  unitId: string,
+  orderId: string,
+  orderStatusId: string,
+): Promise<PosOrderMutationResult<OrderDetailResponse["data"]>> {
+  try {
+    const result = await apiPost<OrderDetailResponse, { order_status_id: string }>(
+      orderStatusTransitionEndpoint(unitId, orderId),
+      {
+        order_status_id: orderStatusId,
+      },
+      {
+        schema: orderDetailResponseSchema,
+      },
+    );
+    return { ok: true, data: result.data };
+  } catch (error: unknown) {
+    const parsed = parseApiError(error);
+    return { ok: false, status: parsed.status, message: parsed.message };
+  }
+}
+
+export async function cancelOrderStatus(
+  unitId: string,
+  orderId: string,
+): Promise<PosOrderMutationResult<void>> {
+  try {
+    await apiPost(
+      orderStatusCancelEndpoint(unitId, orderId),
+      undefined,
+    );
     return { ok: true, data: undefined };
   } catch (error: unknown) {
     const parsed = parseApiError(error);

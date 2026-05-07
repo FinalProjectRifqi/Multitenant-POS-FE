@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { KdsStatusBadge } from "@/components/kitchen/kds-status-badge";
 import { cn } from "@/lib/utils";
 import { KDS_STATUS_META } from "@/lib/kitchen-display/constants";
-import type { KdsStatus, OrderEntity } from "@/lib/schemas/order";
+import type { OrderDetail } from "@/lib/orders/types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -94,12 +94,10 @@ function PriceSummary({ subtotal, taxAmount, totalAmount }: PriceSummaryProps) {
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export type KdsOrderDetailDialogProps = {
-  order: OrderEntity | null;
+  order: OrderDetail | null;
   unitName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  isPending: boolean;
-  onActionClick: (order: OrderEntity, nextStatus: KdsStatus) => void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -120,13 +118,11 @@ export function KdsOrderDetailDialog({
   unitName,
   open,
   onOpenChange,
-  isPending,
-  onActionClick,
 }: KdsOrderDetailDialogProps) {
   // Keep Dialog mounted so the close animation plays correctly.
   // All content is conditionally rendered from the order prop.
-  const status = order ? (order.kds_status as KdsStatus) : null;
-  const meta = status ? KDS_STATUS_META[status] : null;
+  const statusId = order ? order.order_status_id : null;
+  const meta = statusId ? KDS_STATUS_META[statusId] : null;
 
   const formattedOrderedAt = order
     ? format(new Date(order.ordered_at), "dd MMM yyyy, HH:mm", {
@@ -140,13 +136,13 @@ export function KdsOrderDetailDialog({
         className="max-h-[90dvh] gap-0 overflow-hidden p-0 sm:max-w-md"
         showCloseButton={false}
       >
-        {order && status && meta && (
+        {order && (
           <>
             {/* Colored header strip based on status */}
             <div
               className={cn(
                 "flex items-center justify-between gap-3 px-5 py-4",
-                meta.headerBgClass,
+                meta?.headerBgClass ?? "bg-muted",
               )}
             >
               <div className="flex-1 space-y-1">
@@ -154,12 +150,17 @@ export function KdsOrderDetailDialog({
                   {order.order_number}
                 </DialogTitle>
                 <p className="text-xs text-muted-foreground">
-                  {order.order_type}
+                  {order.order_type_name}
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <KdsStatusBadge status={status} />
+                {statusId && (
+                  <KdsStatusBadge
+                    statusId={statusId}
+                    fallbackLabel={order.order_status_name}
+                  />
+                )}
                 <Button
                   aria-label="Tutup"
                   onClick={() => onOpenChange(false)}
@@ -178,12 +179,17 @@ export function KdsOrderDetailDialog({
                   <InfoRow
                     icon={MapPin}
                     label="Nomor Meja"
-                    value={order.table_number}
+                    value={order.table_number ?? "-"}
+                  />
+                  <InfoRow
+                    icon={UtensilsCrossed}
+                    label="Unit"
+                    value={unitName}
                   />
                   <InfoRow
                     icon={UtensilsCrossed}
                     label="Tipe Order"
-                    value={order.order_type}
+                    value={order.order_type_name}
                   />
                   <InfoRow
                     icon={User}
@@ -241,19 +247,6 @@ export function KdsOrderDetailDialog({
                 />
               </div>
             </div>
-
-            {/* Sticky action footer */}
-            {meta.actionLabel && meta.nextStatus && (
-              <div className="border-t border-border bg-background px-5 py-3">
-                <Button
-                  className="w-full"
-                  disabled={isPending}
-                  onClick={() => onActionClick(order, meta.nextStatus!)}
-                >
-                  {isPending ? "Memproses…" : meta.actionLabel}
-                </Button>
-              </div>
-            )}
           </>
         )}
       </DialogContent>
