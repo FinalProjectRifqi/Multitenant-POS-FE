@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CartItem, OrderTypeEntity } from "@/lib/orders/types";
 import { cn } from "@/lib/utils";
+import React from "react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -235,11 +236,8 @@ export function CartPanel({
         ) : (
           <ul>
             {cart.map((item, index) => (
-              <>
-                <li
-                  key={item.menu_item_id}
-                  className="flex items-center gap-3 px-4 py-3.5"
-                >
+              <React.Fragment key={item.menu_item_id}>
+                <li className="flex items-center gap-3 px-4 py-3.5">
                   {/* Qty badge */}
                   <span className="text-xs font-bold text-muted-foreground bg-muted rounded-lg h-7 w-7 flex items-center justify-center shrink-0">
                     {item.quantity}×
@@ -297,7 +295,7 @@ export function CartPanel({
                     className="h-px bg-border/60 mx-4"
                   />
                 )}
-              </>
+              </React.Fragment>
             ))}
           </ul>
         )}

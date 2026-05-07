@@ -61,7 +61,7 @@ export function ConfirmDeleteDialog({
 
         <DialogFooter>
           <Button
-            type="Button"
+            type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isPending}
@@ -69,7 +69,7 @@ export function ConfirmDeleteDialog({
             {cancelLabel}
           </Button>
           <Button
-            type="Button"
+            type="button"
             variant="destructive"
             onClick={() => void onConfirm()}
             disabled={isPending}

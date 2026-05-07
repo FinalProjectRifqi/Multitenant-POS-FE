@@ -353,7 +353,7 @@ export function InventarisView(props: InventarisViewProps) {
 
               <DialogFooter>
                 <Button
-                  type="Button"
+                  type="button"
                   variant="outline"
                   onClick={() => {
                     setPendingUpdateValues(null);
@@ -365,7 +365,7 @@ export function InventarisView(props: InventarisViewProps) {
                   Batalkan
                 </Button>
                 <Button
-                  type="Button"
+                  type="button"
                   onClick={() => void handleEditConfirm()}
                   disabled={props.update.isPending}
                 >

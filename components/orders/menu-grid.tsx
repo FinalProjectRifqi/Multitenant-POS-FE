@@ -35,15 +35,17 @@ function MenuCard({ menu, cartQty, onAdd, onUpdateQty }: MenuCardProps) {
   return (
     <div
       className={cn(
-        "relative w-full aspect-[4/5] rounded-2xl overflow-hidden select-none group border border-border/50",
+        "relative w-full aspect-4/5 rounded-2xl overflow-hidden select-none group border border-border/50",
         unavailable && "opacity-60",
       )}
     >
       {/* Background Image */}
       {menu.menu_image ? (
-        <img
+        <Image
           src={menu.menu_image}
           alt={menu.menu_name}
+          width={100}
+          height={100}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
@@ -53,7 +55,7 @@ function MenuCard({ menu, cartQty, onAdd, onUpdateQty }: MenuCardProps) {
       )}
 
       {/* Gradient overlay so text is legible */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
       {/* Unavailable overlay */}
       {unavailable && (

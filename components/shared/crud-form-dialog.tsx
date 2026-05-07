@@ -75,7 +75,7 @@ export function CrudFormDialog({
 
           <DialogFooter>
             <Button
-              type="Button"
+              type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isPending}

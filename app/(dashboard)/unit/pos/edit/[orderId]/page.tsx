@@ -115,7 +115,7 @@ export default function EditPesananPage({ params }: EditPesananPageProps) {
               {categories.map((cat) => (
                 <Button
                   key={cat}
-                  type="Button"
+                  type="button"
                   className={cn(
                     "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors",
                     categoryFilter === cat

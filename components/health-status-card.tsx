@@ -12,7 +12,7 @@ export function HealthStatusCard() {
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-zinc-900">Health Check</h2>
         <Button
-          type="Button"
+          type="button"
           onClick={() => refetch()}
           disabled={isFetching}
           className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400"

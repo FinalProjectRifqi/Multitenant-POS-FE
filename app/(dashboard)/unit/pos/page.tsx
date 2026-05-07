@@ -2,34 +2,27 @@
 
 import {
   ClipboardList,
-  Plus,
   ShoppingBag,
   ShoppingCart,
   TrendingUp,
 } from "lucide-react";
-import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 
-import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import { StatsCard } from "@/components/dashboard/ui";
 import { buildOrderColumns } from "@/components/orders/order-table-columns";
 import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
-import { PageHeader, StatsCard } from "@/components/dashboard/ui";
-import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { STATUS_FILTER_TABS } from "@/lib/orders/constants";
 import { useOrderListPage } from "@/lib/orders/use-order-list-page";
-import { StatsGrid } from "@/components/shared/stats-grid";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import { getErrorMessage } from "@/lib/api/client copy";
-import { PaginationMeta } from "@/lib/schemas/unit";
 
 function formatRupiah(n: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -82,7 +75,6 @@ export default function KelolaPesananPage() {
       </section>
 
       {/* ── Stats row ── */}
-      {/* <StatsGrid stats={stats} columns={4} /> */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard
           icon={ClipboardList}
@@ -118,15 +110,6 @@ export default function KelolaPesananPage() {
         </CardHeader>
 
         <CardContent className="space-y-5">
-          {/* {isLoading && (
-            <Alert variant="destructive">
-              <AlertTitle>Gagal memuat data pengguna</AlertTitle>
-              <AlertDescription>
-                {getErrorMessage(cancelMutation.error)}
-              </AlertDescription>
-            </Alert>
-          )} */}
-
           <DataTable
             columns={columns}
             data={orders}

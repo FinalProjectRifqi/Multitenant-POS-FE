@@ -273,7 +273,7 @@ export function MenuFormDialog({
               />
               {/* Remove Button overlay */}
               <Button
-                type="Button"
+                type="button"
                 variant="destructive"
                 size="icon"
                 className="absolute right-2 top-2 h-7 w-7 rounded-full shadow-md"
