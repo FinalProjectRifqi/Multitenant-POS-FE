@@ -61,6 +61,43 @@ export interface OrderDetailResponse {
   data: OrderDetail;
 }
 
+export interface PaymentRecord {
+  payment_id: string;
+  order_id: string;
+  reference_number: string;
+  amount: number;
+  payment_status: string;
+  failure_reason: string | null;
+  paid_at: string | null;
+  expired_at: string | null;
+  created_at: string;
+}
+
+export interface PaymentPayload {
+  amount: number;
+}
+
+export interface CashPaymentResponse {
+  success: true;
+  statusCode: number;
+  message: string;
+  data: {
+    payment: PaymentRecord;
+  };
+}
+
+export interface CashlessPaymentResponse {
+  success: true;
+  statusCode: number;
+  message: string;
+  data: {
+    payment: PaymentRecord;
+    snap_token: string;
+    redirect_url: string;
+    webhook_signature_key: string;
+  };
+}
+
 export interface OrderTypesListResponse {
   success: true;
   statusCode: number;

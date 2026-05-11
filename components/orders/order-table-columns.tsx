@@ -3,7 +3,7 @@
 // components/orders/order-table-columns.tsx
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Trash2, UtensilsCrossed } from "lucide-react";
+import { MoreHorizontal, ReceiptText, UtensilsCrossed } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
@@ -53,9 +53,11 @@ function getInitials(name: string): string {
 function OrderActions({
   order,
   onDelete,
+  onOpenPayment,
 }: {
   order: OrderListItem;
   onDelete: (order: OrderListItem) => void;
+  onOpenPayment: (order: OrderListItem) => void;
 }) {
   const router = useRouter();
   const canUpdate =
@@ -72,6 +74,10 @@ function OrderActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={() => onOpenPayment(order)}>
+          Detail & Bayar
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           className={cn(!canUpdate && "opacity-40 cursor-not-allowed")}
           onSelect={() => {
@@ -102,6 +108,7 @@ function OrderActions({
 
 export function buildOrderColumns(
   onDelete: (order: OrderListItem) => void,
+  onOpenPayment: (order: OrderListItem) => void,
 ): ColumnDef<OrderListItem, unknown>[] {
   return [
     {
@@ -175,7 +182,11 @@ export function buildOrderColumns(
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <OrderActions order={row.original} onDelete={onDelete} />
+        <OrderActions
+          order={row.original}
+          onDelete={onDelete}
+          onOpenPayment={onOpenPayment}
+        />
       ),
     },
   ];

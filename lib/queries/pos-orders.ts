@@ -13,6 +13,8 @@ import {
 import { formatApiError } from "@/lib/api/parsed-api-error";
 import {
   cancelPosOrder,
+  createCashlessPayment,
+  createCashPayment,
   createPosOrder,
   getPosOrderDetail,
   getPosOrders,
@@ -21,6 +23,7 @@ import {
 import type {
   CreateOrderPayload,
   GetOrdersParams,
+  PaymentPayload,
   UpdateOrderPayload,
 } from "@/lib/orders/types";
 
@@ -165,6 +168,79 @@ export function useCancelPosOrderMutation(unitId: string) {
 
   return {
     cancelOrder: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error ? getErrorMessage(mutation.error) : null,
+  };
+}
+
+export function useCreateCashPaymentMutation(unitId: string, orderId: string) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (payload: PaymentPayload) => {
+      const result = await createCashPayment(unitId, orderId, payload);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+      return result.data;
+    },
+    onSuccess: () => {
+      toast.success("Pembayaran tunai berhasil diproses.", {
+        position: "top-right",
+        richColors: true,
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: posOrderQueryKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: posOrderQueryKeys.detail(unitId, orderId),
+      });
+    },
+  });
+
+  return {
+    createCashPayment: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error ? getErrorMessage(mutation.error) : null,
+  };
+}
+
+export function useCreateCashlessPaymentMutation(
+  unitId: string,
+  orderId: string,
+) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (payload: PaymentPayload) => {
+      const result = await createCashlessPayment(unitId, orderId, payload);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+      return result.data;
+    },
+    onSuccess: () => {
+      toast.success("Payment cashless berhasil dibuat.", {
+        position: "top-right",
+        richColors: true,
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: posOrderQueryKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: posOrderQueryKeys.detail(unitId, orderId),
+      });
+    },
+  });
+
+  return {
+    createCashlessPayment: mutation.mutateAsync,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error ? getErrorMessage(mutation.error) : null,

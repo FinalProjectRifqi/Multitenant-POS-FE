@@ -6,12 +6,17 @@ import { parseApiError } from "@/lib/api/parsed-api-error";
 import type {
   CreateOrderPayload,
   GetOrdersParams,
+  PaymentPayload,
   UpdateOrderPayload,
 } from "@/lib/orders/types";
 import {
+  cashlessPaymentResponseSchema,
+  cashPaymentResponseSchema,
   orderDetailResponseSchema,
   orderTypesListResponseSchema,
   posOrdersListResponseSchema,
+  type CashlessPaymentResponse,
+  type CashPaymentResponse,
   type OrderDetailResponse,
   type OrderTypesListResponse,
   type PosOrdersListResponse,
@@ -25,6 +30,14 @@ function ordersEndpoint(unitId: string): string {
 
 function orderDetailEndpoint(unitId: string, orderId: string): string {
   return `/orders/${unitId}/${orderId}`;
+}
+
+function paymentEndpoint(
+  unitId: string,
+  orderId: string,
+  method: "cash" | "cashless",
+): string {
+  return `/orders/${unitId}/${orderId}/payments/${method}`;
 }
 
 const ORDER_TYPES_ENDPOINT = "/order-types";
@@ -110,6 +123,42 @@ export async function cancelPosOrder(
   try {
     await apiDelete(orderDetailEndpoint(unitId, orderId));
     return { ok: true, data: undefined };
+  } catch (error: unknown) {
+    const parsed = parseApiError(error);
+    return { ok: false, status: parsed.status, message: parsed.message };
+  }
+}
+
+export async function createCashPayment(
+  unitId: string,
+  orderId: string,
+  payload: PaymentPayload,
+): Promise<PosOrderMutationResult<CashPaymentResponse["data"]>> {
+  try {
+    const result = await apiPost<CashPaymentResponse, PaymentPayload>(
+      paymentEndpoint(unitId, orderId, "cash"),
+      payload,
+      { schema: cashPaymentResponseSchema },
+    );
+    return { ok: true, data: result.data };
+  } catch (error: unknown) {
+    const parsed = parseApiError(error);
+    return { ok: false, status: parsed.status, message: parsed.message };
+  }
+}
+
+export async function createCashlessPayment(
+  unitId: string,
+  orderId: string,
+  payload: PaymentPayload,
+): Promise<PosOrderMutationResult<CashlessPaymentResponse["data"]>> {
+  try {
+    const result = await apiPost<CashlessPaymentResponse, PaymentPayload>(
+      paymentEndpoint(unitId, orderId, "cashless"),
+      payload,
+      { schema: cashlessPaymentResponseSchema },
+    );
+    return { ok: true, data: result.data };
   } catch (error: unknown) {
     const parsed = parseApiError(error);
     return { ok: false, status: parsed.status, message: parsed.message };

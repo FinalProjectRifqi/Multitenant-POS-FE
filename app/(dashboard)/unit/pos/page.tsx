@@ -7,9 +7,10 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { StatsCard } from "@/components/dashboard/ui";
+import { OrderPaymentDialog } from "@/components/orders/order-payment-dialog";
 import { buildOrderColumns } from "@/components/orders/order-table-columns";
 import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { STATUS_FILTER_TABS } from "@/lib/orders/constants";
+import type { OrderListItem } from "@/lib/orders/types";
 import { useOrderListPage } from "@/lib/orders/use-order-list-page";
 
 function formatRupiah(n: number) {
@@ -34,7 +36,9 @@ function formatRupiah(n: number) {
 
 export default function KelolaPesananPage() {
   const router = useRouter();
+  const [paymentOrder, setPaymentOrder] = useState<OrderListItem | null>(null);
   const {
+    unitId,
     orders,
     totalRows,
     isLoading,
@@ -50,7 +54,7 @@ export default function KelolaPesananPage() {
   } = useOrderListPage();
 
   const columns = useMemo(
-    () => buildOrderColumns(setDeletingOrder),
+    () => buildOrderColumns(setDeletingOrder, setPaymentOrder),
     [setDeletingOrder],
   );
 
@@ -169,6 +173,16 @@ export default function KelolaPesananPage() {
         errorMessage={cancelMutation.error}
         onConfirm={handleCancelConfirm}
         confirmLabel="Hapus"
+      />
+
+      <OrderPaymentDialog
+        key={paymentOrder?.order_id ?? "payment-dialog"}
+        open={Boolean(paymentOrder)}
+        onOpenChange={(open) => {
+          if (!open) setPaymentOrder(null);
+        }}
+        unitId={unitId}
+        order={paymentOrder}
       />
     </div>
   );

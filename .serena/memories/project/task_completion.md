@@ -1,0 +1,2 @@
+- After changes: run pnpm lint.
+- Manually verify UI flows with pnpm dev when changes affect screens or dialogs.
