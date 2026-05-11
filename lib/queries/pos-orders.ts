@@ -258,20 +258,20 @@ export function useTransitionOrderStatusMutation(
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (nextStatusId: string) => {
-      const result = await transitionOrderStatus(unitId, orderId, nextStatusId);
+    mutationFn: async (payload: PaymentPayload) => {
+      const result = await createCashPayment(unitId, orderId, payload);
       if (!result.ok) throw formatApiError(result.status, result.message);
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Status order berhasil diperbarui.", {
+      toast.success("Pembayaran tunai berhasil diproses.", {
         position: "top-right",
         richColors: true,
         duration: 3000,
       });
     },
     onError: (error) => {
-      handleApiError(error, { title: "Gagal memperbarui status order" });
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: posOrderQueryKeys.lists() });
@@ -282,38 +282,7 @@ export function useTransitionOrderStatusMutation(
   });
 
   return {
-    transitionStatus: mutation.mutateAsync,
-    isPending: mutation.isPending,
-    isError: mutation.isError,
-    error: mutation.error ? getErrorMessage(mutation.error) : null,
-  };
-}
-
-export function useCancelOrderStatusMutation(unitId: string) {
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation({
-    mutationFn: async (orderId: string) => {
-      const result = await cancelOrderStatus(unitId, orderId);
-      if (!result.ok) throw formatApiError(result.status, result.message);
-    },
-    onSuccess: () => {
-      toast.success("Order berhasil dibatalkan.", {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
-    },
-    onError: (error) => {
-      handleApiError(error, { title: "Gagal membatalkan order" });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: posOrderQueryKeys.lists() });
-    },
-  });
-
-  return {
-    cancelOrderStatus: mutation.mutateAsync,
+    createCashPayment: mutation.mutateAsync,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error ? getErrorMessage(mutation.error) : null,
