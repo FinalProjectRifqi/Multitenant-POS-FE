@@ -5,13 +5,13 @@ import {
   KDS_FILTER_TABS,
   type KdsFilterValue,
 } from "@/lib/kitchen-display/constants";
-import type { KdsStatus } from "@/lib/schemas/order";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export type KdsFilterTabsProps = {
   active: KdsFilterValue;
-  counts: Record<KdsStatus, number>;
+  counts: Record<string, number>;
   onChange: (value: KdsFilterValue) => void;
 };
 
@@ -29,47 +29,36 @@ export function KdsFilterTabs({
   counts,
   onChange,
 }: KdsFilterTabsProps) {
-  return (
-    <div
-      role="tablist"
-      aria-label="Filter status pesanan"
-      className="flex flex-wrap gap-2"
-    >
-      {KDS_FILTER_TABS.map((tab) => {
-        const count =
-          tab.value !== "all" ? counts[tab.value as KdsStatus] : null;
-        const isActive = active === tab.value;
+  const allCount = Object.values(counts).reduce((sum, n) => sum + n, 0);
 
-        return (
-          <Button
-            key={tab.value}
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onChange(tab.value)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-              isActive
-                ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted",
-            )}
-          >
-            {tab.label}
-            {count !== null && (
+  return (
+    <Tabs value={active} onValueChange={(v) => onChange(v as KdsFilterValue)}>
+      <TabsList className="h-12 bg-[#FAF8F6]">
+        {KDS_FILTER_TABS.map((tab) => {
+          const count =
+            tab.value === "all" ? allCount : (counts[String(tab.value)] ?? 0);
+          const isActive = active === tab.value;
+          return (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="text-xs data-[state=inactive]:text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-muted data-[state=active]:shadow-sm"
+            >
+              <span className="mr-2">{tab.label}</span>
               <span
                 className={cn(
-                  "rounded-full px-1.5 py-0.5 text-xs font-semibold leading-none",
+                  "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none",
                   isActive
-                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    ? "bg-muted/25 text-muted"
                     : "bg-muted text-muted-foreground",
                 )}
               >
                 {count}
               </span>
-            )}
-          </Button>
-        );
-      })}
-    </div>
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
+    </Tabs>
   );
 }

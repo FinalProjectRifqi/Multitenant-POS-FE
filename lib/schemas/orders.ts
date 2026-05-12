@@ -29,6 +29,7 @@ export const orderListItemSchema = z.object({
   order_status_id: z.string().uuid(),
   order_status_name: z.string(),
   ordered_at: z.string(),
+  updated_at: z.string().optional(),
 });
 
 export const paginationMetaSchema = z.object({

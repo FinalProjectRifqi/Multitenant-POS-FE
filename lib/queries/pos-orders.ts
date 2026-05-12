@@ -12,10 +12,12 @@ import {
 } from "@/lib/api/handle-api-error";
 import { formatApiError } from "@/lib/api/parsed-api-error";
 import {
+  cancelOrderStatus,
   cancelPosOrder,
   createPosOrder,
   getPosOrderDetail,
   getPosOrders,
+  transitionOrderStatus,
   updatePosOrder,
 } from "@/lib/api/pos-orders";
 import type {
@@ -165,6 +167,75 @@ export function useCancelPosOrderMutation(unitId: string) {
 
   return {
     cancelOrder: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error ? getErrorMessage(mutation.error) : null,
+  };
+}
+
+export function useTransitionOrderStatusMutation(
+  unitId: string,
+  orderId: string,
+) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (nextStatusId: string) => {
+      const result = await transitionOrderStatus(unitId, orderId, nextStatusId);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+      return result.data;
+    },
+    onSuccess: () => {
+      toast.success("Status order berhasil diperbarui.", {
+        position: "top-right",
+        richColors: true,
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      handleApiError(error, { title: "Gagal memperbarui status order" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: posOrderQueryKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: posOrderQueryKeys.detail(unitId, orderId),
+      });
+    },
+  });
+
+  return {
+    transitionStatus: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error ? getErrorMessage(mutation.error) : null,
+  };
+}
+
+export function useCancelOrderStatusMutation(unitId: string) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const result = await cancelOrderStatus(unitId, orderId);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+    },
+    onSuccess: () => {
+      toast.success("Order berhasil dibatalkan.", {
+        position: "top-right",
+        richColors: true,
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      handleApiError(error, { title: "Gagal membatalkan order" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: posOrderQueryKeys.lists() });
+    },
+  });
+
+  return {
+    cancelOrderStatus: mutation.mutateAsync,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error ? getErrorMessage(mutation.error) : null,
