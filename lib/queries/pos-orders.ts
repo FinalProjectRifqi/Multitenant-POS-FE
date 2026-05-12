@@ -46,13 +46,14 @@ export const posOrderQueryKeys = {
 export function usePosOrdersQuery(
   unitId: string,
   params?: GetOrdersParams,
-  pollingInterval = 30_000,
+  pollingInterval = 15_000,
 ) {
   return useQuery({
     queryKey: posOrderQueryKeys.list(unitId, params),
     queryFn: () => getPosOrders(unitId, params),
     enabled: Boolean(unitId),
     refetchInterval: pollingInterval,
+    refetchOnWindowFocus: true,
     refetchIntervalInBackground: false,
     staleTime: pollingInterval / 2,
     meta: { errorTitle: "Gagal Memuat Pesanan" },
@@ -66,6 +67,7 @@ export function usePosOrderDetailQuery(unitId: string, orderId: string) {
     queryKey: posOrderQueryKeys.detail(unitId, orderId),
     queryFn: () => getPosOrderDetail(unitId, orderId),
     enabled: Boolean(unitId) && Boolean(orderId),
+    refetchOnWindowFocus: true,
     meta: { errorTitle: "Gagal Memuat Detail Pesanan" },
   });
 }
