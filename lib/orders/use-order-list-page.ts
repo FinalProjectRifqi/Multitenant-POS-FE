@@ -61,11 +61,14 @@ export function useOrderListPage() {
         o.order_status_id === ORDER_STATUS.ON_PROCESS ||
         o.order_status_id === ORDER_STATUS.READY,
     ).length,
-    completed: allOrders.filter(
-      (o) => o.order_status_id === ORDER_STATUS.COMPLETE,
-    ).length,
+    completed: ORDER_STATUS.COMPLETE
+      ? allOrders.filter((o) => o.order_status_id === ORDER_STATUS.COMPLETE)
+          .length
+      : 0,
     revenue: allOrders
-      .filter((o) => o.order_status_id === ORDER_STATUS.COMPLETE)
+      .filter(
+        (o) => Boolean(ORDER_STATUS.COMPLETE) && o.order_status_id === ORDER_STATUS.COMPLETE,
+      )
       .reduce((sum, o) => sum + o.total_amount, 0),
   };
 

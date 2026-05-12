@@ -1,5 +1,7 @@
 import type { StatItem } from "@/components/shared/stats-grid";
-import type { KdsStatus, OrderEntity } from "@/lib/schemas/order";
+import { ORDER_STATUS } from "@/lib/orders/constants";
+import type { OrderListItem } from "@/lib/orders/types";
+import { KDS_STATUS_IDS } from "@/lib/kitchen-display/constants";
 
 /**
  * Derives the three KDS stat cards from the current order list.
@@ -13,24 +15,32 @@ import type { KdsStatus, OrderEntity } from "@/lib/schemas/order";
  * derived from Total − Diproses − Siap Disajikan) but is surfaced via the
  * filter tabs below the cards.
  */
-export function buildKdsStats(orders: OrderEntity[]): StatItem[] {
-  const countByStatus = (status: KdsStatus) =>
-    orders.filter((o) => o.kds_status === status).length;
+export function buildKdsStats(orders: OrderListItem[]): StatItem[] {
+  const kdsOrders = orders.filter((o) =>
+    KDS_STATUS_IDS.includes(o.order_status_id),
+  );
+  const countByStatusId = (statusId: string) =>
+    kdsOrders.filter((o) => o.order_status_id === statusId).length;
 
   return [
     {
       label: "Total Pesanan",
-      value: orders.length,
-      description: "Semua pesanan aktif di dapur",
+      value: kdsOrders.length,
+      description: "Semua pesanan yang tampil di KDS",
+    },
+    {
+      label: "Menunggu",
+      value: countByStatusId(ORDER_STATUS.JUST_IN),
+      description: "Menunggu untuk mulai diproses oleh tim dapur",
     },
     {
       label: "Diproses",
-      value: countByStatus("diproses"),
+      value: countByStatusId(ORDER_STATUS.ON_PROCESS),
       description: "Sedang dimasak oleh tim dapur",
     },
     {
       label: "Siap Disajikan",
-      value: countByStatus("siap_disajikan"),
+      value: countByStatusId(ORDER_STATUS.READY),
       description: "Siap untuk diantarkan ke pelanggan",
     },
   ];
@@ -41,12 +51,13 @@ export function buildKdsStats(orders: OrderEntity[]): StatItem[] {
  * Used by the filter tab bar to show live badge counts.
  */
 export function buildKdsFilterCounts(
-  orders: OrderEntity[],
-): Record<KdsStatus, number> {
-  return {
-    menunggu: orders.filter((o) => o.kds_status === "menunggu").length,
-    diproses: orders.filter((o) => o.kds_status === "diproses").length,
-    siap_disajikan: orders.filter((o) => o.kds_status === "siap_disajikan")
-      .length,
-  };
+  orders: OrderListItem[],
+): Record<string, number> {
+  const kdsOrders = orders.filter((o) =>
+    KDS_STATUS_IDS.includes(o.order_status_id),
+  );
+  return kdsOrders.reduce<Record<string, number>>((acc, o) => {
+    acc[o.order_status_id] = (acc[o.order_status_id] ?? 0) + 1;
+    return acc;
+  }, {});
 }

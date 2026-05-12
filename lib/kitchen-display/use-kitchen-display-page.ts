@@ -3,13 +3,11 @@
 import { useMemo, useState } from "react";
 
 import { buildKdsFilterCounts, buildKdsStats } from "@/lib/kitchen-display/stats";
-import {
-  useOrdersQuery,
-  useUpdateOrderStatusMutation,
-} from "@/lib/queries/order";
 import type { KdsFilterValue } from "@/lib/kitchen-display/constants";
-import type { KdsStatus, OrderEntity } from "@/lib/schemas/order";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
+import { KDS_STATUS_IDS } from "@/lib/kitchen-display/constants";
+import type { OrderListItem } from "@/lib/orders/types";
+import { usePosOrderDetailQuery, usePosOrdersQuery } from "@/lib/queries/pos-orders";
 
 export type { KdsFilterValue };
 
@@ -27,24 +25,25 @@ export type { KdsFilterValue };
  */
 export function useKitchenDisplayPage() {
   const user = useCurrentUser();
+  const unitId = user?.unit?.unit_id ?? "";
 
   // ── Remote data ────────────────────────────────────────────────────────────
-  const query = useOrdersQuery();
-  const orders: OrderEntity[] = query.data ?? [];
-
-  // ── Status-update mutation ─────────────────────────────────────────────────
-  const updateMutation = useUpdateOrderStatusMutation();
+  const query = usePosOrdersQuery(unitId, { limit: 100, sortBy: "ordered_at", sortType: "DESC" }, 25_000);
+  const orders: OrderListItem[] = query.data?.data ?? [];
 
   // ── Filter state ───────────────────────────────────────────────────────────
   const [activeFilter, setActiveFilter] = useState<KdsFilterValue>("all");
 
   // ── Detail dialog state ────────────────────────────────────────────────────
-  const [selectedOrder, setSelectedOrder] = useState<OrderEntity | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const selectedOrderQuery = usePosOrderDetailQuery(unitId, selectedOrderId ?? "");
+  const selectedOrder = selectedOrderQuery.data?.data ?? null;
 
   // ── Derived values (memoised) ─────────────────────────────────────────────
   const filteredOrders = useMemo(() => {
-    if (activeFilter === "all") return orders;
-    return orders.filter((o) => o.kds_status === activeFilter);
+    const kdsOrders = orders.filter((o) => KDS_STATUS_IDS.includes(o.order_status_id));
+    if (activeFilter === "all") return kdsOrders;
+    return kdsOrders.filter((o) => o.order_status_id === activeFilter);
   }, [orders, activeFilter]);
 
   const stats = useMemo(() => buildKdsStats(orders), [orders]);
@@ -52,26 +51,6 @@ export function useKitchenDisplayPage() {
   const filterCounts = useMemo(() => buildKdsFilterCounts(orders), [orders]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
-
-  /**
-   * Advances the order to its next KDS status.
-   * The caller is responsible for only invoking this when nextStatus !== null.
-   */
-  async function handleAdvanceStatus(order: OrderEntity, nextStatus: KdsStatus) {
-    await updateMutation.updateOrderStatus({
-      order_id: order.order_id,
-      payload: { kds_status: nextStatus },
-    });
-
-    // Keep the dialog in sync: if the order being viewed is the one updated,
-    // reflect the new status immediately (optimistic cache already updated it,
-    // but selectedOrder is a snapshot — re-point to the live order).
-    if (selectedOrder?.order_id === order.order_id) {
-      setSelectedOrder((prev) =>
-        prev ? { ...prev, kds_status: nextStatus } : prev,
-      );
-    }
-  }
 
   /**
    * Derived unit name: prefer the logged-in user's unit, fall back to generic label.
@@ -85,6 +64,7 @@ export function useKitchenDisplayPage() {
     stats,
     filterCounts,
     unitName,
+    unitId,
 
     // Query state
     query,
@@ -95,12 +75,8 @@ export function useKitchenDisplayPage() {
 
     // Detail dialog
     selectedOrder,
-    openOrderDetail: setSelectedOrder,
-    closeOrderDetail: () => setSelectedOrder(null),
-
-    // Mutation
-    handleAdvanceStatus,
-    updateIsPending: updateMutation.isPending,
-    pendingOrderId: updateMutation.pendingOrderId,
+    selectedOrderQuery,
+    openOrderDetail: (order: OrderListItem) => setSelectedOrderId(order.order_id),
+    closeOrderDetail: () => setSelectedOrderId(null),
   };
 }

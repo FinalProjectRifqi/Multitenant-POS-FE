@@ -27,6 +27,7 @@ export interface OrderListItem {
   order_status_id: string;
   order_status_name: string;
   ordered_at: string;
+  updated_at?: string;
 }
 
 export interface OrderDetail extends OrderListItem {

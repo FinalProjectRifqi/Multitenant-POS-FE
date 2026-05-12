@@ -9,9 +9,22 @@ import {
 } from "@/components/kitchen";
 import { StatsGrid } from "@/components/shared/stats-grid";
 import { getErrorMessage } from "@/lib/api/client";
+import { KDS_FILTER_TABS } from "@/lib/kitchen-display/constants";
 import { useKitchenDisplayPage } from "@/lib/kitchen-display/use-kitchen-display-page";
-import type { KdsStatus } from "@/lib/schemas/order";
 import { RefreshCw } from "lucide-react";
+
+const STATUS_COLUMN_CLASS: Record<1 | 2 | 3 | 4, string> = {
+  1: "lg:grid-cols-1",
+  2: "lg:grid-cols-2",
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+};
+
+function getOrderSortTimestamp(order: { updated_at?: string; ordered_at: string }) {
+  const source = order.updated_at ?? order.ordered_at;
+  const time = new Date(source).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
 
 // ── Loading skeleton ──────────────────────────────────────────────────────────
 
@@ -33,11 +46,26 @@ function KdsCardSkeleton() {
   );
 }
 
+function KdsColumnSkeleton() {
+  return (
+    <div className="w-full rounded-2xl border border-[#D8CEC1] bg-[#EAE4DB] p-3">
+      <div className="mb-3 flex items-center justify-between">
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-5 w-8 rounded-full" />
+      </div>
+      <div className="space-y-3">
+        <KdsCardSkeleton />
+        <KdsCardSkeleton />
+      </div>
+    </div>
+  );
+}
+
 // ── Empty state ────────────────────────────────────────────────────────────────
 
 function KdsEmptyState({ hasFilter }: { hasFilter: boolean }) {
   return (
-    <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+    <div className="w-full flex flex-col items-center justify-center py-16 text-center">
       <div className="mb-4 text-5xl">🍽️</div>
       <p className="text-base font-semibold text-foreground">
         {hasFilter
@@ -60,13 +88,23 @@ export default function KitchenDisplayPage() {
 
   const isLoadingInitial = p.query.isLoading;
   const isRefetching = p.query.isFetching && !p.query.isLoading;
+  const statusColumns = KDS_FILTER_TABS.filter((tab) => tab.value !== "all");
+  const visibleColumns =
+    p.activeFilter === "all"
+      ? statusColumns
+      : statusColumns.filter((tab) => tab.value === p.activeFilter);
+  const boardColumns = Math.min(Math.max(visibleColumns.length, 1), 4) as
+    | 1
+    | 2
+    | 3
+    | 4;
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       {/* ── Page heading ── */}
       <section className="space-y-1">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             Kitchen Display System {p.unitName}
           </h1>
           {/* Subtle spinning indicator while background refetch is happening */}
@@ -92,7 +130,7 @@ export default function KitchenDisplayPage() {
       )}
 
       {/* ── Stat cards ── */}
-      <StatsGrid stats={p.stats} columns={3} />
+      <StatsGrid stats={p.stats} columns={4} />
 
       {/* ── Filter tabs ── */}
       <KdsFilterTabs
@@ -101,27 +139,55 @@ export default function KitchenDisplayPage() {
         onChange={p.setActiveFilter}
       />
 
-      {/* ── Order card grid ── */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* ── status board ── */}
+      <div
+        className={`grid grid-cols-1 gap-4 ${STATUS_COLUMN_CLASS[boardColumns]}`}
+      >
         {isLoadingInitial ? (
-          // Show skeleton placeholders during the very first load
-          Array.from({ length: 6 }).map((_, i) => <KdsCardSkeleton key={i} />)
+          Array.from({ length: 3 }).map((_, i) => <KdsColumnSkeleton key={i} />)
         ) : p.filteredOrders.length === 0 ? (
           <KdsEmptyState hasFilter={p.activeFilter !== "all"} />
         ) : (
-          p.filteredOrders.map((order) => (
-            <KdsOrderCard
-              key={order.order_id}
-              order={order}
-              isPending={
-                p.updateIsPending && p.pendingOrderId === order.order_id
-              }
-              onActionClick={(order, nextStatus: KdsStatus) =>
-                p.handleAdvanceStatus(order, nextStatus)
-              }
-              onCardClick={p.openOrderDetail}
-            />
-          ))
+          visibleColumns.map((column) => {
+            const columnOrders = p.orders
+              .filter((order) => order.order_status_id === column.value)
+              .sort(
+                (a, b) => getOrderSortTimestamp(b) - getOrderSortTimestamp(a),
+              );
+
+            return (
+              <section
+                key={column.value}
+                className="w-full rounded-2xl border border-[#D8CEC1] bg-[#EAE4DB] px-3 pb-3 lg:max-h-[calc(100dvh-19rem)] lg:overflow-hidden"
+              >
+                <header className="-mx-3 mb-3 flex items-center justify-between border-b border-[#D8CEC1] bg-[#EAE4DB] px-3 py-2">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {column.label}
+                  </h3>
+                  <span className="inline-flex min-w-7 items-center justify-center rounded-full bg-background/95 px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                    {columnOrders.length}
+                  </span>
+                </header>
+
+                {columnOrders.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border/70 bg-background/70 px-3 py-5 text-center text-xs text-muted-foreground">
+                    Belum ada order di status ini.
+                  </div>
+                ) : (
+                  <div className="space-y-3 lg:max-h-[calc(100dvh-24rem)] lg:overflow-y-auto lg:pr-1">
+                    {columnOrders.map((order) => (
+                      <KdsOrderCard
+                        key={order.order_id}
+                        unitId={p.unitId}
+                        order={order}
+                        onCardClick={p.openOrderDetail}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })
         )}
       </div>
 
@@ -133,13 +199,6 @@ export default function KitchenDisplayPage() {
         onOpenChange={(open) => {
           if (!open) p.closeOrderDetail();
         }}
-        isPending={
-          p.updateIsPending &&
-          p.pendingOrderId === p.selectedOrder?.order_id
-        }
-        onActionClick={(order, nextStatus: KdsStatus) =>
-          p.handleAdvanceStatus(order, nextStatus)
-        }
       />
     </div>
   );
