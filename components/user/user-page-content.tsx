@@ -44,10 +44,10 @@ export function UserPageContent() {
   return (
     <div className="space-y-5 p-8">
       <section className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-3xl font-bold text-primary tracking-tight">
           Kelola Pengguna
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-primary/90 font-semibold">
           Kelola semua pengguna dalam sistem Anda
         </p>
       </section>

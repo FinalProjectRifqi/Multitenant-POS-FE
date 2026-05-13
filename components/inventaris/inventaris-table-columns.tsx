@@ -2,20 +2,19 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
-import { format, parseISO } from "date-fns";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import type { InventarisRow } from "@/lib/inventaris/types";
-import { id } from "date-fns/locale";
 import { formatDateTime } from "@/lib/inventaris/constant";
+import type { InventarisRow } from "@/lib/inventaris/types";
+import { cn } from "@/lib/utils";
+import { Progress } from "../ui/progress";
 
 type Actions = {
   onView: (item: InventarisRow) => void;
@@ -70,35 +69,35 @@ export function buildInventarisColumns(
       header: "Stok Saat Ini",
       cell: ({ row }) => {
         const item = row.original;
+        const current = row.getValue<number>("current_stock");
+        const max = item.max_threshold;
+        const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
+
         return (
-          <span
-            className={cn(
-              "font-medium",
-              item.is_low_stock ? "text-destructive" : "text-foreground/85",
-            )}
-          >
-            {row.getValue<number>("current_stock")}
-          </span>
+          <div className="flex flex-col gap-1.5 w-40">
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span
+                className={cn(
+                  "font-medium tabular-nums",
+                  item.is_low_stock ? "text-destructive" : "text-foreground/85",
+                )}
+              >
+                {current}
+              </span>
+              <span className="text-muted-foreground tabular-nums">
+                / {max}
+              </span>
+            </div>
+            <Progress
+              value={percentage}
+              className={cn(
+                "h-1.5",
+                item.is_low_stock && "[&>div]:bg-destructive",
+              )}
+            />
+          </div>
         );
       },
-    },
-    {
-      accessorKey: "min_threshold",
-      header: "Stok Minimum",
-      cell: ({ row }) => (
-        <span className="text-foreground/85">
-          {row.getValue<number>("min_threshold")}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "max_threshold",
-      header: "Stok Maksimum",
-      cell: ({ row }) => (
-        <span className="text-foreground/85">
-          {row.getValue<number>("max_threshold")}
-        </span>
-      ),
     },
     {
       accessorKey: "last_restocked_at",

@@ -3,6 +3,7 @@
 import { CreditCard, Banknote, Smartphone, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/dashboard/ui";
+import { Button } from "@/components/ui/button";
 
 function formatRupiah(n: number) {
   return new Intl.NumberFormat("id-ID", {
