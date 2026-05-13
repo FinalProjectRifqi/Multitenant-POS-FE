@@ -85,11 +85,11 @@ export function DataTable<T>({
   const table = useReactTable({
     data,
     columns,
-    state: { 
-      sorting, 
-      columnVisibility, 
-      rowSelection, 
-      ...(pagination && { pagination }) 
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      ...(pagination && { pagination }),
     },
     initialState: { pagination: { pageSize: defaultPageSize } },
     enableRowSelection,
@@ -172,7 +172,7 @@ export function DataTable<T>({
             {isLoading ? (
               Array.from({ length: skeletonRows }, (_, i) => (
                 <TableRow key={`skeleton-${i}`}>
-                  <TableCell colSpan={columns.length} className="px-4 py-3">
+                  <TableCell colSpan={columns.length} className="px-8 py-5">
                     <Skeleton className="h-4 w-full" />
                   </TableCell>
                 </TableRow>

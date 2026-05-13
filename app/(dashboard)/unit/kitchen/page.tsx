@@ -20,7 +20,10 @@ const STATUS_COLUMN_CLASS: Record<1 | 2 | 3 | 4, string> = {
   4: "lg:grid-cols-4",
 };
 
-function getOrderSortTimestamp(order: { updated_at?: string; ordered_at: string }) {
+function getOrderSortTimestamp(order: {
+  updated_at?: string;
+  ordered_at: string;
+}) {
   const source = order.updated_at ?? order.ordered_at;
   const time = new Date(source).getTime();
   return Number.isNaN(time) ? 0 : time;
@@ -104,7 +107,7 @@ export default function KitchenDisplayPage() {
       {/* ── Page heading ── */}
       <section className="space-y-1">
         <div className="flex items-center gap-2 sm:gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="text-3xl font-bold text-primary tracking-tight">
             Kitchen Display System {p.unitName}
           </h1>
           {/* Subtle spinning indicator while background refetch is happening */}
@@ -115,7 +118,7 @@ export default function KitchenDisplayPage() {
             />
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-primary/90 font-semibold">
           Pantau dan kelola pesanan dapur secara real-time · Diperbarui setiap
           25 detik
         </p>

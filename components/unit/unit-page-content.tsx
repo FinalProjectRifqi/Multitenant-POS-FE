@@ -20,6 +20,7 @@ import { UnitFormDialog } from "@/components/unit/unit-form-dialog";
 import { buildUnitColumns } from "@/components/unit/unit-table-columns";
 import { getErrorMessage } from "@/lib/api/client";
 import { useUnitPage } from "@/lib/unit/use-unit-page";
+import { PageHeader } from "../dashboard/ui";
 
 /**
  * UnitPageContent — Client Component
@@ -44,14 +45,10 @@ export function UnitPageContent() {
   return (
     <div className="space-y-5 p-8">
       {/* ── Page heading ── */}
-      <section className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          Kelola Unit Usaha
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Kelola semua unit usaha, cabang, dan lokasi bisnis Anda
-        </p>
-      </section>
+      <PageHeader
+        title="Kelola Unit Usaha"
+        description="Kelola semua unit usaha, cabang, dan lokasi bisnis Anda"
+      />
 
       {/* ── Stat cards ── */}
       <StatsGrid stats={p.stats} columns={3} />

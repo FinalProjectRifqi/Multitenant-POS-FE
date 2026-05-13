@@ -23,6 +23,7 @@ import { useUnitMenuPage } from "@/lib/menu/use-unit-menu-page";
 import { buildMenuItemColumns } from "./menu-item-table-columns";
 import { MenuDetailDialog } from "./menu-detail-dialog";
 import { MenuFormDialog } from "./menu-form-dialog";
+import { PageHeader } from "../dashboard/ui";
 
 type MenuPageContentProps = {
   unitId: string;
@@ -65,7 +66,7 @@ export function MenuPageContent({ unitId }: MenuPageContentProps) {
         </Button>
 
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-3xl font-bold text-primary tracking-tight ">
             Kelola Menu
           </h1>
 
@@ -73,7 +74,7 @@ export function MenuPageContent({ unitId }: MenuPageContentProps) {
           {p.query.isLoading ? (
             <Skeleton className="h-5 w-64 rounded" />
           ) : p.selectedUnit ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-primary/90 font-semibold">
               <Building2 className="h-4 w-4 shrink-0" />
               <span>
                 {p.selectedUnit.business_unit_name}

@@ -52,9 +52,10 @@ export function UserFormDialog({
   const { data: rolesResponse, isLoading: rolesLoading } = useRolesQuery();
   const { data: unitsResponse, isLoading: unitsLoading } = useUnitsQuery();
   const activeUnits = useMemo(
-      () => (unitsResponse?.data ?? []).filter((unit) => unit.business_unit_status),
-      [unitsResponse],
-    );
+    () =>
+      (unitsResponse?.data ?? []).filter((unit) => unit.business_unit_status),
+    [unitsResponse],
+  );
 
   const roles = rolesResponse?.data || [];
 
@@ -109,7 +110,7 @@ export function UserFormDialog({
           <Input
             id="full_name"
             placeholder="Masukkan nama lengkap"
-            className={cn(errors.full_name && "border-destructive")}
+            className={cn("py-5", errors.full_name && "border-destructive")}
             disabled={isPending}
             {...register("full_name")}
           />
@@ -125,7 +126,11 @@ export function UserFormDialog({
           <Input
             id="user_name"
             placeholder="Masukkan username"
-            className={cn(errors.user_name && "border-destructive")}
+            className={cn(
+              "py-5",
+              errors.user_name &&
+                "border-destructive focus-visible:ring-destructive",
+            )}
             disabled={isPending}
             {...register("user_name")}
           />
@@ -143,7 +148,7 @@ export function UserFormDialog({
           id="email"
           type="email"
           placeholder="nama@example.com"
-          className={cn(errors.email && "border-destructive")}
+          className={cn("py-5", errors.email && "border-destructive")}
           disabled={isPending}
           {...register("email")}
         />
@@ -167,7 +172,7 @@ export function UserFormDialog({
               >
                 <SelectTrigger
                   id="role_id"
-                  className={cn(errors.role_id && "border-destructive")}
+                  className={cn("py-5", errors.role_id && "border-destructive")}
                 >
                   <SelectValue placeholder="Pilih Role Pengguna" />
                 </SelectTrigger>
@@ -182,9 +187,7 @@ export function UserFormDialog({
             )}
           />
           {errors.role_id && (
-            <p className="text-xs text-destructive">
-              {errors.role_id.message}
-            </p>
+            <p className="text-xs text-destructive">{errors.role_id.message}</p>
           )}
         </div>
 
@@ -195,14 +198,19 @@ export function UserFormDialog({
             name="business_unit_id"
             render={({ field }) => (
               <Select
-                onValueChange={(val) => field.onChange(val === "none" ? null : val)}
+                onValueChange={(val) =>
+                  field.onChange(val === "none" ? null : val)
+                }
                 defaultValue={field.value || "none"}
                 value={field.value || "none"}
                 disabled={isPending || unitsLoading}
               >
                 <SelectTrigger
                   id="business_unit_id"
-                  className={cn(errors.business_unit_id && "border-destructive")}
+                  className={cn(
+                    "py-5",
+                    errors.business_unit_id && "border-destructive",
+                  )}
                 >
                   <SelectValue placeholder="Pilih Unit Usaha" />
                 </SelectTrigger>
@@ -235,12 +243,14 @@ export function UserFormDialog({
             id="password"
             type="password"
             placeholder="Masukkan password"
-            className={cn(errors.password && "border-destructive")}
+            className={cn("py-5", errors.password && "border-destructive")}
             disabled={isPending}
             {...register("password")}
           />
           {errors.password && (
-            <p className="text-xs text-destructive">{errors.password.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.password.message}
+            </p>
           )}
         </div>
       )}

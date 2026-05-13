@@ -32,11 +32,11 @@ export function DataTableToolbar<T>({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-1 items-center gap-2">
-        <div className="relative w-full sm:max-w-xs">
+        <div className="relative w-full sm:max-w-md">
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
-            className="bg-background pl-8"
+            className="bg-background pl-8 py-5"
             value={searchValue}
             onChange={(e) => column?.setFilterValue(e.target.value)}
           />
