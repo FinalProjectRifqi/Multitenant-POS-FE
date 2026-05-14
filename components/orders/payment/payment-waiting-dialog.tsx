@@ -89,8 +89,6 @@ export interface PaymentWaitingDialogProps {
   onFailed: (reason: string) => void;
   /** Called when user explicitly clicks "Batalkan Pembayaran" — triggers Midtrans cancel. */
   onCancel: () => void;
-  /** Called when user dismisses the dialog via X or overlay click — does NOT cancel the payment. */
-  onDismiss: () => void;
 }
 
 // ─── Pure helpers ───────────────────────────────────────────────────────────────
@@ -193,7 +191,6 @@ export function PaymentWaitingDialog({
   onSuccess,
   onFailed,
   onCancel,
-  onDismiss,
 }: PaymentWaitingDialogProps) {
   const simulatePaymentSuccessVar =
     process.env.NEXT_PUBLIC_SIMULATE_PAYMENT_SUCCESS;
@@ -278,12 +275,7 @@ export function PaymentWaitingDialog({
   const qrisMethod = PAYMENT_METHODS.find((m) => m.id === "qris");
   // dialog tidak bisa di close
   return (
-    <Dialog
-      open={open}
-      // onOpenChange={(next) => {
-      //   if (!next) onDismiss();
-      // }}
-    >
+    <Dialog open={open}>
       <DialogContent className="flex h-dvh w-full flex-col overflow-hidden rounded-none p-0 sm:h-auto sm:max-h-[95dvh] sm:w-[min(94vw,1160px)] sm:rounded-xl">
         {/* Header */}
         <DialogHeader className="shrink-0 border-b border-border px-5 py-4 pr-14 sm:px-8 sm:py-6 sm:pr-16">
@@ -414,7 +406,7 @@ export function PaymentWaitingDialog({
                         alt="QRIS Code"
                         width={210}
                         height={210}
-                        className="object-"
+                        className="object-cover"
                       />
                     )}
                   </div>

@@ -3,7 +3,7 @@
 // components/orders/order-table-columns.tsx
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, ReceiptText, UtensilsCrossed } from "lucide-react";
+import { MoreHorizontal, UtensilsCrossed } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";

@@ -55,7 +55,7 @@ export default function KelolaPesananPage() {
 
   const columns = useMemo(
     () => buildOrderColumns(setDeletingOrder, setPaymentOrder),
-    [setDeletingOrder],
+    [setDeletingOrder, setPaymentOrder],
   );
 
   const paginationMeta = {

@@ -82,9 +82,7 @@ export interface CashPaymentResponse {
   success: true;
   statusCode: number;
   message: string;
-  data: {
-    payment: PaymentRecord;
-  };
+  data: PaymentRecord;
 }
 
 export interface CashlessPaymentResponse {

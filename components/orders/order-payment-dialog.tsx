@@ -137,11 +137,6 @@ export function OrderPaymentDialog({
     });
   }
 
-  function handleQrisDismiss() {
-    setWaitingOpen(false);
-    // Sengaja tidak menghapus activeQris agar pembayaran bisa dilanjutkan kembali
-  }
-
   async function handleQrisCancel() {
     const paymentId = activeQris?.paymentId;
     setWaitingOpen(false);
@@ -288,7 +283,6 @@ export function OrderPaymentDialog({
           totalQty={totalQty}
           onSuccess={handleQrisSuccess}
           onFailed={handleQrisFailed}
-          onDismiss={handleQrisDismiss}
           onCancel={handleQrisCancel}
         />
       )}

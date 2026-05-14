@@ -302,7 +302,12 @@ export function usePaymentDetailPollingQuery(
 ) {
   return useQuery({
     queryKey: paymentQueryKeys.detail(unitId, orderId, paymentId ?? ""),
-    queryFn: () => getPaymentDetail(unitId, orderId, paymentId!),
+    queryFn: () => {
+      if (!paymentId) {
+        throw new Error("Payment ID is required to fetch payment detail");
+      }
+      return getPaymentDetail(unitId, orderId, paymentId);
+    },
     enabled: enabled && Boolean(paymentId),
     refetchInterval: 5_000,
     refetchIntervalInBackground: false,
