@@ -33,6 +33,7 @@ interface PaymentDetailSheetProps {
   isCashAllowed: boolean;
   isRoleReady: boolean;
   canPayStatus: boolean;
+  isPending: boolean;
   onProcess: () => void;
 }
 
@@ -52,6 +53,7 @@ export function PaymentDetailSheet({
   isCashAllowed,
   isRoleReady,
   canPayStatus,
+  isPending,
   onProcess,
 }: PaymentDetailSheetProps) {
   const selectedMethod = PAYMENT_METHODS.find((item) => item.id === method);
@@ -165,44 +167,46 @@ export function PaymentDetailSheet({
                   Metode Bayar
                 </Label>
                 <div className="grid gap-3">
-                  {PAYMENT_METHODS.map(({ id, label, description, icon: Icon }) => {
-                    const isDisabled = id === "cash" && isCashRestricted;
+                  {PAYMENT_METHODS.map(
+                    ({ id, label, description, icon: Icon }) => {
+                      const isDisabled = id === "cash" && isCashRestricted;
 
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        disabled={isDisabled}
-                        onClick={() => {
-                          if (isDisabled) return;
-                          onMethodChange(id);
-                        }}
-                        className={cn(
-                          "flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
-                          method === id
-                            ? "border-primary bg-primary/5"
-                            : "border-border bg-background hover:bg-muted/40",
-                          isDisabled && "cursor-not-allowed opacity-50",
-                        )}
-                      >
-                        <Icon className="h-4 w-4 text-primary" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-bold">
-                            {label}
-                          </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {description}
-                          </span>
-                        </span>
-                        <span
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          disabled={isDisabled}
+                          onClick={() => {
+                            if (isDisabled) return;
+                            onMethodChange(id);
+                          }}
                           className={cn(
-                            "h-2 w-2 rounded-full",
-                            method === id ? "bg-primary" : "bg-transparent",
+                            "flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors",
+                            method === id
+                              ? "border-primary bg-primary/5"
+                              : "border-border bg-background hover:bg-muted/40",
+                            isDisabled && "cursor-not-allowed opacity-50",
                           )}
-                        />
-                      </button>
-                    );
-                  })}
+                        >
+                          <Icon className="h-4 w-4 text-primary" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-bold">
+                              {label}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {description}
+                            </span>
+                          </span>
+                          <span
+                            className={cn(
+                              "h-2 w-2 rounded-full",
+                              method === id ? "bg-primary" : "bg-transparent",
+                            )}
+                          />
+                        </button>
+                      );
+                    },
+                  )}
                 </div>
                 {isCashRestricted && (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -233,10 +237,14 @@ export function PaymentDetailSheet({
           <Button
             type="button"
             className="h-12"
-            disabled={!source || !canPayStatus}
+            disabled={!source || !canPayStatus || isPending}
             onClick={onProcess}
           >
-            <SelectedMethodIcon className="h-4 w-4" />
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <SelectedMethodIcon className="h-4 w-4" />
+            )}
             Proses Bayar
           </Button>
         </SheetFooter>

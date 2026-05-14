@@ -13,12 +13,15 @@ import {
 import { formatApiError } from "@/lib/api/parsed-api-error";
 import {
   cancelOrderStatus,
+  cancelPayment,
   cancelPosOrder,
   createCashlessPayment,
   createCashPayment,
   createPosOrder,
+  getPaymentDetail,
   getPosOrderDetail,
   getPosOrders,
+  simulateMidtransPaymentSuccess,
   transitionOrderStatus,
   updatePosOrder,
 } from "@/lib/api/pos-orders";
@@ -30,6 +33,11 @@ import type {
 } from "@/lib/orders/types";
 
 // ─── Query key factory ────────────────────────────────────────────────────────
+
+export const paymentQueryKeys = {
+  detail: (unitId: string, orderId: string, paymentId: string) =>
+    ["payment-detail", unitId, orderId, paymentId] as const,
+};
 
 export const posOrderQueryKeys = {
   all: () => ["pos-orders"] as const,
@@ -251,6 +259,116 @@ export function useCreateCashlessPaymentMutation(
   };
 }
 
+// ─── Mutation: cancel order status (KDS) ────────────────────────────────────
+
+export function useCancelOrderStatusMutation(unitId: string) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const result = await cancelOrderStatus(unitId, orderId);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+    },
+    onSuccess: () => {
+      toast.success("Status pesanan berhasil dibatalkan.", {
+        position: "top-right",
+        richColors: true,
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: posOrderQueryKeys.lists() });
+    },
+  });
+
+  return {
+    cancelOrderStatus: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error ? getErrorMessage(mutation.error) : null,
+  };
+}
+
+// ─── Query: payment detail polling ───────────────────────────────────────────
+
+export function usePaymentDetailPollingQuery(
+  unitId: string,
+  orderId: string,
+  paymentId: string | null,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: paymentQueryKeys.detail(unitId, orderId, paymentId ?? ""),
+    queryFn: () => getPaymentDetail(unitId, orderId, paymentId!),
+    enabled: enabled && Boolean(paymentId),
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: false,
+    staleTime: 0,
+    retry: 2,
+    meta: { errorTitle: "Gagal memeriksa status pembayaran" },
+  });
+}
+
+// ─── Mutation: cancel cashless payment ───────────────────────────────────────
+
+export function useCancelPaymentMutation(unitId: string, orderId: string) {
+  const mutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const result = await cancelPayment(unitId, orderId, paymentId);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+    },
+    onError: (error) => {
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
+    },
+  });
+
+  return {
+    cancelPayment: mutation.mutateAsync,
+    isPending: mutation.isPending,
+  };
+}
+
+export function useSimulateMidtransPaymentMutation(
+  unitId: string,
+  orderId: string,
+  paymentId: string,
+) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const result = await simulateMidtransPaymentSuccess(
+        unitId,
+        orderId,
+        paymentId,
+      );
+      if (!result.ok) throw formatApiError(result.status, result.message);
+    },
+    onError: (error) => {
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: posOrderQueryKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: posOrderQueryKeys.detail(unitId, orderId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: paymentQueryKeys.detail(unitId, orderId, paymentId),
+      });
+    },
+  });
+
+  return {
+    simulateSuccess: mutation.mutateAsync,
+    isPending: mutation.isPending,
+  };
+}
+
+// ─── Mutation: transition order status (KDS) ─────────────────────────────────
+
 export function useTransitionOrderStatusMutation(
   unitId: string,
   orderId: string,
@@ -258,13 +376,17 @@ export function useTransitionOrderStatusMutation(
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (payload: PaymentPayload) => {
-      const result = await createCashPayment(unitId, orderId, payload);
+    mutationFn: async (orderStatusId: string) => {
+      const result = await transitionOrderStatus(
+        unitId,
+        orderId,
+        orderStatusId,
+      );
       if (!result.ok) throw formatApiError(result.status, result.message);
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Pembayaran tunai berhasil diproses.", {
+      toast.success("Status pesanan berhasil diperbarui.", {
         position: "top-right",
         richColors: true,
         duration: 3000,
@@ -282,7 +404,7 @@ export function useTransitionOrderStatusMutation(
   });
 
   return {
-    createCashPayment: mutation.mutateAsync,
+    transitionStatus: mutation.mutateAsync,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error ? getErrorMessage(mutation.error) : null,

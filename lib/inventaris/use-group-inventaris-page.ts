@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 
 import { useUnitsQuery } from "@/lib/queries/unit";
@@ -18,7 +20,7 @@ function toInventarisRow(items: InventarisItem[] | undefined): InventarisRow[] {
 }
 
 export function useGroupInventarisPage() {
-  const unitsQuery = useUnitsQuery();
+  const unitsQuery = useUnitsQuery(1, 100, false);
 
   const units = useMemo(
     () =>

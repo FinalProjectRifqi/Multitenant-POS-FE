@@ -1,22 +1,31 @@
-"use client";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
 
-import { useGroupInventarisPage } from "@/lib/inventaris/use-group-inventaris-page";
-import { InventarisUnitSelector } from "@/components/inventaris/inventaris-unit-selector";
-import { PageHeader } from "@/components/dashboard/ui";
+import { GroupInventarisPageContent } from "@/components/inventaris/group-inventaris-page-content";
+import { getUnits } from "@/lib/api/units";
+import { unitQueryKeys } from "@/lib/queries/unit-keys";
 
-export default function Page() {
-  const p = useGroupInventarisPage();
+export default async function Page() {
+  const queryClient = new QueryClient();
+
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: [
+        ...unitQueryKeys.lists(),
+        { page: 1, limit: 100, showInactive: false },
+      ],
+      queryFn: () => getUnits({ page: 1, limit: 100, show_inactive: false }),
+    });
+  } catch (error) {
+    console.error("Failed to prefetch units for inventaris selector:", error);
+  }
 
   return (
-    <div className="space-y-6 p-8">
-      {/* ── Page heading ── */}
-      <PageHeader
-        title="Kelola Inventaris"
-        description="Kelola daftar inventaris yang tersedia di seluruh unit"
-      />
-
-      {/* ── Unit selector grid ── */}
-      <InventarisUnitSelector units={p.units} isLoading={p.query.isLoading} />
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <GroupInventarisPageContent />
+    </HydrationBoundary>
   );
 }

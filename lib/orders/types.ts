@@ -93,8 +93,9 @@ export interface CashlessPaymentResponse {
   message: string;
   data: {
     payment: PaymentRecord;
-    snap_token: string;
-    redirect_url: string;
+    qr_code_url: string;
+    qr_string: string;
+    acquirer: string;
     webhook_signature_key: string;
   };
 }

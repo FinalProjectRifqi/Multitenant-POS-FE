@@ -80,9 +80,7 @@ export const cashPaymentResponseSchema = z.object({
   success: z.literal(true),
   statusCode: z.number(),
   message: z.string(),
-  data: z.object({
-    payment: paymentRecordSchema,
-  }),
+  data: paymentRecordSchema,
 });
 
 export const cashlessPaymentResponseSchema = z.object({
@@ -91,10 +89,18 @@ export const cashlessPaymentResponseSchema = z.object({
   message: z.string(),
   data: z.object({
     payment: paymentRecordSchema,
-    snap_token: z.string(),
-    redirect_url: z.string(),
+    qr_code_url: z.string(),
+    qr_string: z.string(),
+    acquirer: z.string(),
     webhook_signature_key: z.string(),
   }),
+});
+
+export const paymentDetailResponseSchema = z.object({
+  success: z.literal(true),
+  statusCode: z.number(),
+  message: z.string(),
+  data: paymentRecordSchema,
 });
 
 export const orderTypesListResponseSchema = z.object({
@@ -111,6 +117,7 @@ export type CashPaymentResponse = z.infer<typeof cashPaymentResponseSchema>;
 export type CashlessPaymentResponse = z.infer<
   typeof cashlessPaymentResponseSchema
 >;
+export type PaymentDetailResponse = z.infer<typeof paymentDetailResponseSchema>;
 export type OrderTypesListResponse = z.infer<
   typeof orderTypesListResponseSchema
 >;

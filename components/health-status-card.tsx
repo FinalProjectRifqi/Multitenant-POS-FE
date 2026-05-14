@@ -2,6 +2,7 @@
 
 import { getErrorMessage } from "@/lib/api/client";
 import { useHealthQuery } from "@/lib/queries/health";
+import { Button } from "./ui/button";
 
 export function HealthStatusCard() {
   const { data, error, isError, isFetching, isPending, refetch } =
