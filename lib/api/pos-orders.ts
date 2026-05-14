@@ -6,14 +6,21 @@ import { parseApiError } from "@/lib/api/parsed-api-error";
 import type {
   CreateOrderPayload,
   GetOrdersParams,
+  PaymentPayload,
   UpdateOrderPayload,
 } from "@/lib/orders/types";
 import {
+  cashlessPaymentResponseSchema,
+  cashPaymentResponseSchema,
   orderDetailResponseSchema,
   orderTypesListResponseSchema,
+  paymentDetailResponseSchema,
   posOrdersListResponseSchema,
+  type CashlessPaymentResponse,
+  type CashPaymentResponse,
   type OrderDetailResponse,
   type OrderTypesListResponse,
+  type PaymentDetailResponse,
   type PosOrdersListResponse,
 } from "@/lib/schemas/orders";
 
@@ -27,7 +34,34 @@ function orderDetailEndpoint(unitId: string, orderId: string): string {
   return `/orders/${unitId}/${orderId}`;
 }
 
-function orderStatusTransitionEndpoint(unitId: string, orderId: string): string {
+function paymentEndpoint(
+  unitId: string,
+  orderId: string,
+  method: "cash" | "cashless",
+): string {
+  return `/orders/${unitId}/${orderId}/payments/${method}`;
+}
+
+function paymentDetailEndpoint(
+  unitId: string,
+  orderId: string,
+  paymentId: string,
+): string {
+  return `/orders/${unitId}/${orderId}/payments/${paymentId}`;
+}
+
+function paymentSimulateSuccessEndpoint(
+  unitId: string,
+  orderId: string,
+  paymentId: string,
+): string {
+  return `/orders/${unitId}/${orderId}/payments/${paymentId}/simulate-success`;
+}
+
+function orderStatusTransitionEndpoint(
+  unitId: string,
+  orderId: string,
+): string {
   return `/order-status/${unitId}/${orderId}/transition`;
 }
 
@@ -62,6 +96,17 @@ export async function getPosOrderDetail(
   return apiGet<OrderDetailResponse>(orderDetailEndpoint(unitId, orderId), {
     schema: orderDetailResponseSchema,
   });
+}
+
+export async function getPaymentDetail(
+  unitId: string,
+  orderId: string,
+  paymentId: string,
+): Promise<PaymentDetailResponse> {
+  return apiGet<PaymentDetailResponse>(
+    paymentDetailEndpoint(unitId, orderId, paymentId),
+    { schema: paymentDetailResponseSchema },
+  );
 }
 
 export async function getOrderTypes(params?: {
@@ -124,13 +169,53 @@ export async function cancelPosOrder(
   }
 }
 
+export async function createCashPayment(
+  unitId: string,
+  orderId: string,
+  payload: PaymentPayload,
+): Promise<PosOrderMutationResult<CashPaymentResponse["data"]>> {
+  try {
+    const result = await apiPost<CashPaymentResponse, PaymentPayload>(
+      paymentEndpoint(unitId, orderId, "cash"),
+      payload,
+      { schema: cashPaymentResponseSchema },
+    );
+    return { ok: true, data: result.data };
+  } catch (error: unknown) {
+    const parsed = parseApiError(error);
+    return { ok: false, status: parsed.status, message: parsed.message };
+  }
+}
+
+export async function createCashlessPayment(
+  unitId: string,
+  orderId: string,
+  payload: PaymentPayload,
+): Promise<PosOrderMutationResult<CashlessPaymentResponse["data"]>> {
+  try {
+    const result = await apiPost<CashlessPaymentResponse, PaymentPayload>(
+      paymentEndpoint(unitId, orderId, "cashless"),
+      payload,
+      { schema: cashlessPaymentResponseSchema },
+    );
+    console.log("createCashlessPayment result:", result);
+    return { ok: true, data: result.data };
+  } catch (error: unknown) {
+    const parsed = parseApiError(error);
+    return { ok: false, status: parsed.status, message: parsed.message };
+  }
+}
+
 export async function transitionOrderStatus(
   unitId: string,
   orderId: string,
   orderStatusId: string,
 ): Promise<PosOrderMutationResult<OrderDetailResponse["data"]>> {
   try {
-    const result = await apiPost<OrderDetailResponse, { order_status_id: string }>(
+    const result = await apiPost<
+      OrderDetailResponse,
+      { order_status_id: string }
+    >(
       orderStatusTransitionEndpoint(unitId, orderId),
       {
         order_status_id: orderStatusId,
@@ -151,10 +236,35 @@ export async function cancelOrderStatus(
   orderId: string,
 ): Promise<PosOrderMutationResult<void>> {
   try {
-    await apiPost(
-      orderStatusCancelEndpoint(unitId, orderId),
-      undefined,
-    );
+    await apiPost(orderStatusCancelEndpoint(unitId, orderId), undefined);
+    return { ok: true, data: undefined };
+  } catch (error: unknown) {
+    const parsed = parseApiError(error);
+    return { ok: false, status: parsed.status, message: parsed.message };
+  }
+}
+
+export async function cancelPayment(
+  unitId: string,
+  orderId: string,
+  paymentId: string,
+): Promise<PosOrderMutationResult<void>> {
+  try {
+    await apiDelete(paymentDetailEndpoint(unitId, orderId, paymentId));
+    return { ok: true, data: undefined };
+  } catch (error: unknown) {
+    const parsed = parseApiError(error);
+    return { ok: false, status: parsed.status, message: parsed.message };
+  }
+}
+
+export async function simulateMidtransPaymentSuccess(
+  unitId: string,
+  orderId: string,
+  paymentId: string,
+): Promise<PosOrderMutationResult<void>> {
+  try {
+    await apiPost(paymentSimulateSuccessEndpoint(unitId, orderId, paymentId));
     return { ok: true, data: undefined };
   } catch (error: unknown) {
     const parsed = parseApiError(error);

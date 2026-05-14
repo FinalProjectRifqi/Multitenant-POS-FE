@@ -1,0 +1,6 @@
+- app/: Next.js routes (App Router).
+- components/: UI + feature components (orders, menu, unit, user, etc.).
+- lib/: API clients, queries, schemas, types, utils.
+- hooks/: shared React hooks.
+- public/: static assets.
+- .github/, .vscode/: project tooling/config.

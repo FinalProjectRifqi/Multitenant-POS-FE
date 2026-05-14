@@ -1,0 +1,3 @@
+- Purpose: multitenant POS frontend (Next.js app) for managing orders, payments, menus, units, users.
+- Stack: Next.js 16 (App Router), React 19, TypeScript (strict), Tailwind CSS v4, shadcn/ui + Radix UI, React Query, Zod, Zustand, NextAuth, Sonner.
+- Runtime: Node + pnpm; Windows dev environment.

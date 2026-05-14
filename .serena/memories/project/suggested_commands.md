@@ -1,0 +1,6 @@
+- Install deps: pnpm install
+- Dev server: pnpm dev
+- Build: pnpm build
+- Start prod: pnpm start
+- Lint: pnpm lint
+- Windows shell utils: Get-ChildItem (ls), Set-Location (cd), Select-String (grep), git status

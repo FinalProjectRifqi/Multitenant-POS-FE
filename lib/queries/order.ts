@@ -19,7 +19,7 @@ import { KDS_STATUS_META } from "@/lib/kitchen-display/constants";
 export const orderQueryKeys = createCrudQueryKeys("orders");
 
 // Polling interval: 25 seconds (within the requested 20-30 s range)
-const KDS_POLL_INTERVAL_MS = 25_000;
+const KDS_POLL_INTERVAL_MS = 15_000;
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -59,6 +59,7 @@ export function useOrdersQuery() {
     queryKey: orderQueryKeys.lists(),
     queryFn: getOrders,
     refetchInterval: KDS_POLL_INTERVAL_MS,
+    refetchOnWindowFocus: true,
     refetchIntervalInBackground: false,
     // Prevent stale flash: keep showing cached data while revalidating
     staleTime: KDS_POLL_INTERVAL_MS / 2,

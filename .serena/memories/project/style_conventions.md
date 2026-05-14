@@ -1,0 +1,5 @@
+- TypeScript with strict compiler settings (tsconfig.json).
+- Path alias: @/* points to repo root.
+- Tailwind CSS classes heavily used for styling.
+- Client components use "use client" directive.
+- ESLint configured via eslint.config.mjs.
