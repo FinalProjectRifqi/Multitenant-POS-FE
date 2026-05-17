@@ -51,8 +51,7 @@ export function RealizationTab(props: DailyInventorySectionProps) {
           <CardHeader className="pb-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Send className="h-5 w-5 text-primary" />
+                <CardTitle className="text-xl font-semibold">
                   Realisasi Penggunaan Bahan
                 </CardTitle>
                 <CardDescription className="mt-1">
@@ -69,8 +68,8 @@ export function RealizationTab(props: DailyInventorySectionProps) {
                     variant="outline"
                     className="shrink-0 self-start border-destructive/40 text-destructive"
                   >
-                    Perlu cek: {realization.overUsageRows.length} bahan
-                    melebihi rencana
+                    Perlu cek: {realization.overUsageRows.length} bahan melebihi
+                    rencana
                   </Badge>
                 )}
             </div>

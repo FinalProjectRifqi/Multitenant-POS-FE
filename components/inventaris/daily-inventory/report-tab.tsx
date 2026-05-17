@@ -107,8 +107,7 @@ export function ReportTab({ unitId, selectedDate }: ReportTabProps) {
 
       <Card className={DAILY_INVENTORY_CARD_CLASS}>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <TrendingUp className="h-5 w-5 text-primary" />
+          <CardTitle className="text-xl font-semibold">
             Laporan Penggunaan Harian
           </CardTitle>
           <CardDescription className="mt-1">
@@ -196,7 +195,9 @@ function buildReportStats(
       label: "Total Variance",
       value: totals.variance > 0 ? `+${totals.variance}` : totals.variance,
       description:
-        totals.variance < 0 ? "Pemakaian melebihi rencana" : "Sisa dari rencana",
+        totals.variance < 0
+          ? "Pemakaian melebihi rencana"
+          : "Sisa dari rencana",
     },
   ];
 }
