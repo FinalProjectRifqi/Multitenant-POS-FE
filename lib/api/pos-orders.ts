@@ -126,6 +126,8 @@ export async function createPosOrder(
   payload: CreateOrderPayload,
 ): Promise<PosOrderMutationResult<OrderDetailResponse["data"]>> {
   try {
+    // Orders are sales records only. Inventory movement is handled by the
+    // daily inventory realization flow, restock, or manual adjustment.
     const result = await apiPost<OrderDetailResponse, CreateOrderPayload>(
       ordersEndpoint(unitId),
       payload,

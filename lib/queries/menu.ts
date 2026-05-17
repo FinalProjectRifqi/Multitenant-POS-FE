@@ -50,6 +50,52 @@ function useMenuListCache() {
   return { queryClient, setListCache, invalidateList };
 }
 
+function getMenuEntityPatchFromPayload(
+  payload: UpdateMenuInput["payload"],
+): Partial<MenuEntity> {
+  const patch: Partial<MenuEntity> = {};
+
+  if (payload.menu_name !== undefined) patch.menu_name = payload.menu_name;
+  if (payload.menu_category_id !== undefined) {
+    patch.menu_category_id = payload.menu_category_id;
+  }
+  if (payload.item_price !== undefined) patch.menu_price = payload.item_price;
+  if (payload.is_available !== undefined) {
+    patch.is_available = payload.is_available;
+  }
+
+  return patch;
+}
+
+function applyMenuUpdateToList(
+  current: MenuEntity[],
+  input: UpdateMenuInput,
+  updatedMenu?: MenuEntity,
+): MenuEntity[] {
+  const payloadPatch = getMenuEntityPatchFromPayload(input.payload);
+
+  return current.map((item) =>
+    item.menu_id === input.menu_id
+      ? { ...item, ...updatedMenu, ...payloadPatch }
+      : item,
+  );
+}
+
+function getMenuUpdateToastDescription(
+  updatedMenu: MenuEntity,
+  input: UpdateMenuInput,
+): string {
+  const availability = getMenuEntityPatchFromPayload(input.payload).is_available;
+
+  if (typeof availability === "boolean") {
+    return `${updatedMenu.menu_name} sekarang ${
+      availability ? "aktif" : "nonaktif"
+    }.`;
+  }
+
+  return `${updatedMenu.menu_name} telah diperbarui.`;
+}
+
 // ─── Query ─────────────────────────────────────────────────────────────────────
 
 export function useMenusQuery(businessId: string, params?: GetMenusParams) {
@@ -104,7 +150,7 @@ export function useCreateMenuMutation(businessId: string) {
 // ─── Update ────────────────────────────────────────────────────────────────────
 
 export function useUpdateMenuMutation() {
-  const { queryClient, setListCache, invalidateList } = useMenuListCache();
+  const { queryClient, setListCache } = useMenuListCache();
 
   const mutation = useMutation({
     mutationFn: async (input: UpdateMenuInput) => {
@@ -119,22 +165,16 @@ export function useUpdateMenuMutation() {
         queryKey: menuQueryKeys.lists(),
       });
 
-      setListCache((current) =>
-        current.map((item) =>
-          item.menu_id === input.menu_id
-            ? { ...item, ...input.payload }
-            : item,
-        ),
-      );
+      setListCache((current) => applyMenuUpdateToList(current, input));
 
       return { previous };
     },
-    onSuccess: (updatedMenu) => {
+    onSuccess: (updatedMenu, input) => {
       setListCache((current) =>
-        upsertEntityByKey(current, updatedMenu, "menu_id"),
+        applyMenuUpdateToList(current, input, updatedMenu),
       );
       toast.success("Menu berhasil diperbarui.", {
-        description: `${updatedMenu.menu_name} telah diperbarui.`,
+        description: getMenuUpdateToastDescription(updatedMenu, input),
         position: "top-right",
         richColors: true,
         duration: 3000,
@@ -147,9 +187,6 @@ export function useUpdateMenuMutation() {
         });
       }
       if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
-    },
-    onSettled: () => {
-      invalidateList();
     },
   });
 

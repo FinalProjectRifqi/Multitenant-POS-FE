@@ -33,6 +33,16 @@ export const ROLE_NAV: Record<RoleCode, NavItem[]> = {
 
   [ROLE_CODE.TIM_DAPUR]: [
     { label: "Kitchen Display System", href: "/unit/kitchen", icon: "ChefHat" },
+    {
+      label: "Inventaris Harian",
+      href: "/unit/inventaris/harian",
+      icon: "ClipboardCheck",
+    },
+    {
+      label: "Kelola Menu",
+      href: "/unit/menu",
+      icon: "UtensilsCrossed",
+    },
   ],
 
   [ROLE_CODE.MANAJER_UNIT]: [
@@ -42,6 +52,11 @@ export const ROLE_NAV: Record<RoleCode, NavItem[]> = {
       label: "Kelola Inventaris",
       href: "/unit/inventaris",
       icon: "PackageSearch",
+    },
+    {
+      label: "Inventaris Harian",
+      href: "/unit/inventaris/harian",
+      icon: "ClipboardCheck",
     },
     {
       label: "Riwayat Transaksi",
