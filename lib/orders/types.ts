@@ -78,6 +78,62 @@ export interface PaymentPayload {
   amount: number;
 }
 
+export type TransactionHistoryPaymentMethod = "cash" | "cashless";
+
+export type TransactionHistorySortBy =
+  | "ordered_at"
+  | "completed_at"
+  | "total_amount"
+  | "customer_name"
+  | "payment_status";
+
+export type TransactionHistorySortType = "ASC" | "DESC";
+
+export interface TransactionHistoryPayment {
+  payment_id: string;
+  reference_number: string;
+  payment_status: string;
+  payment_method: TransactionHistoryPaymentMethod;
+  amount: number;
+  paid_at: string | null;
+}
+
+export interface TransactionHistoryItem {
+  order_id: string;
+  order_number: string;
+  business_unit_id: string;
+  business_unit_name: string | null;
+  customer_name: string;
+  table_number: string | null;
+  order_type_id: string;
+  order_type_name: string;
+  total_amount: number;
+  order_status_id: string;
+  order_status_name: string;
+  ordered_at: string;
+  completed_at: string | null;
+  payment: TransactionHistoryPayment | null;
+}
+
+export interface TransactionHistoryParams {
+  status_id?: string;
+  date_from?: string;
+  date_to?: string;
+  payment_method?: TransactionHistoryPaymentMethod;
+  sortBy?: TransactionHistorySortBy;
+  sortType?: TransactionHistorySortType;
+  page?: number;
+  limit?: number;
+}
+
+export interface TransactionHistoryResponse {
+  success: true;
+  statusCode: 200;
+  message: string;
+  data: TransactionHistoryItem[];
+  meta: PaginationMeta;
+}
+
 export interface CashPaymentResponse {
   success: true;
   statusCode: number;
