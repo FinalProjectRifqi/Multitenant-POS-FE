@@ -9,14 +9,22 @@ import {
   useUpdateUserMutation,
   useUsersQuery,
 } from "../queries/user";
+import { useRolesQuery } from "../queries/role";
+import { useUnitsQuery } from "../queries/unit";
 import { CreateUserRequest, UserEntity } from "../types/user";
 import { DEFAULT_USER_FORM_VALUES } from "./constants";
 import { buildUserStats } from "./stats";
+
+const ALL_FILTER_VALUE = "all";
 
 export function useUserPage() {
   const [viewingUser, setViewingUser] = useState<UserEntity | null>(null);
   const [createdCredentials, setCreatedCredentials] = useState<{user_name: string; password?: string} | null>(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState(ALL_FILTER_VALUE);
+  const [businessUnitFilter, setBusinessUnitFilter] =
+    useState(ALL_FILTER_VALUE);
 
   const [showInactive, setShowInactive] = useState(true);
 
@@ -31,12 +39,41 @@ export function useUserPage() {
     | "status"
     | "last_login" = "last_login";
   const sortType: "ASC" | "DESC" = "DESC";
-  const search = "";
 
-  const usersQuery = useUsersQuery(page, limit, sortBy, sortType, search);
+  const usersQuery = useUsersQuery(page, limit, sortBy, sortType, search, {
+    roleId: roleFilter === ALL_FILTER_VALUE ? undefined : roleFilter,
+    businessUnitId:
+      businessUnitFilter === ALL_FILTER_VALUE ? undefined : businessUnitFilter,
+  });
+  const rolesQuery = useRolesQuery();
+  const unitsQuery = useUnitsQuery(1, 100, false);
   const createMutation = useCreateUserMutation();
   const updateMutation = useUpdateUserMutation();
   const deleteMutation = useDeleteUserMutation();
+
+  const roles = rolesQuery.data?.data ?? [];
+  const units = (unitsQuery.data?.data ?? []).filter(
+    (unit) => unit.business_unit_status,
+  );
+
+  function resetPaginationPage() {
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }
+
+  function handleRoleFilterChange(value: string) {
+    setRoleFilter(value);
+    resetPaginationPage();
+  }
+
+  function handleBusinessUnitFilterChange(value: string) {
+    setBusinessUnitFilter(value);
+    resetPaginationPage();
+  }
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    resetPaginationPage();
+  }
 
   const controller = useCrudPageController({
     defaultFormValues: DEFAULT_USER_FORM_VALUES,
@@ -107,8 +144,21 @@ export function useUserPage() {
     setViewingUser,
     showInactive,
     setShowInactive,
+    search,
+    setSearch: handleSearchChange,
     pagination,
     setPagination,
+    filters: {
+      roleId: roleFilter,
+      businessUnitId: businessUnitFilter,
+      allValue: ALL_FILTER_VALUE,
+      setRoleId: handleRoleFilterChange,
+      setBusinessUnitId: handleBusinessUnitFilterChange,
+      roles,
+      units,
+      isLoadingRoles: rolesQuery.isLoading,
+      isLoadingUnits: unitsQuery.isLoading,
+    },
     create: {
       ...controller.create,
       handle: async (values: CreateUserRequest) => {

@@ -56,9 +56,16 @@ export function usePosOrdersQuery(
   params?: GetOrdersParams,
   pollingInterval = 15_000,
 ) {
+  const normalizedParams = params
+    ? {
+        ...params,
+        search: params.search?.trim() || undefined,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: posOrderQueryKeys.list(unitId, params),
-    queryFn: () => getPosOrders(unitId, params),
+    queryKey: posOrderQueryKeys.list(unitId, normalizedParams),
+    queryFn: () => getPosOrders(unitId, normalizedParams),
     enabled: Boolean(unitId),
     refetchInterval: pollingInterval,
     refetchOnWindowFocus: true,

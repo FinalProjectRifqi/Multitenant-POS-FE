@@ -16,6 +16,7 @@ import { buildUnitStats } from "./stats";
 export function useUnitPage() {
   const [viewingUnit, setViewingUnit] = useState<UnitEntity | null>(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [search, setSearch] = useState("");
 
   const [showInactive, setShowInactive] = useState(true);
 
@@ -23,7 +24,7 @@ export function useUnitPage() {
   const page = pagination.pageIndex + 1;
   const limit = pagination.pageSize;
 
-  const unitsQuery = useUnitsQuery(page, limit, showInactive);
+  const unitsQuery = useUnitsQuery(page, limit, showInactive, true, search);
   const createMutation = useCreateUnitMutation();
   const updateMutation = useUpdateUnitMutation();
   const deleteMutation = useDeleteUnitMutation();
@@ -80,6 +81,11 @@ export function useUnitPage() {
     [controller.items],
   );
 
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }
+
   return {
     units: controller.items,
     stats,
@@ -95,6 +101,8 @@ export function useUnitPage() {
     setViewingUnit,
     showInactive,
     setShowInactive,
+    search,
+    setSearch: handleSearchChange,
     pagination,
     setPagination,
     create: controller.create,

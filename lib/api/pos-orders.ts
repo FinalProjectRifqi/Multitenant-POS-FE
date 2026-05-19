@@ -34,7 +34,7 @@ function ordersEndpoint(unitId: string): string {
 }
 
 function transactionHistoryEndpoint(unitId: string): string {
-  return `/orders/transaction-history/${unitId}`;
+  return `orders/transaction-history/${unitId}`;
 }
 
 function orderDetailEndpoint(unitId: string, orderId: string): string {
@@ -100,10 +100,13 @@ export async function getTransactionHistory(
   unitId: string,
   params?: TransactionHistoryParams,
 ): Promise<TransactionHistoryResponse> {
-  return apiGet<TransactionHistoryResponse>(transactionHistoryEndpoint(unitId), {
-    schema: transactionHistoryResponseSchema,
-    params: params as Record<string, unknown> | undefined,
-  });
+  return apiGet<TransactionHistoryResponse>(
+    transactionHistoryEndpoint(unitId),
+    {
+      schema: transactionHistoryResponseSchema,
+      params: params as Record<string, unknown> | undefined,
+    },
+  );
 }
 
 export async function getPosOrderDetail(

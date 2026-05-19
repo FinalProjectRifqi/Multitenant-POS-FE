@@ -20,6 +20,7 @@ export function useOrderListPage() {
   const [activeStatusId, setActiveStatusId] = useState<string | undefined>(
     undefined,
   );
+  const [search, setSearch] = useState("");
   const [deletingOrder, setDeletingOrder] = useState<OrderListItem | null>(
     null,
   );
@@ -29,7 +30,12 @@ export function useOrderListPage() {
 
   const ordersQuery = usePosOrdersQuery(
     unitId,
-    { status_id: activeStatusId, page, limit },
+    {
+      status_id: activeStatusId,
+      search: search.trim() || undefined,
+      page,
+      limit,
+    },
     30_000,
   );
 
@@ -38,8 +44,12 @@ export function useOrderListPage() {
   const cancelMutation = useCancelPosOrderMutation(unitId);
 
   function handleStatusChange(statusId: string | undefined) {
-    console.log("tab clicked:", statusId); // add this
     setActiveStatusId(statusId);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
 
@@ -81,6 +91,8 @@ export function useOrderListPage() {
     stats,
     pagination,
     setPagination,
+    search,
+    setSearch: handleSearchChange,
     activeStatusId,
     handleStatusChange,
     deletingOrder,

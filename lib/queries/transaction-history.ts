@@ -16,9 +16,16 @@ export function useTransactionHistoryQuery(
   unitId: string,
   params?: TransactionHistoryParams,
 ) {
+  const normalizedParams = params
+    ? {
+        ...params,
+        search: params.search?.trim() || undefined,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: transactionHistoryQueryKeys.list(unitId, params),
-    queryFn: () => getTransactionHistory(unitId, params),
+    queryKey: transactionHistoryQueryKeys.list(unitId, normalizedParams),
+    queryFn: () => getTransactionHistory(unitId, normalizedParams),
     enabled: Boolean(unitId),
     staleTime: 30_000,
     refetchOnWindowFocus: true,
