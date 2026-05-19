@@ -162,6 +162,8 @@ export function TransactionHistoryPageContent({
             isLoading={p.query.isLoading}
             searchColumn="order_number"
             searchPlaceholder="Cari order, pelanggan, unit, status, pembayaran..."
+            searchValue={p.search}
+            onSearchChange={p.setSearch}
             emptyMessage="Belum ada riwayat transaksi."
             searchEmptyMessage="Riwayat transaksi tidak ditemukan."
             enableSorting={false}

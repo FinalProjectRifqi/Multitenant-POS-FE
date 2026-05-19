@@ -24,6 +24,11 @@ import {
   handleApiError,
 } from "../api/handle-api-error";
 
+type UserListFilters = {
+  roleId?: string;
+  businessUnitId?: string;
+};
+
 function useUserListCache() {
   const queryClient = useQueryClient();
 
@@ -67,13 +72,35 @@ export function useUsersQuery(
     | "last_login" = "last_login",
   sortType: "ASC" | "DESC" = "DESC",
   search = "",
+  filters: UserListFilters = {},
 ) {
+  const role_id = filters.roleId || undefined;
+  const business_unit_id = filters.businessUnitId || undefined;
+  const normalizedSearch = search.trim();
+
   return useQuery({
     queryKey: [
       ...userQueryKeys.lists(),
-      { page, limit, sortBy, sortType, search },
+      {
+        page,
+        limit,
+        sortBy,
+        sortType,
+        search: normalizedSearch,
+        role_id,
+        business_unit_id,
+      },
     ],
-    queryFn: () => getUsers({ page, limit, sortBy, sortType, search }),
+    queryFn: () =>
+      getUsers({
+        page,
+        limit,
+        sortBy,
+        sortType,
+        search: normalizedSearch || undefined,
+        role_id,
+        business_unit_id,
+      }),
     meta: {
       errorTitle: "Gagal Memuat User",
     },
@@ -214,7 +241,7 @@ export function useDeleteUserMutation() {
       });
 
       let target: UserEntity | undefined;
-      previous.forEach(([_, data]) => {
+      previous.forEach(([, data]) => {
         if (!target && data?.data) {
           target = data.data.find((item) => item.user_id === input.user_id);
         }

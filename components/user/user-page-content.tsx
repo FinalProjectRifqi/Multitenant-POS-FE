@@ -13,6 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/api/client";
 import { PaginationMeta } from "@/lib/schemas/unit";
 import { useUserPage } from "@/lib/user/use-user-page";
@@ -80,8 +87,56 @@ export function UserPageContent() {
             isLoading={p.query.isLoading}
             searchColumn="full_name"
             searchPlaceholder="Cari nama, username, email, role, unit, status..."
+            searchValue={p.search}
+            onSearchChange={p.setSearch}
             actionLabel="Tambah Pengguna"
             onActionClick={() => p.setIsCreateOpen(true)}
+            extraControls={
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                <Select
+                  value={p.filters.businessUnitId}
+                  onValueChange={p.filters.setBusinessUnitId}
+                  disabled={p.filters.isLoadingUnits}
+                >
+                  <SelectTrigger className="h-9 w-full bg-background sm:w-52">
+                    <SelectValue placeholder="Unit Usaha" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={p.filters.allValue}>
+                      Semua Unit
+                    </SelectItem>
+                    {p.filters.units.map((unit) => (
+                      <SelectItem
+                        key={unit.business_unit_id}
+                        value={unit.business_unit_id}
+                      >
+                        {unit.business_unit_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={p.filters.roleId}
+                  onValueChange={p.filters.setRoleId}
+                  disabled={p.filters.isLoadingRoles}
+                >
+                  <SelectTrigger className="h-9 w-full bg-background sm:w-44">
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={p.filters.allValue}>
+                      Semua Role
+                    </SelectItem>
+                    {p.filters.roles.map((role) => (
+                      <SelectItem key={role.role_id} value={role.role_id}>
+                        {role.role_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            }
             emptyMessage="Belum ada pengguna yang terdaftar."
             searchEmptyMessage="Data pengguna tidak ditemukan dari kata kunci pencarian."
             enableSorting

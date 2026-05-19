@@ -35,10 +35,12 @@ export function useTransactionHistoryPage(unitId?: string) {
   const [filters, setFilters] = useState<TransactionHistoryFilters>({
     sortBy: DEFAULT_SORT_BY,
   });
+  const [search, setSearch] = useState("");
 
   const params = useMemo(
     () => ({
       status_id: ORDER_STATUS.COMPLETE,
+      search: search.trim() || undefined,
       date_from: filters.dateFrom || undefined,
       date_to: filters.dateTo || undefined,
       payment_method: filters.paymentMethod,
@@ -47,7 +49,7 @@ export function useTransactionHistoryPage(unitId?: string) {
       page: pagination.pageIndex + 1,
       limit: pagination.pageSize,
     }),
-    [filters, pagination.pageIndex, pagination.pageSize],
+    [filters, pagination.pageIndex, pagination.pageSize, search],
   );
 
   const historyQuery = useTransactionHistoryQuery(resolvedUnitId, params);
@@ -87,6 +89,11 @@ export function useTransactionHistoryPage(unitId?: string) {
     setPagination((current) => ({ ...current, pageIndex: 0 }));
   }
 
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }
+
   return {
     unitId: resolvedUnitId,
     selectedUnit,
@@ -95,6 +102,8 @@ export function useTransactionHistoryPage(unitId?: string) {
     filters,
     updateFilters,
     resetFilters,
+    search,
+    setSearch: handleSearchChange,
     pagination,
     setPagination,
     query: {

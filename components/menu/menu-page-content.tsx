@@ -23,7 +23,6 @@ import { useUnitMenuPage } from "@/lib/menu/use-unit-menu-page";
 import { buildMenuItemColumns } from "./menu-item-table-columns";
 import { MenuDetailDialog } from "./menu-detail-dialog";
 import { MenuFormDialog } from "./menu-form-dialog";
-import { PageHeader } from "../dashboard/ui";
 
 type MenuPageContentProps = {
   unitId: string;
@@ -120,6 +119,8 @@ export function MenuPageContent({ unitId }: MenuPageContentProps) {
             isLoading={p.query.isLoading}
             searchColumn="menu_name"
             searchPlaceholder="Cari nama menu, kategori, harga, status..."
+            searchValue={p.search}
+            onSearchChange={p.setSearch}
             actionLabel="Tambah Menu"
             onActionClick={() => p.setIsCreateOpen(true)}
             emptyMessage="Belum ada item menu yang terdaftar."

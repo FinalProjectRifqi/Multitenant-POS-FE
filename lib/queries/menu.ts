@@ -53,9 +53,16 @@ function useMenuListCache() {
 // ─── Query ─────────────────────────────────────────────────────────────────────
 
 export function useMenusQuery(businessId: string, params?: GetMenusParams) {
+  const normalizedParams = params
+    ? {
+        ...params,
+        search: params.search?.trim() || undefined,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: [...menuQueryKeys.lists(), { businessId, ...params }],
-    queryFn: () => getMenus(businessId, params),
+    queryKey: [...menuQueryKeys.lists(), { businessId, ...normalizedParams }],
+    queryFn: () => getMenus(businessId, normalizedParams),
     enabled: Boolean(businessId),
     meta: {
       errorTitle: "Gagal Memuat Menu",

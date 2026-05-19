@@ -117,6 +117,7 @@ export interface TransactionHistoryItem {
 
 export interface TransactionHistoryParams {
   status_id?: string;
+  search?: string;
   date_from?: string;
   date_to?: string;
   payment_method?: TransactionHistoryPaymentMethod;
@@ -205,6 +206,7 @@ export interface UpdateOrderPayload {
 
 export interface GetOrdersParams {
   status_id?: string;
+  search?: string;
   page?: number;
   limit?: number;
   sortBy?: "ordered_at" | "total_amount" | "customer_name";
