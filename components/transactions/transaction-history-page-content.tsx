@@ -137,8 +137,8 @@ export function TransactionHistoryPageContent({
             Daftar Transaksi
           </CardTitle>
           <CardDescription>
-            Filter riwayat transaksi berdasarkan status, tanggal, metode bayar,
-            dan urutan data.
+            Menampilkan transaksi selesai. Filter berdasarkan tanggal, metode
+            bayar, dan urutan data.
           </CardDescription>
         </CardHeader>
 

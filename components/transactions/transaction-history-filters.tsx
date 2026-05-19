@@ -12,11 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { STATUS_FILTER_TABS } from "@/lib/orders/constants";
 import type {
   TransactionHistoryPaymentMethod,
   TransactionHistorySortBy,
-  TransactionHistorySortType,
 } from "@/lib/orders/types";
 import type { TransactionHistoryFilters } from "@/lib/transactions/use-transaction-history-page";
 
@@ -45,28 +43,7 @@ export function TransactionHistoryFilters({
   onReset,
 }: TransactionHistoryFiltersProps) {
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-7">
-      <div className="space-y-1.5">
-        <Label>Status Order</Label>
-        <Select
-          value={filters.statusId ?? ALL_VALUE}
-          onValueChange={(value) =>
-            onChange({ statusId: value === ALL_VALUE ? undefined : value })
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Semua status" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTER_TABS.map((tab) => (
-              <SelectItem key={tab.statusId ?? ALL_VALUE} value={tab.statusId ?? ALL_VALUE}>
-                {tab.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
       <div className="space-y-1.5">
         <Label>Dari Tanggal</Label>
         <Input
@@ -126,24 +103,6 @@ export function TransactionHistoryFilters({
                 {option.label}
               </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label>Arah</Label>
-        <Select
-          value={filters.sortType}
-          onValueChange={(value) =>
-            onChange({ sortType: value as TransactionHistorySortType })
-          }
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="DESC">Terbaru / terbesar</SelectItem>
-            <SelectItem value="ASC">Terlama / terkecil</SelectItem>
           </SelectContent>
         </Select>
       </div>
