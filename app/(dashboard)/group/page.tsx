@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
-import { UtensilsCrossed, Building2, BarChart3, PackageSearch, Users } from "lucide-react";
-import { PageHeader, DashboardCard, StatsCard } from "@/components/dashboard/ui";
+import {
+  UtensilsCrossed,
+  Building2,
+  BarChart3,
+  PackageSearch,
+  Users,
+} from "lucide-react";
+import { PageHeader, DashboardCard } from "@/components/dashboard/ui";
 
 export const metadata: Metadata = {
   title: "Dashboard — Manajemen Grup | XYZ POS",
@@ -15,39 +21,43 @@ export default function ManajemenGrupDashboard() {
         description="Selamat datang di Sistem POS manajemen Grup XYZ"
       />
 
-      
-
       {/* ── Feature cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
         <DashboardCard
           icon={UtensilsCrossed}
           title="Kelola Menu"
           description="Kelola daftar produk & harga yang tersedia di seluruh unit"
-          href="/dashboard/group/menu"
+          href="/group/menu"
         />
         <DashboardCard
           icon={Building2}
           title="Kelola Unit"
           description="Pantau & kelola menu seluruh Unit Usaha Grup XYZ"
-          href="/dashboard/group/unit"
+          href="/group/unit"
         />
         <DashboardCard
           icon={BarChart3}
           title="Monitoring Laporan"
           description="Pantau performa penjualan & omzet seluruh unit secara real-time"
-          href="/dashboard/group/laporan"
+          href="/group/laporan"
         />
         <DashboardCard
           icon={PackageSearch}
           title="Kelola Inventaris"
           description="Pantau stok bahan baku & ketersediaan di setiap unit"
-          href="/dashboard/group/inventaris"
+          href="/group/inventaris"
         />
         <DashboardCard
           icon={Users}
           title="Kelola Pengguna"
           description="Atur akun & hak akses pengguna di seluruh unit bisnis"
-          href="/dashboard/group/pengguna"
+          href="/group/pengguna"
+        />
+        <DashboardCard
+          icon={Users}
+          title="Kelola Pengguna"
+          description="Atur akun & hak akses pengguna di seluruh unit bisnis"
+          href="/group/transaksi"
         />
       </div>
     </div>
