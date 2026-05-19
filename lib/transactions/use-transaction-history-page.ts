@@ -26,6 +26,7 @@ export type TransactionHistoryFilters = {
 
 export function useTransactionHistoryPage(unitId?: string) {
   const currentUser = useCurrentUser();
+  const shouldLookupUnitList = Boolean(unitId);
   const resolvedUnitId = unitId ?? currentUser?.unit?.unit_id ?? "";
 
   const [pagination, setPagination] = useState<PaginationState>({
@@ -52,14 +53,17 @@ export function useTransactionHistoryPage(unitId?: string) {
   );
 
   const historyQuery = useTransactionHistoryQuery(resolvedUnitId, params);
-  const unitsQuery = useUnitsQuery(1, 100, false);
+  const unitsQuery = useUnitsQuery(1, 100, false, shouldLookupUnitList);
 
   const selectedUnit = useMemo(() => {
-    const unit = unitsQuery.data?.data.find(
-      (item) => item.business_unit_id === resolvedUnitId,
-    );
+    if (shouldLookupUnitList) {
+      const unit = unitsQuery.data?.data.find(
+        (item) => item.business_unit_id === resolvedUnitId,
+      );
 
-    if (unit) return unit;
+      if (unit) return unit;
+    }
+
     if (!currentUser?.unit || currentUser.unit.unit_id !== resolvedUnitId) {
       return null;
     }
@@ -71,7 +75,7 @@ export function useTransactionHistoryPage(unitId?: string) {
       business_unit_phone: currentUser.unit.phone_number,
       business_unit_status: currentUser.unit.status === "active",
     };
-  }, [currentUser, resolvedUnitId, unitsQuery.data]);
+  }, [currentUser, resolvedUnitId, shouldLookupUnitList, unitsQuery.data]);
 
   function updateFilters(next: Partial<TransactionHistoryFilters>) {
     setFilters((current) => ({ ...current, ...next }));
@@ -97,9 +101,11 @@ export function useTransactionHistoryPage(unitId?: string) {
     pagination,
     setPagination,
     query: {
-      isLoading: historyQuery.isLoading || unitsQuery.isLoading,
-      isError: historyQuery.isError || unitsQuery.isError,
-      error: historyQuery.error ?? unitsQuery.error,
+      isLoading:
+        historyQuery.isLoading ||
+        (shouldLookupUnitList && unitsQuery.isLoading),
+      isError: historyQuery.isError || (shouldLookupUnitList && unitsQuery.isError),
+      error: historyQuery.error ?? (shouldLookupUnitList ? unitsQuery.error : null),
     },
   };
 }

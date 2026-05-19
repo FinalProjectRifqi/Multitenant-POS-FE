@@ -48,10 +48,16 @@ function useUnitListCache() {
   };
 }
 
-export function useUnitsQuery(page = 1, limit = 10, showInactive = true) {
+export function useUnitsQuery(
+  page = 1,
+  limit = 10,
+  showInactive = true,
+  enabled = true,
+) {
   return useQuery({
     queryKey: [...unitQueryKeys.lists(), { page, limit, showInactive }],
     queryFn: () => getUnits({ page, limit, show_inactive: showInactive }),
+    enabled,
     meta: {
       errorTitle: "Gagal Memuat Unit Usaha",
     },
