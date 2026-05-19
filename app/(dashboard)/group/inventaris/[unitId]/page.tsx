@@ -7,6 +7,7 @@ import {
 import { GroupInventarisUnitPageContent } from "@/components/inventaris/group-inventaris-unit-page-content";
 import { getInventarisItems, getInventarisStats } from "@/lib/api/inventaris";
 import { inventarisQueryKeys } from "@/lib/queries/inventaris-keys";
+import { isUuid } from "@/lib/utils";
 
 type PageProps = {
   params: Promise<{ unitId: string }>;
@@ -19,7 +20,7 @@ export default async function Page({ params }: PageProps) {
 
   const queryClient = new QueryClient();
 
-  if (unitId) {
+  if (isUuid(unitId)) {
     try {
       await Promise.all([
         queryClient.prefetchQuery({

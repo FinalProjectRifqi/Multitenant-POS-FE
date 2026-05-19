@@ -10,6 +10,8 @@ type DataTableToolbarProps<T> = {
   /** The accessorKey of the column whose filterFn handles searching */
   searchColumn?: string;
   searchPlaceholder?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
   /** Pass null to hide the action Button entirely */
   actionLabel?: string | null;
   onActionClick?: () => void;
@@ -21,28 +23,42 @@ export function DataTableToolbar<T>({
   table,
   searchColumn,
   searchPlaceholder = "Search...",
+  searchValue: controlledSearchValue,
+  onSearchChange,
   actionLabel,
   onActionClick,
   extraControls,
 }: DataTableToolbarProps<T>) {
   const column = searchColumn ? table.getColumn(searchColumn) : undefined;
-  const searchValue = (column?.getFilterValue() as string) ?? "";
+  const searchValue =
+    controlledSearchValue ?? ((column?.getFilterValue() as string) || "");
   const isFiltered = table.getState().columnFilters.length > 0;
+  const showSearch = onSearchChange != null || column != null;
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-1 items-center gap-2">
-        <div className="relative w-full sm:max-w-md">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={searchPlaceholder}
-            className="bg-background pl-8 py-5"
-            value={searchValue}
-            onChange={(e) => column?.setFilterValue(e.target.value)}
-          />
-        </div>
+        {showSearch && (
+          <div className="relative w-full sm:max-w-md">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={searchPlaceholder}
+              className="bg-background pl-8 py-5"
+              value={searchValue}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                if (onSearchChange) {
+                  onSearchChange(nextValue);
+                  return;
+                }
 
-        {isFiltered && (
+                column?.setFilterValue(nextValue);
+              }}
+            />
+          </div>
+        )}
+
+        {!onSearchChange && isFiltered && (
           <Button
             variant="ghost"
             size="sm"
@@ -55,7 +71,7 @@ export function DataTableToolbar<T>({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         {extraControls}
         {actionLabel && (
           <Button

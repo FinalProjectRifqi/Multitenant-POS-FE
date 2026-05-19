@@ -25,6 +25,7 @@ import type {
   MenuEntity,
   MenusListResponse,
 } from "@/lib/schemas/menu";
+import { isUuid } from "@/lib/utils";
 
 // ─── Cache helpers ─────────────────────────────────────────────────────────────
 
@@ -53,10 +54,17 @@ function useMenuListCache() {
 // ─── Query ─────────────────────────────────────────────────────────────────────
 
 export function useMenusQuery(businessId: string, params?: GetMenusParams) {
+  const normalizedParams = params
+    ? {
+        ...params,
+        search: params.search?.trim() || undefined,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: [...menuQueryKeys.lists(), { businessId, ...params }],
-    queryFn: () => getMenus(businessId, params),
-    enabled: Boolean(businessId),
+    queryKey: [...menuQueryKeys.lists(), { businessId, ...normalizedParams }],
+    queryFn: () => getMenus(businessId, normalizedParams),
+    enabled: isUuid(businessId),
     meta: {
       errorTitle: "Gagal Memuat Menu",
     },

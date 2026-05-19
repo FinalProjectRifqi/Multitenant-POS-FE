@@ -81,6 +81,8 @@ export function UnitPageContent() {
             // Search — points to the column whose filterFn handles all fields
             searchColumn="business_unit_name"
             searchPlaceholder="Cari nama, alamat, telepon, status..."
+            searchValue={p.search}
+            onSearchChange={p.setSearch}
             // Toolbar CTA
             actionLabel="Tambah Unit Usaha"
             onActionClick={() => p.setIsCreateOpen(true)}

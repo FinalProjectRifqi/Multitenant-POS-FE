@@ -261,7 +261,7 @@ export function CartPanel({
                       onClick={() => onUpdateQty(item.menu_item_id, -1)}
                       className="h-7 w-7 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted transition-colors"
                     >
-                      <Minus className="h-3 w-3" />
+                      <Minus className="h-3 w-3 text-primary" />
                     </Button>
 
                     <span className="w-5 text-center text-sm font-bold">

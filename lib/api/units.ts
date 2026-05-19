@@ -112,6 +112,7 @@ export async function getUnits(params?: {
   page?: number;
   limit?: number;
   show_inactive?: boolean;
+  search?: string;
 }) {
   return apiGet<UnitsListResponse>(UNITS_ENDPOINT, {
     schema: unitsListResponseSchema,

@@ -45,6 +45,8 @@ export default function KelolaPesananPage() {
     stats,
     pagination,
     setPagination,
+    search,
+    setSearch,
     activeStatusId,
     handleStatusChange,
     deletingOrder,
@@ -124,6 +126,8 @@ export default function KelolaPesananPage() {
             searchEmptyMessage="Pesanan tidak ditemukan."
             searchColumn="customer_name"
             searchPlaceholder="Cari pelanggan..."
+            searchValue={search}
+            onSearchChange={setSearch}
             extraControls={
               <Tabs
                 value={statusTabValue}

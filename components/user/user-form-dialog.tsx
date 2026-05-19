@@ -2,7 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo } from "react";
-import { type Resolver, useForm, Controller } from "react-hook-form";
+import {
+  type Resolver,
+  useForm,
+  Controller,
+  useWatch,
+} from "react-hook-form";
 
 import { CrudFormDialog } from "@/components/shared/crud-form-dialog";
 import { Input } from "@/components/ui/input";
@@ -14,8 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ROLE_CODE } from "@/lib/constants/roles";
 import { useRolesQuery } from "@/lib/queries/role";
 import { useUnitsQuery } from "@/lib/queries/unit";
+import type { RoleEntity } from "@/lib/schemas/role";
 import {
   createUserRequestSchema,
   updateUserRequestSchema,
@@ -37,6 +44,43 @@ type UserFormDialogProps = {
   onSubmit: (values: CreateUserRequest) => Promise<void>;
 };
 
+function isGroupManagementRole(role?: RoleEntity | null) {
+  return (
+    role?.role_code === ROLE_CODE.MANAJEMEN_GRUP ||
+    role?.role_name.toLowerCase().includes("manajemen grup")
+  );
+}
+
+function getServerFieldError(
+  errorMessage: string | null | undefined,
+  field: "email" | "user_name" | "business_unit_id",
+) {
+  if (!errorMessage) return undefined;
+
+  const normalizedMessage = errorMessage.toLowerCase();
+  if (field === "email" && normalizedMessage.includes("email")) {
+    return errorMessage;
+  }
+
+  if (
+    field === "user_name" &&
+    (normalizedMessage.includes("username") ||
+      normalizedMessage.includes("user_name"))
+  ) {
+    return errorMessage;
+  }
+
+  if (
+    field === "business_unit_id" &&
+    (normalizedMessage.includes("unit usaha") ||
+      normalizedMessage.includes("business_unit_id"))
+  ) {
+    return errorMessage;
+  }
+
+  return undefined;
+}
+
 export function UserFormDialog({
   title,
   description,
@@ -57,13 +101,15 @@ export function UserFormDialog({
     [unitsResponse],
   );
 
-  const roles = rolesResponse?.data || [];
+  const roles = useMemo(() => rolesResponse?.data ?? [], [rolesResponse?.data]);
 
   const {
     register,
     control,
     handleSubmit,
     reset,
+    setValue,
+    clearErrors,
     formState: { errors },
   } = useForm<CreateUserRequest>({
     resolver: zodResolver(
@@ -71,10 +117,29 @@ export function UserFormDialog({
     ) as unknown as Resolver<CreateUserRequest>,
     defaultValues: initialValues,
   });
+  const selectedRoleId = useWatch({ control, name: "role_id" });
+  const selectedRole = roles.find((role) => role.role_id === selectedRoleId);
+  const shouldShowUnitInput = !isGroupManagementRole(selectedRole);
+  const userNameError =
+    errors.user_name?.message ??
+    getServerFieldError(errorMessage, "user_name");
+  const emailError =
+    errors.email?.message ?? getServerFieldError(errorMessage, "email");
+  const businessUnitError =
+    errors.business_unit_id?.message ??
+    getServerFieldError(errorMessage, "business_unit_id");
+  const fieldErrorMessage = userNameError ?? emailError ?? businessUnitError;
 
   useEffect(() => {
     if (open) reset(initialValues);
   }, [initialValues, open, reset]);
+
+  useEffect(() => {
+    if (isGroupManagementRole(selectedRole)) {
+      setValue("business_unit_id", null);
+      clearErrors("business_unit_id");
+    }
+  }, [clearErrors, selectedRole, setValue]);
 
   const onFormSubmit = handleSubmit(async (values) => {
     try {
@@ -98,7 +163,7 @@ export function UserFormDialog({
       submitLabel={submitLabel}
       submitPendingLabel="Menyimpan..."
       isPending={isPending}
-      errorMessage={errorMessage}
+      errorMessage={fieldErrorMessage === errorMessage ? null : errorMessage}
       contentClassName="w-[min(92vw,560px)]"
       onSubmit={(event) => {
         void onFormSubmit(event);
@@ -128,16 +193,14 @@ export function UserFormDialog({
             placeholder="Masukkan username"
             className={cn(
               "py-5",
-              errors.user_name &&
+              userNameError &&
                 "border-destructive focus-visible:ring-destructive",
             )}
             disabled={isPending}
             {...register("user_name")}
           />
-          {errors.user_name && (
-            <p className="text-xs text-destructive">
-              {errors.user_name.message}
-            </p>
+          {userNameError && (
+            <p className="text-xs text-destructive">{userNameError}</p>
           )}
         </div>
       </div>
@@ -148,12 +211,12 @@ export function UserFormDialog({
           id="email"
           type="email"
           placeholder="nama@example.com"
-          className={cn("py-5", errors.email && "border-destructive")}
+          className={cn("py-5", emailError && "border-destructive")}
           disabled={isPending}
           {...register("email")}
         />
-        {errors.email && (
-          <p className="text-xs text-destructive">{errors.email.message}</p>
+        {emailError && (
+          <p className="text-xs text-destructive">{emailError}</p>
         )}
       </div>
 
@@ -165,7 +228,15 @@ export function UserFormDialog({
             name="role_id"
             render={({ field }) => (
               <Select
-                onValueChange={field.onChange}
+                onValueChange={(value) => {
+                  field.onChange(value);
+
+                  const nextRole = roles.find((role) => role.role_id === value);
+                  if (isGroupManagementRole(nextRole)) {
+                    setValue("business_unit_id", null);
+                    clearErrors("business_unit_id");
+                  }
+                }}
                 defaultValue={field.value}
                 value={field.value}
                 disabled={isPending || rolesLoading}
@@ -191,49 +262,51 @@ export function UserFormDialog({
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="business_unit_id">Unit Usaha</Label>
-          <Controller
-            control={control}
-            name="business_unit_id"
-            render={({ field }) => (
-              <Select
-                onValueChange={(val) =>
-                  field.onChange(val === "none" ? null : val)
-                }
-                defaultValue={field.value || "none"}
-                value={field.value || "none"}
-                disabled={isPending || unitsLoading}
-              >
-                <SelectTrigger
-                  id="business_unit_id"
-                  className={cn(
-                    "py-5",
-                    errors.business_unit_id && "border-destructive",
-                  )}
+        {shouldShowUnitInput && (
+          <div className="space-y-2">
+            <Label htmlFor="business_unit_id">Unit Usaha</Label>
+            <Controller
+              control={control}
+              name="business_unit_id"
+              render={({ field }) => (
+                <Select
+                  onValueChange={(val) =>
+                    field.onChange(val === "none" ? null : val)
+                  }
+                  defaultValue={field.value || "none"}
+                  value={field.value || "none"}
+                  disabled={isPending || unitsLoading}
                 >
-                  <SelectValue placeholder="Pilih Unit Usaha" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">-- Pilih Unit Usaha --</SelectItem>
-                  {activeUnits.map((unit) => (
-                    <SelectItem
-                      key={unit.business_unit_id}
-                      value={unit.business_unit_id}
-                    >
-                      {unit.business_unit_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectTrigger
+                    id="business_unit_id"
+                    className={cn(
+                      "py-5",
+                      businessUnitError && "border-destructive",
+                    )}
+                  >
+                    <SelectValue placeholder="Pilih Unit Usaha" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- Pilih Unit Usaha --</SelectItem>
+                    {activeUnits.map((unit) => (
+                      <SelectItem
+                        key={unit.business_unit_id}
+                        value={unit.business_unit_id}
+                      >
+                        {unit.business_unit_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {businessUnitError && (
+              <p className="text-xs text-destructive">
+                {businessUnitError}
+              </p>
             )}
-          />
-          {errors.business_unit_id && (
-            <p className="text-xs text-destructive">
-              {errors.business_unit_id.message}
-            </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {requirePassword && (

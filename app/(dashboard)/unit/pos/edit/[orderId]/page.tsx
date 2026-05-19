@@ -61,7 +61,7 @@ export default function EditPesananPage({ params }: EditPesananPageProps) {
      * Same two-column sticky layout as the "tambah" page.
      * See tambah/page.tsx for layout notes.
      */
-    <div className="flex h-[calc(100svh-var(--header-height,64px))] overflow-hidden">
+    <div className="flex h-full overflow-hidden">
       {/* ══════════════════════════════════════════════════
           LEFT — scrollable menu column
          ══════════════════════════════════════════════════ */}
@@ -179,7 +179,7 @@ export default function EditPesananPage({ params }: EditPesananPageProps) {
       {/* ══════════════════════════════════════════════════
           RIGHT — sticky cart sidebar (desktop only)
          ══════════════════════════════════════════════════ */}
-      <div className="hidden lg:flex flex-col w-96 xl:w-104 shrink-0 border-l border-border overflow-y-auto">
+      <div className="hidden lg:flex flex-col w-96 xl:w-104 h-full shrink-0 border-l border-border">
         <CartPanel
           mode="edit"
           orderNumber={orderNumber}

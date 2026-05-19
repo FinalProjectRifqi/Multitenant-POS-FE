@@ -24,12 +24,13 @@ import type { MenuRow } from "./types";
 export function useUnitMenuPage(unitId: string) {
   const [viewingItem, setViewingItem] = useState<MenuRow | null>(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [search, setSearch] = useState("");
 
   const page = pagination.pageIndex + 1;
   const limit = pagination.pageSize;
 
   const unitsQuery = useUnitsQuery();
-  const menusQuery = useMenusQuery(unitId, { page, limit });
+  const menusQuery = useMenusQuery(unitId, { page, limit, search });
 
   const createMutation = useCreateMenuMutation(unitId);
   const updateMutation = useUpdateMenuMutation();
@@ -91,6 +92,11 @@ export function useUnitMenuPage(unitId: string) {
     [controller.items],
   );
 
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }
+
   return {
     selectedUnit,
     stats,
@@ -99,6 +105,8 @@ export function useUnitMenuPage(unitId: string) {
     editInitialValues: controller.editInitialValues,
 
     query: controller.query,
+    search,
+    setSearch: handleSearchChange,
     pagination,
     setPagination,
 

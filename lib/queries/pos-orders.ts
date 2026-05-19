@@ -31,6 +31,7 @@ import type {
   PaymentPayload,
   UpdateOrderPayload,
 } from "@/lib/orders/types";
+import { isUuid } from "@/lib/utils";
 
 // ─── Query key factory ────────────────────────────────────────────────────────
 
@@ -56,10 +57,17 @@ export function usePosOrdersQuery(
   params?: GetOrdersParams,
   pollingInterval = 15_000,
 ) {
+  const normalizedParams = params
+    ? {
+        ...params,
+        search: params.search?.trim() || undefined,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: posOrderQueryKeys.list(unitId, params),
-    queryFn: () => getPosOrders(unitId, params),
-    enabled: Boolean(unitId),
+    queryKey: posOrderQueryKeys.list(unitId, normalizedParams),
+    queryFn: () => getPosOrders(unitId, normalizedParams),
+    enabled: isUuid(unitId),
     refetchInterval: pollingInterval,
     refetchOnWindowFocus: true,
     refetchIntervalInBackground: false,
@@ -74,7 +82,7 @@ export function usePosOrderDetailQuery(unitId: string, orderId: string) {
   return useQuery({
     queryKey: posOrderQueryKeys.detail(unitId, orderId),
     queryFn: () => getPosOrderDetail(unitId, orderId),
-    enabled: Boolean(unitId) && Boolean(orderId),
+    enabled: isUuid(unitId) && isUuid(orderId),
     refetchOnWindowFocus: true,
     meta: { errorTitle: "Gagal Memuat Detail Pesanan" },
   });
@@ -308,7 +316,7 @@ export function usePaymentDetailPollingQuery(
       }
       return getPaymentDetail(unitId, orderId, paymentId);
     },
-    enabled: enabled && Boolean(paymentId),
+    enabled: enabled && isUuid(unitId) && isUuid(orderId) && isUuid(paymentId),
     refetchInterval: 5_000,
     refetchIntervalInBackground: false,
     staleTime: 0,

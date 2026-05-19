@@ -42,6 +42,8 @@ type DataTableProps<T> = {
   // Toolbar
   searchColumn?: string;
   searchPlaceholder?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
   actionLabel?: string | null;
   onActionClick?: () => void;
   extraControls?: ReactNode;
@@ -65,6 +67,8 @@ export function DataTable<T>({
   searchEmptyMessage = "Data tidak ditemukan.",
   searchColumn,
   searchPlaceholder,
+  searchValue,
+  onSearchChange,
   actionLabel,
   onActionClick,
   extraControls,
@@ -106,9 +110,14 @@ export function DataTable<T>({
   });
 
   const isFiltered = table.getState().columnFilters.length > 0;
+  const hasServerSearch = Boolean(searchValue?.trim());
   const rows = table.getRowModel().rows;
 
-  const showToolbar = searchColumn != null || actionLabel != null;
+  const showToolbar =
+    searchColumn != null ||
+    onSearchChange != null ||
+    actionLabel != null ||
+    extraControls != null;
 
   return (
     <div className="space-y-4">
@@ -117,6 +126,8 @@ export function DataTable<T>({
           table={table}
           searchColumn={searchColumn}
           searchPlaceholder={searchPlaceholder}
+          searchValue={searchValue}
+          onSearchChange={onSearchChange}
           actionLabel={actionLabel}
           onActionClick={onActionClick}
           extraControls={extraControls}
@@ -183,7 +194,9 @@ export function DataTable<T>({
                   colSpan={columns.length}
                   className="py-8 text-center text-muted-foreground"
                 >
-                  {isFiltered ? searchEmptyMessage : emptyMessage}
+                  {isFiltered || hasServerSearch
+                    ? searchEmptyMessage
+                    : emptyMessage}
                 </TableCell>
               </TableRow>
             ) : (

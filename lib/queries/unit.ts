@@ -48,10 +48,28 @@ function useUnitListCache() {
   };
 }
 
-export function useUnitsQuery(page = 1, limit = 10, showInactive = true) {
+export function useUnitsQuery(
+  page = 1,
+  limit = 10,
+  showInactive = true,
+  enabled = true,
+  search = "",
+) {
+  const normalizedSearch = search.trim();
+
   return useQuery({
-    queryKey: [...unitQueryKeys.lists(), { page, limit, showInactive }],
-    queryFn: () => getUnits({ page, limit, show_inactive: showInactive }),
+    queryKey: [
+      ...unitQueryKeys.lists(),
+      { page, limit, showInactive, search: normalizedSearch },
+    ],
+    queryFn: () =>
+      getUnits({
+        page,
+        limit,
+        show_inactive: showInactive,
+        search: normalizedSearch || undefined,
+      }),
+    enabled,
     meta: {
       errorTitle: "Gagal Memuat Unit Usaha",
     },

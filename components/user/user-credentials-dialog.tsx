@@ -80,7 +80,7 @@ export function UserCredentialsDialog({
               />
               <Button
                 type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted"
+                className="absolute bg-transparent right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted"
                 onClick={() => handleCopy("user_name", credentials.user_name)}
               >
                 {copiedField === "user_name" ? (
@@ -104,7 +104,7 @@ export function UserCredentialsDialog({
               />
               <Button
                 type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted"
+                className="absolute bg-transparent right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted"
                 onClick={() =>
                   handleCopy("password", credentials.password ?? "")
                 }

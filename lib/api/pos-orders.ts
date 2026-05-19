@@ -7,6 +7,7 @@ import type {
   CreateOrderPayload,
   GetOrdersParams,
   PaymentPayload,
+  TransactionHistoryParams,
   UpdateOrderPayload,
 } from "@/lib/orders/types";
 import {
@@ -16,6 +17,7 @@ import {
   orderTypesListResponseSchema,
   paymentDetailResponseSchema,
   posOrdersListResponseSchema,
+  transactionHistoryResponseSchema,
   type CashlessPaymentResponse,
   type CashPaymentResponse,
   type OrderDetailResponse,
@@ -23,11 +25,16 @@ import {
   type PaymentDetailResponse,
   type PosOrdersListResponse,
 } from "@/lib/schemas/orders";
+import type { TransactionHistoryResponse } from "@/lib/orders/types";
 
 // ─── Endpoint builders ─────────────────────────────────────────────────────────
 
 function ordersEndpoint(unitId: string): string {
   return `/orders/${unitId}`;
+}
+
+function transactionHistoryEndpoint(unitId: string): string {
+  return `/orders/transaction-history/${unitId}`;
 }
 
 function orderDetailEndpoint(unitId: string, orderId: string): string {
@@ -87,6 +94,19 @@ export async function getPosOrders(
     schema: posOrdersListResponseSchema,
     params: params as Record<string, unknown> | undefined,
   });
+}
+
+export async function getTransactionHistory(
+  unitId: string,
+  params?: TransactionHistoryParams,
+): Promise<TransactionHistoryResponse> {
+  return apiGet<TransactionHistoryResponse>(
+    transactionHistoryEndpoint(unitId),
+    {
+      schema: transactionHistoryResponseSchema,
+      params: params as Record<string, unknown> | undefined,
+    },
+  );
 }
 
 export async function getPosOrderDetail(

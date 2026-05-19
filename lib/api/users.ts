@@ -108,6 +108,8 @@ export async function getUsers(params?: {
     | "last_login";
   sortType?: "ASC" | "DESC";
   search?: string;
+  role_id?: string;
+  business_unit_id?: string;
 }) {
   return apiGet<UsersListResponse>(USERS_ENDPOINT, {
     schema: usersListResponseSchema,
