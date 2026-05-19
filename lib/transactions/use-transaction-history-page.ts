@@ -9,6 +9,7 @@ import type {
   TransactionHistorySortBy,
   TransactionHistorySortType,
 } from "@/lib/orders/types";
+import { ORDER_STATUS } from "@/lib/orders/constants";
 import { useTransactionHistoryQuery } from "@/lib/queries/transaction-history";
 import { useUnitsQuery } from "@/lib/queries/unit";
 
@@ -16,12 +17,10 @@ const DEFAULT_SORT_BY: TransactionHistorySortBy = "ordered_at";
 const DEFAULT_SORT_TYPE: TransactionHistorySortType = "DESC";
 
 export type TransactionHistoryFilters = {
-  statusId?: string;
   dateFrom?: string;
   dateTo?: string;
   paymentMethod?: TransactionHistoryPaymentMethod;
   sortBy: TransactionHistorySortBy;
-  sortType: TransactionHistorySortType;
 };
 
 export function useTransactionHistoryPage(unitId?: string) {
@@ -35,17 +34,16 @@ export function useTransactionHistoryPage(unitId?: string) {
   });
   const [filters, setFilters] = useState<TransactionHistoryFilters>({
     sortBy: DEFAULT_SORT_BY,
-    sortType: DEFAULT_SORT_TYPE,
   });
 
   const params = useMemo(
     () => ({
-      status_id: filters.statusId,
+      status_id: ORDER_STATUS.COMPLETE,
       date_from: filters.dateFrom || undefined,
       date_to: filters.dateTo || undefined,
       payment_method: filters.paymentMethod,
       sortBy: filters.sortBy,
-      sortType: filters.sortType,
+      sortType: DEFAULT_SORT_TYPE,
       page: pagination.pageIndex + 1,
       limit: pagination.pageSize,
     }),
@@ -85,7 +83,6 @@ export function useTransactionHistoryPage(unitId?: string) {
   function resetFilters() {
     setFilters({
       sortBy: DEFAULT_SORT_BY,
-      sortType: DEFAULT_SORT_TYPE,
     });
     setPagination((current) => ({ ...current, pageIndex: 0 }));
   }
