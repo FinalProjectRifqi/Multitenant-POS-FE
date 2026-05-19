@@ -34,7 +34,7 @@ function ordersEndpoint(unitId: string): string {
 }
 
 function transactionHistoryEndpoint(unitId: string): string {
-  return `orders/transaction-history/${unitId}`;
+  return `/orders/transaction-history/${unitId}`;
 }
 
 function orderDetailEndpoint(unitId: string, orderId: string): string {

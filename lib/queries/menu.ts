@@ -25,6 +25,7 @@ import type {
   MenuEntity,
   MenusListResponse,
 } from "@/lib/schemas/menu";
+import { isUuid } from "@/lib/utils";
 
 // ─── Cache helpers ─────────────────────────────────────────────────────────────
 
@@ -63,7 +64,7 @@ export function useMenusQuery(businessId: string, params?: GetMenusParams) {
   return useQuery({
     queryKey: [...menuQueryKeys.lists(), { businessId, ...normalizedParams }],
     queryFn: () => getMenus(businessId, normalizedParams),
-    enabled: Boolean(businessId),
+    enabled: isUuid(businessId),
     meta: {
       errorTitle: "Gagal Memuat Menu",
     },
