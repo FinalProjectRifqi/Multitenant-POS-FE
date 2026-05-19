@@ -23,6 +23,7 @@ type Actions = {
 };
 
 const STOCK_STATUS_LABEL = {
+  out: "Stok Habis",
   low: "Stok Rendah",
   normal: "Stok Normal",
 } as const;
@@ -53,7 +54,15 @@ export function buildInventarisColumns(
       enableSorting: false,
       cell: ({ row }) => {
         const item = row.original;
+        const isOutOfStock = item.is_out_of_stock;
         const isLowStock = item.is_low_stock;
+        if (isOutOfStock) {
+          return (
+            <Badge variant="secondary" className="text-gray-600">
+              {STOCK_STATUS_LABEL.out}
+            </Badge>
+          );
+        }
         return (
           <Badge
             variant={isLowStock ? "destructive" : "secondary"}
@@ -79,7 +88,11 @@ export function buildInventarisColumns(
               <span
                 className={cn(
                   "font-medium tabular-nums",
-                  item.is_low_stock ? "text-destructive" : "text-foreground/85",
+                  item.is_out_of_stock
+                    ? "text-muted-foreground"
+                    : item.is_low_stock
+                      ? "text-destructive"
+                      : "text-foreground/85",
                 )}
               >
                 {current}
@@ -92,7 +105,9 @@ export function buildInventarisColumns(
               value={percentage}
               className={cn(
                 "h-1.5",
-                item.is_low_stock && "[&>div]:bg-destructive",
+                item.is_out_of_stock
+                  ? "[&>div]:bg-muted-foreground"
+                  : item.is_low_stock && "[&>div]:bg-destructive",
               )}
             />
           </div>

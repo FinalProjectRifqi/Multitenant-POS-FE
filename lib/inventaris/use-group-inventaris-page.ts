@@ -15,7 +15,9 @@ function toInventarisRow(items: InventarisItem[] | undefined): InventarisRow[] {
   if (!items) return [];
   return items.map((item) => ({
     ...item,
-    is_low_stock: item.current_stock <= item.min_threshold,
+    is_out_of_stock: item.current_stock === 0,
+    is_low_stock:
+      item.current_stock > 0 && item.current_stock <= item.min_threshold,
   }));
 }
 
