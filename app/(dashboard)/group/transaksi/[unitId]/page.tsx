@@ -9,6 +9,7 @@ import { getTransactionHistory } from "@/lib/api/pos-orders";
 import { getUnits } from "@/lib/api/units";
 import { transactionHistoryQueryKeys } from "@/lib/queries/transaction-history";
 import { unitQueryKeys } from "@/lib/queries/unit-keys";
+import { isUuid } from "@/lib/utils";
 
 type PageProps = {
   params: Promise<{ unitId: string }>;
@@ -24,21 +25,25 @@ export default async function GroupTransactionHistoryUnitPage({
 
   try {
     await Promise.all([
-      queryClient.prefetchQuery({
-        queryKey: transactionHistoryQueryKeys.list(unitId, {
-          page: 1,
-          limit: 10,
-          sortBy: "ordered_at",
-          sortType: "DESC",
-        }),
-        queryFn: () =>
-          getTransactionHistory(unitId, {
-            page: 1,
-            limit: 10,
-            sortBy: "ordered_at",
-            sortType: "DESC",
-          }),
-      }),
+      ...(isUuid(unitId)
+        ? [
+            queryClient.prefetchQuery({
+              queryKey: transactionHistoryQueryKeys.list(unitId, {
+                page: 1,
+                limit: 10,
+                sortBy: "ordered_at",
+                sortType: "DESC",
+              }),
+              queryFn: () =>
+                getTransactionHistory(unitId, {
+                  page: 1,
+                  limit: 10,
+                  sortBy: "ordered_at",
+                  sortType: "DESC",
+                }),
+            }),
+          ]
+        : []),
       queryClient.prefetchQuery({
         queryKey: [
           ...unitQueryKeys.lists(),

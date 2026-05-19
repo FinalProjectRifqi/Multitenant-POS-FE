@@ -24,6 +24,7 @@ import type {
   InventarisListResponse,
 } from "@/lib/schemas/inventaris";
 import type { InventarisItemFormValues } from "@/lib/schemas/inventaris";
+import { isUuid } from "@/lib/utils";
 
 // ─── Cache helpers ────────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ export function useInventarisItemsQuery(
   return useQuery({
     queryKey: [...inventarisQueryKeys.lists(businessId), params],
     queryFn: () => getInventarisItems(businessId, params),
-    enabled: !!businessId,
+    enabled: isUuid(businessId),
     meta: { errorTitle: "Gagal Memuat Data Inventaris" },
   });
 }
@@ -73,7 +74,7 @@ export function useInventarisStatsQuery(businessId: string) {
   return useQuery({
     queryKey: inventarisQueryKeys.stats(businessId),
     queryFn: () => getInventarisStats(businessId),
-    enabled: !!businessId,
+    enabled: isUuid(businessId),
     meta: { errorTitle: "Gagal Memuat Statistik Inventaris" },
   });
 }

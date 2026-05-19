@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getTransactionHistory } from "@/lib/api/pos-orders";
 import type { TransactionHistoryParams } from "@/lib/orders/types";
+import { isUuid } from "@/lib/utils";
 
 export const transactionHistoryQueryKeys = {
   all: () => ["transaction-history"] as const,
@@ -26,7 +27,7 @@ export function useTransactionHistoryQuery(
   return useQuery({
     queryKey: transactionHistoryQueryKeys.list(unitId, normalizedParams),
     queryFn: () => getTransactionHistory(unitId, normalizedParams),
-    enabled: Boolean(unitId),
+    enabled: isUuid(unitId),
     staleTime: 30_000,
     refetchOnWindowFocus: true,
     meta: { errorTitle: "Gagal Memuat Riwayat Transaksi" },

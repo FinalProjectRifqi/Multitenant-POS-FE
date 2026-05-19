@@ -8,6 +8,7 @@ import { UnitInventarisPageContent } from "@/components/inventaris/unit-inventar
 import { getInventarisItems, getInventarisStats } from "@/lib/api/inventaris";
 import { auth } from "@/lib/nextauth/auth";
 import { inventarisQueryKeys } from "@/lib/queries/inventaris-keys";
+import { isUuid } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function Page() {
 
   const queryClient = new QueryClient();
 
-  if (unitId) {
+  if (isUuid(unitId)) {
     try {
       await Promise.all([
         queryClient.prefetchQuery({
