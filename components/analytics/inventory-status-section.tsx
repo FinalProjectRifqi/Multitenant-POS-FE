@@ -20,7 +20,7 @@ function StatusBadge({ status }: { status: InventoryStatusRow["status"] }) {
   };
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border font-medium ${
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${
         map[status] ?? "border-border bg-muted text-muted-foreground"
       }`}
     >
@@ -42,16 +42,16 @@ function InventoryItem({ item }: { item: InventoryStatusRow }) {
         borderColor[item.status] ?? "border-l-border"
       }`}
     >
-      <div>
-        <p className="text-sm font-medium text-foreground">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-foreground">
           {item.inventory_item_name}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs font-medium text-muted-foreground">
           Min {item.min_threshold} {item.unit_of_measure}
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold">
+        <span className="text-sm font-bold text-foreground">
           {item.current_stock} {item.unit_of_measure}
         </span>
         <StatusBadge status={item.status} />
@@ -91,10 +91,12 @@ export function InventoryStatusSection({
       <div className="rounded-xl border p-5 space-y-3 bg-primary-foreground">
         <div className="flex items-center gap-2 border-l-4 border-l-amber-500 pl-3">
           <TriangleAlert className="h-4 w-4 text-amber-500" />
-          <h3 className="font-semibold text-base">Stok Rendah / Kritis</h3>
+          <h3 className="text-lg font-semibold leading-none">
+            Stok Rendah / Kritis
+          </h3>
         </div>
         {low.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
+          <p className="py-4 text-center text-sm font-medium text-muted-foreground">
             Semua stok aman
           </p>
         ) : (
@@ -110,10 +112,10 @@ export function InventoryStatusSection({
       <div className="rounded-xl border p-5 space-y-3 bg-primary-foreground">
         <div className="flex items-center gap-2 border-l-4 border-l-red-500 pl-3">
           <Package className="h-4 w-4 text-red-500" />
-          <h3 className="font-semibold text-base">Stok Habis</h3>
+          <h3 className="text-lg font-semibold leading-none">Stok Habis</h3>
         </div>
         {out.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
+          <p className="py-4 text-center text-sm font-medium text-muted-foreground">
             Tidak ada stok habis
           </p>
         ) : (

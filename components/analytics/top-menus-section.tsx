@@ -34,7 +34,7 @@ function RankBadge({ rank }: { rank: number }) {
   const style = RANK_STYLES[rank - 1] ?? "bg-muted text-muted-foreground";
   return (
     <span
-      className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${style}`}
+      className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold leading-none ${style}`}
     >
       {rank}
     </span>
@@ -60,13 +60,15 @@ export function MenuRevenueList({
 
   return (
     <Card className="h-full bg-primary-foreground">
-      <CardHeader className="pb-2 pt-4 px-4">
+      <CardHeader className="px-5 pb-3 pt-5">
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 rounded-full bg-primary opacity-70" />
-          <h3 className="text-sm font-semibold">Pendapatan per Menu</h3>
+          <h3 className="text-lg font-semibold leading-none">
+            Pendapatan per Menu
+          </h3>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4">
+      <CardContent className="px-5 pb-5">
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -74,24 +76,24 @@ export function MenuRevenueList({
             ))}
           </div>
         ) : displayData.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
+          <p className="py-8 text-center text-sm font-medium text-muted-foreground">
             Belum ada data
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {displayData.map((row, index) => {
               const pct =
                 maxRevenue > 0 ? (row.pendapatan / maxRevenue) * 100 : 0;
               return (
                 <div key={row.menu_item_id}>
-                  <div className="flex items-center justify-between mb-1 gap-2">
+                  <div className="mb-1.5 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <RankBadge rank={index + 1} />
-                      <span className="text-xs font-medium truncate">
+                      <span className="truncate text-sm font-semibold text-foreground">
                         {row.menu_item_name}
                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground shrink-0">
+                    <span className="shrink-0 text-sm font-semibold text-muted-foreground">
                       {formatRupiahShort(row.pendapatan)}
                     </span>
                   </div>
@@ -134,14 +136,16 @@ export function TopMenusSection({
       accessorKey: "menu_item_name",
       header: "Menu",
       cell: ({ row }) => (
-        <span className="font-medium">{row.getValue("menu_item_name")}</span>
+        <span className="font-semibold text-foreground">
+          {row.getValue("menu_item_name")}
+        </span>
       ),
     },
     {
       accessorKey: "category_name",
       header: "Kategori",
       cell: ({ row }) => (
-        <span className="text-muted-foreground">
+        <span className="text-sm font-medium text-muted-foreground">
           {row.getValue("category_name")}
         </span>
       ),
@@ -150,14 +154,16 @@ export function TopMenusSection({
       accessorKey: "qty_terjual",
       header: () => <div className="text-right">Qty Terjual</div>,
       cell: ({ row }) => (
-        <div className="text-left">{row.getValue("qty_terjual")}</div>
+        <div className="text-left font-medium">
+          {row.getValue("qty_terjual")}
+        </div>
       ),
     },
     {
       accessorKey: "pendapatan",
       header: () => <div className="text-right">Pendapatan</div>,
       cell: ({ row }) => (
-        <div className="text-left font-medium">
+        <div className="text-left font-semibold">
           {formatRupiah(row.getValue("pendapatan"))}
         </div>
       ),
@@ -166,10 +172,10 @@ export function TopMenusSection({
 
   return (
     <Card className="bg-primary-foreground">
-      <CardHeader className="pb-2 pt-4 px-4">
+      <CardHeader className="px-5 pb-3 pt-5">
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 rounded-full bg-primary opacity-70" />
-          <h3 className="text-sm font-semibold">Menu Terlaris</h3>
+          <h3 className="text-lg font-semibold leading-none">Menu Terlaris</h3>
         </div>
       </CardHeader>
       <CardContent className="space-y-5">

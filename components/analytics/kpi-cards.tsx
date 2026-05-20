@@ -41,7 +41,7 @@ function GrowthBadge({ pct }: { pct: number | null | undefined }) {
   const positive = pct >= 0;
   return (
     <span
-      className={`inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-full ${
+      className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold ${
         positive
           ? "bg-emerald-500/25 text-emerald-200"
           : "bg-red-500/25 text-red-200"
@@ -69,15 +69,17 @@ export function KpiCards({ data, isLoading, unitName }: KpiCardsProps) {
     "relative overflow-hidden rounded-xl bg-primary p-5 text-primary-foreground shadow-sm";
   const iconWrap =
     "flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 shrink-0";
+  const labelClass =
+    "text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-foreground/80";
+  const valueClass = "mt-3 text-3xl font-extrabold leading-tight tracking-normal";
+  const metaClass = "text-[13px] font-medium text-primary-foreground/75 truncate";
 
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {/* Total Omzet */}
       <div className={cardBase}>
         <div className="flex items-start justify-between">
-          <p className="text-xs font-medium opacity-70 uppercase tracking-wide">
-            Total Omzet
-          </p>
+          <p className={labelClass}>Total Omzet</p>
           <div className={iconWrap}>
             <TrendingUp className="h-4 w-4" />
           </div>
@@ -86,16 +88,14 @@ export function KpiCards({ data, isLoading, unitName }: KpiCardsProps) {
           <Skeleton className="mt-3 h-8 w-28 bg-white/20" />
         ) : (
           <p
-            className="mt-2 text-2xl font-bold truncate"
+            className={`${valueClass} truncate`}
             title={data ? formatRupiahFull(data.total_omzet) : "Rp 0"}
           >
             {data ? formatRupiah(data.total_omzet) : "Rp 0"}
           </p>
         )}
         <div className="mt-2 flex items-center gap-2">
-          {unitName && (
-            <span className="text-xs opacity-60 truncate">{unitName}</span>
-          )}
+          {unitName && <span className={metaClass}>{unitName}</span>}
           {!isLoading && <GrowthBadge pct={data?.omzet_growth_pct} />}
         </div>
       </div>
@@ -103,9 +103,7 @@ export function KpiCards({ data, isLoading, unitName }: KpiCardsProps) {
       {/* Total Transaksi */}
       <div className={cardBase}>
         <div className="flex items-start justify-between">
-          <p className="text-xs font-medium opacity-70 uppercase tracking-wide">
-            Total Transaksi
-          </p>
+          <p className={labelClass}>Total Transaksi</p>
           <div className={iconWrap}>
             <ShoppingCart className="h-4 w-4" />
           </div>
@@ -113,14 +111,12 @@ export function KpiCards({ data, isLoading, unitName }: KpiCardsProps) {
         {isLoading ? (
           <Skeleton className="mt-3 h-8 w-20 bg-white/20" />
         ) : (
-          <p className="mt-2 text-2xl font-bold">
+          <p className={valueClass}>
             {data ? formatNumber(data.total_transaksi) : "0"}
           </p>
         )}
         <div className="mt-2 flex items-center gap-2">
-          {unitName && (
-            <span className="text-xs opacity-60 truncate">{unitName}</span>
-          )}
+          {unitName && <span className={metaClass}>{unitName}</span>}
           {!isLoading && <GrowthBadge pct={data?.transaksi_growth_pct} />}
         </div>
       </div>
@@ -128,9 +124,7 @@ export function KpiCards({ data, isLoading, unitName }: KpiCardsProps) {
       {/* Rata-rata Order */}
       <div className={cardBase}>
         <div className="flex items-start justify-between">
-          <p className="text-xs font-medium opacity-70 uppercase tracking-wide">
-            Rata-rata Order
-          </p>
+          <p className={labelClass}>Rata-rata Order</p>
           <div className={iconWrap}>
             <Calculator className="h-4 w-4" />
           </div>
@@ -139,7 +133,7 @@ export function KpiCards({ data, isLoading, unitName }: KpiCardsProps) {
           <Skeleton className="mt-3 h-8 w-24 bg-white/20" />
         ) : (
           <p
-            className="mt-2 text-2xl font-bold truncate"
+            className={`${valueClass} truncate`}
             title={data ? formatRupiahFull(data.rata_rata_order) : "Rp 0"}
           >
             {data ? formatRupiah(data.rata_rata_order) : "Rp 0"}
@@ -153,9 +147,7 @@ export function KpiCards({ data, isLoading, unitName }: KpiCardsProps) {
       {/* Status Transaksi */}
       <div className={cardBase}>
         <div className="flex items-start justify-between">
-          <p className="text-xs font-medium opacity-70 uppercase tracking-wide">
-            Status Transaksi
-          </p>
+          <p className={labelClass}>Status Transaksi</p>
           <div className={iconWrap}>
             <CheckCircle2 className="h-4 w-4" />
           </div>
@@ -164,13 +156,13 @@ export function KpiCards({ data, isLoading, unitName }: KpiCardsProps) {
           <Skeleton className="mt-3 h-8 w-24 bg-white/20" />
         ) : (
           <>
-            <p className="mt-2 text-2xl font-bold">
+            <p className={valueClass}>
               {formatNumber(selesai)}{" "}
-              <span className="text-base font-normal opacity-60">
+              <span className="text-lg font-semibold text-primary-foreground/65">
                 / {formatNumber(dibatalkan)}
               </span>
             </p>
-            <p className="mt-2 text-xs opacity-70 flex items-center gap-1">
+            <p className="mt-2 flex items-center gap-1 text-[13px] font-medium text-primary-foreground/80">
               <CheckCircle2 className="h-3 w-3 shrink-0" />
               Selesai /
               <AlertCircle className="h-3 w-3 shrink-0" />

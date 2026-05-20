@@ -37,19 +37,22 @@ export function SalesTrendChart({
   isLoading,
 }: SalesTrendChartProps) {
   const [mode, setMode] = useState<ChartMode>("omzet");
+  const axisTick = { fontSize: 12, fill: "#6b5156", fontWeight: 600 };
 
   return (
     <Card className="h-full bg-primary-foreground">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
+      <CardHeader className="flex flex-row items-center justify-between px-5 pb-3 pt-5">
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 rounded-full bg-primary opacity-70" />
-          <h3 className="text-sm font-semibold">Tren Penjualan</h3>
+          <h3 className="text-lg font-semibold leading-none">
+            Tren Penjualan
+          </h3>
         </div>
         <div className="flex gap-1.5">
           <Button
             size="sm"
             variant={mode === "omzet" ? "default" : "outline"}
-            className="h-7 text-xs px-2.5"
+            className="h-8 px-3 text-sm font-semibold"
             onClick={() => setMode("omzet")}
           >
             Omzet
@@ -57,25 +60,25 @@ export function SalesTrendChart({
           <Button
             size="sm"
             variant={mode === "transaksi" ? "default" : "outline"}
-            className="h-7 text-xs px-2.5"
+            className="h-8 px-3 text-sm font-semibold"
             onClick={() => setMode("transaksi")}
           >
             Transaksi
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-2 pb-4">
+      <CardContent className="px-4 pb-5">
         {isLoading ? (
           <Skeleton className="h-48 w-full" />
         ) : data.length === 0 ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">
+          <p className="py-12 text-center text-sm font-medium text-muted-foreground">
             Belum ada data penjualan
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={220}>
             <AreaChart
               data={data}
-              margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+              margin={{ top: 8, right: 12, left: 2, bottom: 0 }}
             >
               <defs>
                 <linearGradient
@@ -97,14 +100,14 @@ export function SalesTrendChart({
                   />
                 </linearGradient>
                 <linearGradient
-                  id="colorTransaksiGreen"
+                  id="colorTransaksiSecondary"
                   x1="0"
                   y1="0"
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="5%" stopColor="#16a34a" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#8f3144" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#8f3144" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid
@@ -113,23 +116,24 @@ export function SalesTrendChart({
               />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 11 }}
+                tick={axisTick}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 tickFormatter={mode === "omzet" ? formatRupiah : undefined}
-                tick={{ fontSize: 11 }}
+                tick={axisTick}
                 axisLine={false}
                 tickLine={false}
-                width={60}
+                width={64}
               />
               <Tooltip
                 contentStyle={{
                   background: "var(--color-card)",
                   border: "1px solid var(--color-border)",
                   borderRadius: 8,
-                  fontSize: 12,
+                  fontSize: 13,
+                  fontWeight: 600,
                 }}
                 formatter={(value) =>
                   mode === "omzet"
@@ -140,7 +144,7 @@ export function SalesTrendChart({
                       }).format(Number(value))
                     : String(value)
                 }
-                labelStyle={{ fontWeight: 600 }}
+                labelStyle={{ fontWeight: 700 }}
               />
               {mode === "omzet" ? (
                 <Area
@@ -155,8 +159,8 @@ export function SalesTrendChart({
                 <Area
                   type="monotone"
                   dataKey="transaksi"
-                  stroke="#16a34a"
-                  fill="url(#colorTransaksiGreen)"
+                  stroke="#8f3144"
+                  fill="url(#colorTransaksiSecondary)"
                   strokeWidth={2}
                   name="Transaksi"
                 />

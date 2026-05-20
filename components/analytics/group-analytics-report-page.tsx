@@ -32,6 +32,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  Cell,
+  LabelList,
 } from "recharts";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { SalesTrendChart } from "@/components/analytics/sales-trend-chart";
@@ -68,6 +70,27 @@ const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
   { value: "quarter", label: "3 Bulan Terakhir" },
 ];
 
+const CHART_COLORS = {
+  omzet: ["#49111c", "#7a2638", "#a64a5d", "#c77a87", "#6f3c46", "#9b6470"],
+  transaksi: "#49111c",
+  selesai: "#8f3144",
+  dibatalkan: "#c85c67",
+  grid: "#e2d8d0",
+  axis: "#6b5156",
+  hover: "rgba(73, 17, 28, 0.08)",
+};
+
+const CARD_LABEL_CLASS =
+  "text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-foreground/80";
+const CARD_VALUE_CLASS =
+  "mt-3 text-3xl font-extrabold leading-tight tracking-normal text-primary-foreground";
+const SECTION_TITLE_CLASS = "text-lg font-semibold leading-none";
+const AXIS_TICK = {
+  fontSize: 12,
+  fill: CHART_COLORS.axis,
+  fontWeight: 600,
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatRupiah(value: number): string {
@@ -84,6 +107,12 @@ function formatNumber(value: number): string {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
+function formatShortChartValue(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}jt`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}rb`;
+  return formatNumber(value);
+}
+
 // ─── Group KPI Cards ──────────────────────────────────────────────────────────
 
 function GroupKpiCards({
@@ -98,7 +127,7 @@ function GroupKpiCards({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="bg-primary">
-            <CardContent className="p-6 flex flex-col gap-3">
+            <CardContent className="flex flex-col gap-3 p-5">
               <Skeleton className="h-4 w-24 mb-2" />
               <Skeleton className="h-8 w-32" />
             </CardContent>
@@ -143,18 +172,14 @@ function GroupKpiCards({
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
         <Card key={card.title} className="bg-primary">
-          <CardContent className="p-6">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-primary-foreground opacity-70">
-                {card.title}
-              </p>
+              <p className={CARD_LABEL_CLASS}>{card.title}</p>
               <div className={`p-2 rounded-lg bg-white/15 shrink-0`}>
                 <card.icon className={`h-4 w-4 text-primary-foreground`} />
               </div>
             </div>
-            <p className="text-2xl text-primary-foreground font-bold">
-              {card.value}
-            </p>
+            <p className={CARD_VALUE_CLASS}>{card.value}</p>
           </CardContent>
         </Card>
       ))}
@@ -178,7 +203,7 @@ function SecondaryKpis({
       <div className="grid gap-4 sm:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i} className="bg-primary-foreground">
-            <CardContent className="p-4 ">
+            <CardContent className="p-5">
               <Skeleton className="h-4 w-20 mb-2" />
               <Skeleton className="h-6 w-16" />
             </CardContent>
@@ -191,33 +216,39 @@ function SecondaryKpis({
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       <Card className="bg-primary-foreground">
-        <CardContent className="p-4 flex items-center gap-3">
+        <CardContent className="flex items-center gap-4">
           <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <div>
-            <p className="text-xs text-muted-foreground">Order Selesai</p>
-            <p className="text-lg font-bold">
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-muted-foreground">
+              Order Selesai
+            </p>
+            <p className="text-lg font-bold leading-tight">
               {formatNumber(data?.selesai ?? 0)}
             </p>
           </div>
         </CardContent>
       </Card>
       <Card className="bg-primary-foreground">
-        <CardContent className="p-4 flex items-center gap-3">
+        <CardContent className="flex items-center gap-4">
           <XCircle className="h-5 w-5 text-red-400 shrink-0" />
-          <div>
-            <p className="text-xs text-muted-foreground">Order Dibatalkan</p>
-            <p className="text-lg font-bold">
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-muted-foreground">
+              Order Dibatalkan
+            </p>
+            <p className="text-lg font-bold leading-tight">
               {formatNumber(data?.dibatalkan ?? 0)}
             </p>
           </div>
         </CardContent>
       </Card>
       <Card className="bg-primary-foreground">
-        <CardContent className="p-4 flex items-center gap-3">
+        <CardContent className="flex items-center gap-4">
           <TrendingUp className="h-5 w-5 text-yellow-400 shrink-0" />
-          <div>
-            <p className="text-xs text-muted-foreground">Unit Terbaik</p>
-            <p className="text-lg font-bold truncate">
+          <div className="space-y-1">
+            <p className="text-lg font-semibold text-muted-foreground">
+              Unit Terbaik
+            </p>
+            <p className="truncate text-lg font-bold leading-tight">
               {bestUnit?.unit_name ?? "—"}
             </p>
           </div>
@@ -241,21 +272,25 @@ function UnitPerformanceTable({
       accessorKey: "unit_name",
       header: "Unit",
       cell: ({ row }) => (
-        <span className="font-medium">{row.getValue("unit_name")}</span>
+        <span className="font-semibold text-foreground">
+          {row.getValue("unit_name")}
+        </span>
       ),
     },
     {
       accessorKey: "omzet",
       header: () => <div className="text-left">Omzet</div>,
       cell: ({ row }) => (
-        <div className="text-left">{formatRupiah(row.getValue("omzet"))}</div>
+        <div className="text-left font-medium">
+          {formatRupiah(row.getValue("omzet"))}
+        </div>
       ),
     },
     {
       accessorKey: "transaksi",
       header: () => <div className="text-left">Transaksi</div>,
       cell: ({ row }) => (
-        <div className="text-left">
+        <div className="text-left font-medium">
           {formatNumber(row.getValue("transaksi"))}
         </div>
       ),
@@ -264,7 +299,7 @@ function UnitPerformanceTable({
       accessorKey: "rata_rata_order",
       header: () => <div className="text-left">Rata-rata</div>,
       cell: ({ row }) => (
-        <div className="text-left">
+        <div className="text-left font-medium">
           {formatRupiah(row.getValue("rata_rata_order"))}
         </div>
       ),
@@ -273,7 +308,7 @@ function UnitPerformanceTable({
       accessorKey: "selesai",
       header: () => <div className="text-left">Selesai</div>,
       cell: ({ row }) => (
-        <div className="text-justify text-emerald-400">
+        <div className="text-justify font-semibold text-emerald-600">
           {formatNumber(row.getValue("selesai"))}
         </div>
       ),
@@ -282,7 +317,7 @@ function UnitPerformanceTable({
       accessorKey: "dibatalkan",
       header: () => <div className="text-left">Batal</div>,
       cell: ({ row }) => (
-        <div className="text-justify text-red-400">
+        <div className="text-justify font-semibold text-red-600">
           {formatNumber(row.getValue("dibatalkan"))}
         </div>
       ),
@@ -297,7 +332,7 @@ function UnitPerformanceTable({
             {val > 0 ? (
               <Badge variant="destructive">{val}</Badge>
             ) : (
-              <span className="text-muted-foreground">0</span>
+              <span className="font-medium text-muted-foreground">0</span>
             )}
           </div>
         );
@@ -310,7 +345,9 @@ function UnitPerformanceTable({
       <CardHeader>
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 rounded-full bg-primary opacity-70" />
-          <CardTitle className="text-base">Performa Per Unit</CardTitle>
+          <CardTitle className={SECTION_TITLE_CLASS}>
+            Performa Per Unit
+          </CardTitle>
         </div>
       </CardHeader>
       <CardContent className="">
@@ -378,9 +415,11 @@ function PerUnitTab({ period }: { period: AnalyticsPeriod }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <p className="text-sm font-medium text-muted-foreground">Pilih Unit:</p>
+        <p className="text-sm font-semibold text-muted-foreground">
+          Pilih Unit:
+        </p>
         <Select value={unitId} onValueChange={setSelectedUnitId}>
-          <SelectTrigger className="w-64 bg-primary-foreground">
+          <SelectTrigger className="w-64 bg-primary-foreground font-medium">
             <SelectValue placeholder="Pilih unit..." />
           </SelectTrigger>
           <SelectContent className="bg-primary-foreground">
@@ -399,7 +438,7 @@ function PerUnitTab({ period }: { period: AnalyticsPeriod }) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Card key={i} className="bg-primary">
-                  <CardContent className="p-6 flex flex-col gap-3">
+                  <CardContent className="flex flex-col gap-3 p-5">
                     <Skeleton className="h-4 w-24 mb-2" />
                     <Skeleton className="h-8 w-32" />
                   </CardContent>
@@ -436,44 +475,40 @@ function PerUnitTab({ period }: { period: AnalyticsPeriod }) {
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {kpiCards.map((card) => (
                       <Card key={card.title} className="bg-primary">
-                        <CardContent className="p-6">
+                        <CardContent className="p-5">
                           <div className="flex items-center justify-between mb-3">
-                            <p className="text-sm font-medium text-primary-foreground opacity-70">
-                              {card.title}
-                            </p>
+                            <p className={CARD_LABEL_CLASS}>{card.title}</p>
                             <div className="p-2 rounded-lg bg-white/15 shrink-0">
                               <card.icon className="h-4 w-4 text-primary-foreground" />
                             </div>
                           </div>
-                          <p className="text-2xl text-primary-foreground font-bold">
-                            {card.value}
-                          </p>
+                          <p className={CARD_VALUE_CLASS}>{card.value}</p>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Card className="bg-primary-foreground">
-                      <CardContent className="p-4 flex items-center gap-3">
+                      <CardContent className="flex items-center gap-3 p-5">
                         <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
                         <div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm font-semibold text-muted-foreground">
                             Transaksi Selesai
                           </p>
-                          <p className="text-lg font-bold">
+                          <p className="text-2xl font-bold leading-tight">
                             {formatNumber(kpi.selesai)}
                           </p>
                         </div>
                       </CardContent>
                     </Card>
                     <Card className="bg-primary-foreground">
-                      <CardContent className="p-4 flex items-center gap-3">
+                      <CardContent className="flex items-center gap-3 p-5">
                         <XCircle className="h-5 w-5 text-red-400 shrink-0" />
                         <div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm font-semibold text-muted-foreground">
                             Dibatalkan
                           </p>
-                          <p className="text-lg font-bold">
+                          <p className="text-2xl font-bold leading-tight">
                             {formatNumber(kpi.dibatalkan)}
                           </p>
                         </div>
@@ -505,6 +540,9 @@ function PerUnitTab({ period }: { period: AnalyticsPeriod }) {
           <PaymentHistorySection
             data={paymentsQuery.data?.data}
             isLoading={paymentsQuery.isLoading}
+            redirectToTransaksi
+            redirectToTransaksiUrl={`/group/transaksi/${selectedUnitId}`}
+            selectedUnitId={selectedUnitId}
           />
           <InventoryStatusSection
             data={inventoryStatusQuery.data?.data}
@@ -565,21 +603,25 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
       accessorKey: "unit_name",
       header: "Unit",
       cell: ({ row }) => (
-        <span className="font-medium">{row.getValue("unit_name")}</span>
+        <span className="font-semibold text-foreground">
+          {row.getValue("unit_name")}
+        </span>
       ),
     },
     {
       accessorKey: "omzet",
       header: () => <div className="text-left">Omzet</div>,
       cell: ({ row }) => (
-        <div className="text-left">{formatRupiah(row.getValue("omzet"))}</div>
+        <div className="text-left font-medium">
+          {formatRupiah(row.getValue("omzet"))}
+        </div>
       ),
     },
     {
       accessorKey: "transaksi",
       header: () => <div className="text-left">Transaksi</div>,
       cell: ({ row }) => (
-        <div className="text-left">
+        <div className="text-left font-medium">
           {formatNumber(row.getValue("transaksi"))}
         </div>
       ),
@@ -588,7 +630,7 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
       accessorKey: "rata_rata_order",
       header: () => <div className="text-left">Rata-rata Order</div>,
       cell: ({ row }) => (
-        <div className="text-left">
+        <div className="text-left font-medium">
           {formatRupiah(row.getValue("rata_rata_order"))}
         </div>
       ),
@@ -597,7 +639,7 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
       accessorKey: "selesai",
       header: () => <div className="text-left">Selesai</div>,
       cell: ({ row }) => (
-        <div className="text-left text-emerald-400">
+        <div className="text-left font-semibold text-emerald-600">
           {formatNumber(row.getValue("selesai"))}
         </div>
       ),
@@ -606,7 +648,7 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
       accessorKey: "dibatalkan",
       header: () => <div className="text-left">Batal</div>,
       cell: ({ row }) => (
-        <div className="text-left text-red-400">
+        <div className="text-left font-semibold text-red-600">
           {formatNumber(row.getValue("dibatalkan"))}
         </div>
       ),
@@ -621,7 +663,7 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
             <div className="text-left">
               <Badge
                 variant="outline"
-                className="text-emerald-400 border-emerald-400"
+                className="text-primary-foreground bg-emerald-400 border-emerald-400"
               >
                 Aman
               </Badge>
@@ -632,7 +674,7 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
             <div className="text-left">
               <Badge
                 variant="outline"
-                className="text-amber-400 border-amber-400"
+                className="text-primary-foreground bg-amber-400 border-amber-400"
               >
                 Rendah {val}
               </Badge>
@@ -653,11 +695,11 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
       <Card className="bg-primary-foreground">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">
+            <CardTitle className={SECTION_TITLE_CLASS}>
               Pilih Unit untuk Dibandingkan
             </CardTitle>
             {selectedIds.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs font-semibold">
                 {selectedIds.length} dipilih
               </Badge>
             )}
@@ -676,7 +718,7 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
                 <button
                   key={u.business_unit_id}
                   onClick={() => toggleUnit(u.business_unit_id)}
-                  className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                  className={`rounded-full border px-3 py-1 text-sm font-semibold transition-colors ${
                     selectedIds.includes(u.business_unit_id)
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-background text-foreground border-border hover:bg-muted"
@@ -691,7 +733,7 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
       </Card>
 
       {selectedIds.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-8">
+        <p className="py-8 text-center text-sm font-medium text-muted-foreground">
           Pilih minimal 2 unit untuk melihat perbandingan.
         </p>
       ) : isLoading ? (
@@ -709,22 +751,36 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
           <div className="grid gap-4 lg:grid-cols-2">
             <Card className="bg-primary-foreground">
               <CardHeader>
-                <CardTitle className="text-base">Omzet per Unit</CardTitle>
+                <CardTitle className={SECTION_TITLE_CLASS}>
+                  Omzet per Unit
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={omzetChartData}>
+                  <BarChart
+                    data={omzetChartData}
+                    margin={{ top: 18, right: 24, left: 4, bottom: 4 }}
+                  >
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="rgba(255,255,255,0.05)"
+                      stroke={CHART_COLORS.grid}
+                      vertical={false}
                     />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <XAxis
+                      dataKey="name"
+                      tick={AXIS_TICK}
+                      axisLine={{ stroke: CHART_COLORS.axis }}
+                      tickLine={{ stroke: CHART_COLORS.axis }}
+                    />
                     <YAxis
                       tickFormatter={(v) => formatRupiah(v)}
-                      tick={{ fontSize: 11 }}
+                      tick={AXIS_TICK}
+                      axisLine={{ stroke: CHART_COLORS.axis }}
+                      tickLine={{ stroke: CHART_COLORS.axis }}
                       width={70}
                     />
                     <Tooltip
+                      cursor={{ fill: CHART_COLORS.hover }}
                       formatter={(v) =>
                         v != null
                           ? new Intl.NumberFormat("id-ID", {
@@ -738,49 +794,118 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: 600,
                       }}
                     />
-                    <Bar dataKey="Omzet" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Omzet" minPointSize={8} radius={[4, 4, 0, 0]}>
+                      {omzetChartData.map((entry, index) => (
+                        <Cell
+                          key={entry.name}
+                          fill={
+                            CHART_COLORS.omzet[
+                              index % CHART_COLORS.omzet.length
+                            ]
+                          }
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="Omzet"
+                        position="top"
+                        formatter={(value) =>
+                          formatShortChartValue(Number(value ?? 0))
+                        }
+                        fill={CHART_COLORS.axis}
+                        fontSize={12}
+                        fontWeight={600}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
             <Card className="bg-primary-foreground">
               <CardHeader>
-                <CardTitle className="text-base">Transaksi per Unit</CardTitle>
+                <CardTitle className={SECTION_TITLE_CLASS}>
+                  Transaksi per Unit
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={transaksiChartData}>
+                  <BarChart
+                    data={transaksiChartData}
+                    margin={{ top: 18, right: 24, left: 4, bottom: 4 }}
+                  >
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="rgba(255,255,255,0.05)"
+                      stroke={CHART_COLORS.grid}
+                      vertical={false}
                     />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
+                    <XAxis
+                      dataKey="name"
+                      tick={AXIS_TICK}
+                      axisLine={{ stroke: CHART_COLORS.axis }}
+                      tickLine={{ stroke: CHART_COLORS.axis }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={AXIS_TICK}
+                      axisLine={{ stroke: CHART_COLORS.axis }}
+                      tickLine={{ stroke: CHART_COLORS.axis }}
+                    />
                     <Tooltip
+                      cursor={{ fill: CHART_COLORS.hover }}
                       contentStyle={{
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: 600,
                       }}
                     />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: 13, fontWeight: 600 }} />
                     <Bar
                       dataKey="Transaksi"
-                      fill="#3b82f6"
+                      fill={CHART_COLORS.transaksi}
+                      minPointSize={6}
                       radius={[4, 4, 0, 0]}
-                    />
+                    >
+                      <LabelList
+                        dataKey="Transaksi"
+                        position="top"
+                        fill={CHART_COLORS.axis}
+                        fontSize={12}
+                        fontWeight={600}
+                      />
+                    </Bar>
                     <Bar
                       dataKey="Selesai"
-                      fill="#10b981"
+                      fill={CHART_COLORS.selesai}
+                      minPointSize={6}
                       radius={[4, 4, 0, 0]}
-                    />
+                    >
+                      <LabelList
+                        dataKey="Selesai"
+                        position="top"
+                        fill={CHART_COLORS.axis}
+                        fontSize={12}
+                        fontWeight={600}
+                      />
+                    </Bar>
                     <Bar
                       dataKey="Dibatalkan"
-                      fill="#ef4444"
+                      fill={CHART_COLORS.dibatalkan}
+                      minPointSize={6}
                       radius={[4, 4, 0, 0]}
-                    />
+                    >
+                      <LabelList
+                        dataKey="Dibatalkan"
+                        position="top"
+                        fill={CHART_COLORS.axis}
+                        fontSize={12}
+                        fontWeight={600}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -790,7 +915,9 @@ function CompareTab({ period }: { period: AnalyticsPeriod }) {
           {/* Matriks Perbandingan */}
           <Card className="bg-primary-foreground">
             <CardHeader>
-              <CardTitle className="text-base">Matriks Perbandingan</CardTitle>
+              <CardTitle className={SECTION_TITLE_CLASS}>
+                Matriks Perbandingan
+              </CardTitle>
             </CardHeader>
             <CardContent className="">
               <DataTable
@@ -819,8 +946,10 @@ export function GroupAnalyticsReportPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Laporan & Analitik Grup</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-3xl font-extrabold leading-tight tracking-normal">
+            Laporan & Analitik Grup
+          </h1>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
             Pantau performa keseluruhan unit, per unit, dan perbandingan antar
             unit.
           </p>
@@ -830,7 +959,7 @@ export function GroupAnalyticsReportPage() {
             value={period}
             onValueChange={(v) => setPeriod(v as AnalyticsPeriod)}
           >
-            <SelectTrigger className="w-44 bg-primary-foreground">
+            <SelectTrigger className="w-44 bg-primary-foreground font-medium">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-primary-foreground">
@@ -853,19 +982,19 @@ export function GroupAnalyticsReportPage() {
         <TabsList className="bg-primary-foreground border border-border p-1 h-auto gap-0.5 rounded-full">
           <TabsTrigger
             value="all"
-            className="rounded-full px-4 py-1 h-auto flex-none text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none cursor-pointer"
+            className="h-auto flex-none cursor-pointer rounded-full px-4 py-1 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none"
           >
             Semua Unit
           </TabsTrigger>
           <TabsTrigger
             value="per-unit"
-            className="rounded-full px-4 py-1 h-auto flex-none text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none cursor-pointer"
+            className="h-auto flex-none cursor-pointer rounded-full px-4 py-1 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none"
           >
             Per Unit
           </TabsTrigger>
           <TabsTrigger
             value="compare"
-            className="rounded-full px-4 py-1 h-auto flex-none text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none cursor-pointer"
+            className="h-auto flex-none cursor-pointer rounded-full px-4 py-1 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none"
           >
             Perbandingan
           </TabsTrigger>

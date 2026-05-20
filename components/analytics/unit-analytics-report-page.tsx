@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  useAnalyticsDailyInventory,
   useAnalyticsInventoryStatus,
   useAnalyticsKpi,
   useAnalyticsRecentPayments,
@@ -38,10 +37,6 @@ const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
   { value: "quarter", label: "3 Bulan Terakhir" },
 ];
 
-function getTodayDateString(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function UnitAnalyticsReportPage() {
   const { data: session } = useSession();
   const unitId = session?.user?.unit_id ?? "";
@@ -49,22 +44,22 @@ export function UnitAnalyticsReportPage() {
   const unitName = currentUser?.business_units?.[0]?.business_unit_name ?? "";
 
   const [period, setPeriod] = useState<AnalyticsPeriod>("7d");
-  const [dailyDate, setDailyDate] = useState<string>(getTodayDateString);
 
   const kpiQuery = useAnalyticsKpi(unitId, period);
   const trendQuery = useAnalyticsSalesTrend(unitId, period);
   const topMenusQuery = useAnalyticsTopMenus(unitId, period);
   const paymentsQuery = useAnalyticsRecentPayments(unitId);
   const inventoryStatusQuery = useAnalyticsInventoryStatus(unitId);
-  const dailyInventoryQuery = useAnalyticsDailyInventory(unitId, dailyDate);
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Laporan & Analitik</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-3xl font-extrabold leading-tight tracking-normal">
+            Laporan & Analitik
+          </h1>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
             Pantau performa penjualan & omzet unit Anda secara real-time.
           </p>
         </div>
@@ -73,7 +68,7 @@ export function UnitAnalyticsReportPage() {
             value={period}
             onValueChange={(v) => setPeriod(v as AnalyticsPeriod)}
           >
-            <SelectTrigger className="w-44 bg-primary-foreground">
+            <SelectTrigger className="w-44 bg-primary-foreground font-medium">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-primary-foreground">
@@ -114,18 +109,24 @@ export function UnitAnalyticsReportPage() {
         </div>
       </div>
 
-      {/* Top Menus Table */}
-      <TopMenusSection
-        data={topMenusQuery.data?.data}
-        isLoading={topMenusQuery.isLoading}
-      />
-
-      {/* Payment History */}
-      <PaymentHistorySection
-        data={paymentsQuery.data?.data}
-        isLoading={paymentsQuery.isLoading}
-        redirectToTransaksi
-      />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="">
+          {/* Top Menus Table */}
+          <TopMenusSection
+            data={topMenusQuery.data?.data}
+            isLoading={topMenusQuery.isLoading}
+          />
+        </div>
+        <div>
+          {/* Payment History */}
+          <PaymentHistorySection
+            data={paymentsQuery.data?.data}
+            isLoading={paymentsQuery.isLoading}
+            redirectToTransaksi
+            redirectToTransaksiUrl={`/unit/transaksi`}
+          />
+        </div>
+      </div>
 
       {/* Inventory Status */}
       <InventoryStatusSection

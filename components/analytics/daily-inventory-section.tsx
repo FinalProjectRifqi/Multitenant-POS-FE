@@ -21,9 +21,9 @@ const dailyInventoryColumns: ColumnDef<DailyInventoryRow, unknown>[] = [
     cell: ({ row }) => {
       const item = row.original;
       return (
-        <span className="font-medium">
+        <span className="font-semibold text-foreground">
           {item.inventory_item_name}
-          <span className="ml-1 text-xs text-muted-foreground">
+          <span className="ml-1 text-xs font-medium text-muted-foreground">
             ({item.unit})
           </span>
         </span>
@@ -34,14 +34,18 @@ const dailyInventoryColumns: ColumnDef<DailyInventoryRow, unknown>[] = [
     accessorKey: "planned_usage_qty",
     header: () => <div className="text-right">Rencana</div>,
     cell: ({ row }) => (
-      <div className="text-right">{row.getValue("planned_usage_qty")}</div>
+      <div className="text-right font-medium">
+        {row.getValue("planned_usage_qty")}
+      </div>
     ),
   },
   {
     accessorKey: "actual_usage_qty",
     header: () => <div className="text-right">Realisasi</div>,
     cell: ({ row }) => (
-      <div className="text-right">{row.getValue("actual_usage_qty")}</div>
+      <div className="text-right font-medium">
+        {row.getValue("actual_usage_qty")}
+      </div>
     ),
   },
   {
@@ -52,7 +56,7 @@ const dailyInventoryColumns: ColumnDef<DailyInventoryRow, unknown>[] = [
       return (
         <div className="text-right">
           {waste !== null && waste > 0 ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-red-300 bg-red-50 text-red-700 font-medium">
+            <span className="inline-flex items-center rounded-full border border-red-300 bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
               {waste}
             </span>
           ) : (
@@ -70,13 +74,13 @@ const dailyInventoryColumns: ColumnDef<DailyInventoryRow, unknown>[] = [
       return (
         <div className="text-right">
           {variance === 0 ? (
-            <span className="text-muted-foreground">0</span>
+            <span className="font-medium text-muted-foreground">0</span>
           ) : variance > 0 ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-amber-300 bg-amber-50 text-amber-700 font-medium">
+            <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
               +{variance}
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-red-300 bg-red-50 text-red-700 font-medium">
+            <span className="inline-flex items-center rounded-full border border-red-300 bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
               {variance}
             </span>
           )}
@@ -94,10 +98,10 @@ export function DailyInventorySection({
 }: DailyInventorySectionProps) {
   return (
     <Card className="bg-primary-foreground">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
+      <CardHeader className="flex flex-row items-center justify-between px-5 pb-3 pt-5">
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 rounded-full bg-primary opacity-70" />
-          <h3 className="text-sm font-semibold">
+          <h3 className="text-lg font-semibold leading-none">
             Penggunaan Inventaris Harian
           </h3>
         </div>
