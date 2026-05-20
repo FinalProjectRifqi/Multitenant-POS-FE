@@ -1,4 +1,5 @@
-import { PlaceholderPage } from "@/components/dashboard/placeholder-page";
+import { UnitAnalyticsReportPage } from "@/components/analytics/unit-analytics-report-page";
+
 export default function Page() {
-  return <PlaceholderPage title="Monitoring Laporan" description="Pantau performa penjualan & omzet unit Anda secara real-time." />;
+  return <UnitAnalyticsReportPage />;
 }
