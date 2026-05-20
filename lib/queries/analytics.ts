@@ -9,10 +9,16 @@ import {
   getAnalyticsRecentPayments,
   getAnalyticsSalesTrend,
   getAnalyticsTopMenus,
+  getGroupSummary,
+  getGroupCompare,
 } from "@/lib/api/analytics";
 import type { AnalyticsPeriod } from "@/lib/types/analytics";
 
 export const analyticsQueryKeys = {
+  groupSummary: (period: AnalyticsPeriod) =>
+    ["analytics", "group", "summary", period] as const,
+  groupCompare: (unitIds: string[], period: AnalyticsPeriod) =>
+    ["analytics", "group", "compare", unitIds.join(","), period] as const,
   kpi: (unitId: string, period: AnalyticsPeriod) =>
     ["analytics", unitId, "kpi", period] as const,
   salesTrend: (unitId: string, period: AnalyticsPeriod) =>
@@ -74,5 +80,20 @@ export function useAnalyticsDailyInventory(unitId: string, date?: string) {
     queryKey: analyticsQueryKeys.dailyInventory(unitId, date),
     queryFn: () => getAnalyticsDailyInventory(unitId, date),
     enabled: !!unitId,
+  });
+}
+
+export function useGroupSummary(period: AnalyticsPeriod) {
+  return useQuery({
+    queryKey: analyticsQueryKeys.groupSummary(period),
+    queryFn: () => getGroupSummary(period),
+  });
+}
+
+export function useGroupCompare(unitIds: string[], period: AnalyticsPeriod) {
+  return useQuery({
+    queryKey: analyticsQueryKeys.groupCompare(unitIds, period),
+    queryFn: () => getGroupCompare(unitIds, period),
+    enabled: unitIds.length > 0,
   });
 }

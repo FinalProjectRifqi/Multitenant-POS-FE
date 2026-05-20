@@ -105,3 +105,57 @@ export interface AnalyticsDailyInventoryResponse {
   message: string;
   data: DailyInventoryRow[];
 }
+
+// ─── Group Analytics ─────────────────────────────────────────────────────────
+
+export interface GroupKpiData {
+  total_omzet: number;
+  total_transaksi: number;
+  rata_rata_order: number;
+  selesai: number;
+  dibatalkan: number;
+  stok_kritis: number;
+}
+
+export interface UnitPerformanceRow {
+  unit_id: string;
+  unit_name: string;
+  omzet: number;
+  transaksi: number;
+  rata_rata_order: number;
+  selesai: number;
+  dibatalkan: number;
+  stok_kritis: number;
+}
+
+export interface AnalyticsGroupSummaryData {
+  kpi: GroupKpiData;
+  sales_trend: SalesTrendPoint[];
+  top_menus: TopMenuRow[];
+  unit_performance: UnitPerformanceRow[];
+}
+
+export interface AnalyticsGroupSummaryResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: AnalyticsGroupSummaryData;
+}
+
+export interface UnitCompareRow {
+  unit_id: string;
+  unit_name: string;
+  omzet: number;
+  transaksi: number;
+  rata_rata_order: number;
+  selesai: number;
+  dibatalkan: number;
+  stok_kritis: number;
+}
+
+export interface AnalyticsGroupCompareResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: UnitCompareRow[];
+}

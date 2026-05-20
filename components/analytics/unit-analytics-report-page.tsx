@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useSession } from "next-auth/react";
-import { Download } from "lucide-react";
+import { InventoryStatusSection } from "@/components/analytics/inventory-status-section";
+import { KpiCards } from "@/components/analytics/kpi-cards";
+import { PaymentHistorySection } from "@/components/analytics/payment-history-section";
+import { SalesTrendChart } from "@/components/analytics/sales-trend-chart";
+import {
+  MenuRevenueList,
+  TopMenusSection,
+} from "@/components/analytics/top-menus-section";
+import { useCurrentUserContext } from "@/components/dashboard/current-user-context";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -11,25 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { KpiCards } from "@/components/analytics/kpi-cards";
-import { useCurrentUserContext } from "@/components/dashboard/current-user-context";
-import { SalesTrendChart } from "@/components/analytics/sales-trend-chart";
 import {
-  TopMenusSection,
-  MenuRevenueList,
-} from "@/components/analytics/top-menus-section";
-import { PaymentHistorySection } from "@/components/analytics/payment-history-section";
-import { InventoryStatusSection } from "@/components/analytics/inventory-status-section";
-import { DailyInventorySection } from "@/components/analytics/daily-inventory-section";
-import {
+  useAnalyticsDailyInventory,
+  useAnalyticsInventoryStatus,
   useAnalyticsKpi,
+  useAnalyticsRecentPayments,
   useAnalyticsSalesTrend,
   useAnalyticsTopMenus,
-  useAnalyticsRecentPayments,
-  useAnalyticsInventoryStatus,
-  useAnalyticsDailyInventory,
 } from "@/lib/queries/analytics";
 import type { AnalyticsPeriod } from "@/lib/types/analytics";
+import { Download } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
   { value: "today", label: "Hari Ini" },
@@ -43,7 +42,7 @@ function getTodayDateString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function AnalyticsReportPage() {
+export function UnitAnalyticsReportPage() {
   const { data: session } = useSession();
   const unitId = session?.user?.unit_id ?? "";
   const currentUser = useCurrentUserContext();
@@ -125,6 +124,7 @@ export function AnalyticsReportPage() {
       <PaymentHistorySection
         data={paymentsQuery.data?.data}
         isLoading={paymentsQuery.isLoading}
+        redirectToTransaksi
       />
 
       {/* Inventory Status */}

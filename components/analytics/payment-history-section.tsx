@@ -74,11 +74,13 @@ const columns: ColumnDef<PaymentHistoryRow, unknown>[] = [
 interface PaymentHistorySectionProps {
   data?: PaymentHistoryRow[];
   isLoading: boolean;
+  redirectToTransaksi?: boolean;
 }
 
 export function PaymentHistorySection({
   data = [],
   isLoading,
+  redirectToTransaksi = false,
 }: PaymentHistorySectionProps) {
   const router = useRouter();
 
@@ -92,15 +94,17 @@ export function PaymentHistorySection({
               Riwayat Pembayaran Terbaru
             </h3>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-muted-foreground gap-1"
-            onClick={() => router.push("/unit/transaksi")}
-          >
-            Lihat Semua
-            <ArrowRight className="h-3 w-3" />
-          </Button>
+          {redirectToTransaksi && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground gap-1"
+              onClick={() => router.push("/unit/transaksi")}
+            >
+              Lihat Semua
+              <ArrowRight className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="">

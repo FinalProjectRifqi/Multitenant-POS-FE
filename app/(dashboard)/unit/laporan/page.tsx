@@ -1,5 +1,5 @@
-import { AnalyticsReportPage } from "@/components/analytics/analytics-report-page";
+import { UnitAnalyticsReportPage } from "@/components/analytics/unit-analytics-report-page";
 
 export default function Page() {
-  return <AnalyticsReportPage />;
+  return <UnitAnalyticsReportPage />;
 }

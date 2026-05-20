@@ -9,6 +9,8 @@ import type {
   AnalyticsPeriod,
   AnalyticsSalesTrendResponse,
   AnalyticsTopMenusResponse,
+  AnalyticsGroupSummaryResponse,
+  AnalyticsGroupCompareResponse,
 } from "@/lib/types/analytics";
 
 const BASE = "/analytics";
@@ -64,4 +66,21 @@ export async function getAnalyticsDailyInventory(
       params: date ? { date } : {},
     },
   );
+}
+
+export async function getGroupSummary(
+  period: AnalyticsPeriod = "7d",
+): Promise<AnalyticsGroupSummaryResponse> {
+  return apiGet<AnalyticsGroupSummaryResponse>(`${BASE}/group/summary`, {
+    params: { period },
+  });
+}
+
+export async function getGroupCompare(
+  unitIds: string[],
+  period: AnalyticsPeriod = "7d",
+): Promise<AnalyticsGroupCompareResponse> {
+  return apiGet<AnalyticsGroupCompareResponse>(`${BASE}/group/compare`, {
+    params: { unitIds: unitIds.join(","), period },
+  });
 }
