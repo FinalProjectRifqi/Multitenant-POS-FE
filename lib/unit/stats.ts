@@ -1,8 +1,8 @@
 import type { StatItem } from "@/components/shared/stats-grid";
-import type { UnitEntity } from "@/lib/schemas/unit";
+import type { UnitEntity } from "@/lib/types/unit";
 
 export function buildUnitStats(units: UnitEntity[]): StatItem[] {
-  const activeCount = units.filter((u) => u.status === "active").length;
+  const activeCount = units.filter((u) => u.business_unit_status).length;
 
   return [
     {

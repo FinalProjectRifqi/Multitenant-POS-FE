@@ -1,32 +1,36 @@
-"use client";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { MenuSelectorContent } from "@/components/menu/menu-selector-content";
+import { getUnits } from "@/lib/api/units";
+import { unitQueryKeys } from "@/lib/queries/unit-keys";
 
-import { useMemo } from "react";
+export default async function GroupMenuPage() {
+  // Create a new QueryClient for this request (server-side)
+  const queryClient = new QueryClient();
 
-import { useUnitsQuery } from "@/lib/queries/unit";
-import { UnitSelector } from "@/components/menu/unit-selector";
+  // Prefetch units so the unit-selector grid renders immediately.
+  // If prefetch fails (e.g., 401), the error is captured in the cache
+  // and will be displayed by the client component's error handling.
+  try {
+    await queryClient.prefetchQuery({
+      queryKey: [
+        ...unitQueryKeys.lists(),
+        { page: 1, limit: 100, showInactive: false },
+      ],
+      queryFn: () => getUnits({ page: 1, limit: 100, show_inactive: false }),
+    });
+  } catch (error) {
+    console.error("Failed to prefetch units for menu selector:", error);
+  }
 
-export default function Page() {
-  const unitsQuery = useUnitsQuery();
-
-  const activeUnits = useMemo(
-    () => (unitsQuery.data ?? []).filter((unit) => unit.status === "active"),
-    [unitsQuery.data],
-  );
+  const dehydratedState = dehydrate(queryClient);
 
   return (
-    <div className="space-y-6 p-8">
-      {/* ── Page heading ── */}
-      <section className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          Kelola Menu
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Pilih unit usaha untuk melihat dan mengelola daftar menu
-        </p>
-      </section>
-
-      {/* ── Unit selector grid ── */}
-      <UnitSelector units={activeUnits} isLoading={unitsQuery.isLoading} />
-    </div>
+    <HydrationBoundary state={dehydratedState}>
+      <MenuSelectorContent />
+    </HydrationBoundary>
   );
 }

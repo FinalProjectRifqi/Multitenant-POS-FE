@@ -8,6 +8,8 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type OnChangeFn,
+  type PaginationState,
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
@@ -26,6 +28,7 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
+import type { PaginationMeta } from "@/lib/schemas/unit";
 
 type DataTableProps<T> = {
   columns: ColumnDef<T, unknown>[];
@@ -39,6 +42,8 @@ type DataTableProps<T> = {
   // Toolbar
   searchColumn?: string;
   searchPlaceholder?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
   actionLabel?: string | null;
   onActionClick?: () => void;
   extraControls?: ReactNode;
@@ -48,6 +53,9 @@ type DataTableProps<T> = {
   enableRowSelection?: boolean;
   defaultPageSize?: number;
   initialVisibility?: VisibilityState;
+  meta?: PaginationMeta;
+  pagination?: PaginationState;
+  onPaginationChange?: OnChangeFn<PaginationState>;
 };
 
 export function DataTable<T>({
@@ -59,6 +67,8 @@ export function DataTable<T>({
   searchEmptyMessage = "Data tidak ditemukan.",
   searchColumn,
   searchPlaceholder,
+  searchValue,
+  onSearchChange,
   actionLabel,
   onActionClick,
   extraControls,
@@ -67,6 +77,9 @@ export function DataTable<T>({
   enableRowSelection = false,
   defaultPageSize = 10,
   initialVisibility = {},
+  meta,
+  pagination,
+  onPaginationChange,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] =
@@ -76,12 +89,20 @@ export function DataTable<T>({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnVisibility, rowSelection },
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      ...(pagination && { pagination }),
+    },
     initialState: { pagination: { pageSize: defaultPageSize } },
     enableRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    ...(onPaginationChange && { onPaginationChange }),
+    manualPagination: !!pagination,
+    pageCount: meta?.totalPages ?? -1,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -89,9 +110,14 @@ export function DataTable<T>({
   });
 
   const isFiltered = table.getState().columnFilters.length > 0;
+  const hasServerSearch = Boolean(searchValue?.trim());
   const rows = table.getRowModel().rows;
 
-  const showToolbar = searchColumn != null || actionLabel != null;
+  const showToolbar =
+    searchColumn != null ||
+    onSearchChange != null ||
+    actionLabel != null ||
+    extraControls != null;
 
   return (
     <div className="space-y-4">
@@ -100,6 +126,8 @@ export function DataTable<T>({
           table={table}
           searchColumn={searchColumn}
           searchPlaceholder={searchPlaceholder}
+          searchValue={searchValue}
+          onSearchChange={onSearchChange}
           actionLabel={actionLabel}
           onActionClick={onActionClick}
           extraControls={extraControls}
@@ -155,7 +183,7 @@ export function DataTable<T>({
             {isLoading ? (
               Array.from({ length: skeletonRows }, (_, i) => (
                 <TableRow key={`skeleton-${i}`}>
-                  <TableCell colSpan={columns.length} className="px-4 py-3">
+                  <TableCell colSpan={columns.length} className="px-8 py-5">
                     <Skeleton className="h-4 w-full" />
                   </TableCell>
                 </TableRow>
@@ -166,7 +194,9 @@ export function DataTable<T>({
                   colSpan={columns.length}
                   className="py-8 text-center text-muted-foreground"
                 >
-                  {isFiltered ? searchEmptyMessage : emptyMessage}
+                  {isFiltered || hasServerSearch
+                    ? searchEmptyMessage
+                    : emptyMessage}
                 </TableCell>
               </TableRow>
             ) : (
@@ -190,7 +220,7 @@ export function DataTable<T>({
         </Table>
       </div>
 
-      {enablePagination && <DataTablePagination table={table} />}
+      {enablePagination && <DataTablePagination table={table} meta={meta} />}
     </div>
   );
 }

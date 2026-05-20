@@ -1,11 +1,11 @@
-import type { CreateMenuItemRequest } from "@/lib/schemas/menu";
+import type { CreateMenuRequest } from "@/lib/schemas/menu";
 
-export const DEFAULT_MENU_ITEM_FORM_VALUES: CreateMenuItemRequest = {
+export const DEFAULT_MENU_ITEM_FORM_VALUES: CreateMenuRequest = {
+  menu_name: "",
   menu_category_id: "",
-  menu_item_name: "",
-  image_url: "",
   item_price: 0,
   is_available: true,
+  menu_image: undefined,
 };
 
 export function formatCurrency(value: number): string {
@@ -16,7 +16,8 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export function formatDate(value: string): string {
+export function formatDate(value: string | undefined): string {
+  if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 

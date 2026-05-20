@@ -1,6 +1,13 @@
-import type { MenuItemEntity } from "@/lib/schemas/menu";
+import type { MenuEntity } from "@/lib/schemas/menu";
 
-export type MenuItemRow = MenuItemEntity & {
-  category_name: string;
-  unit_id: string;
-};
+/**
+ * MenuRow is the display-ready type passed to table columns and detail dialogs.
+ * It extends MenuEntity with a convenience `category_name` alias
+ * (already present in MenuEntity as `menu_category_name`, kept for compatibility).
+ */
+export type MenuRow = MenuEntity
+
+/**
+ * @deprecated Use MenuRow instead.
+ */
+export type MenuItemRow = MenuRow;

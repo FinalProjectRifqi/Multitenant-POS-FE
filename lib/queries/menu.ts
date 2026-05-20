@@ -5,89 +5,96 @@ import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api/client";
 import {
-  createMenuItem,
-  deleteMenuItem,
-  getMenuCategories,
-  getMenuItems,
-  type DeleteMenuItemInput,
-  type UpdateMenuItemInput,
-  updateMenuItem,
-} from "@/lib/api/menu";
+  handleApiError,
+  shouldHandleMutationErrorGlobally,
+} from "@/lib/api/handle-api-error";
+import { formatApiError } from "@/lib/api/parsed-api-error";
 import {
-  createCrudQueryKeys,
-  removeEntityByKey,
-  upsertEntityByKey,
-} from "@/lib/queries/crud";
+  createMenu,
+  deleteMenu,
+  getMenus,
+  updateMenu,
+  type DeleteMenuInput,
+  type GetMenusParams,
+  type UpdateMenuInput,
+} from "@/lib/api/menu";
+import { removeEntityByKey, upsertEntityByKey } from "@/lib/queries/crud";
+import { menuQueryKeys } from "@/lib/queries/menu-keys";
 import type {
-  CreateMenuItemRequest,
-  MenuCategoryEntity,
-  MenuItemEntity,
+  CreateMenuRequest,
+  MenuEntity,
+  MenusListResponse,
 } from "@/lib/schemas/menu";
+import { isUuid } from "@/lib/utils";
 
-export const menuItemQueryKeys = createCrudQueryKeys("menu-items");
-export const menuCategoryQueryKeys = createCrudQueryKeys("menu-categories");
+// ─── Cache helpers ─────────────────────────────────────────────────────────────
 
-type MenuItemListCache = MenuItemEntity[];
-
-function useMenuItemListCache() {
+function useMenuListCache() {
   const queryClient = useQueryClient();
 
-  const setListCache = (
-    updater: (current: MenuItemListCache) => MenuItemListCache,
-  ) => {
-    queryClient.setQueryData<MenuItemEntity[]>(
-      menuItemQueryKeys.lists(),
-      (current = []) => updater(current),
+  const setListCache = (updater: (current: MenuEntity[]) => MenuEntity[]) => {
+    queryClient.setQueriesData<MenusListResponse>(
+      { queryKey: menuQueryKeys.lists() },
+      (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          data: updater(current.data ?? []),
+        };
+      },
     );
   };
 
   const invalidateList = () =>
-    queryClient.invalidateQueries({ queryKey: menuItemQueryKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: menuQueryKeys.lists() });
 
-  return {
-    queryClient,
-    setListCache,
-    invalidateList,
-  };
+  return { queryClient, setListCache, invalidateList };
 }
 
-export function useMenuCategoriesQuery() {
+// ─── Query ─────────────────────────────────────────────────────────────────────
+
+export function useMenusQuery(businessId: string, params?: GetMenusParams) {
+  const normalizedParams = params
+    ? {
+        ...params,
+        search: params.search?.trim() || undefined,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: menuCategoryQueryKeys.lists(),
-    queryFn: getMenuCategories,
+    queryKey: [...menuQueryKeys.lists(), { businessId, ...normalizedParams }],
+    queryFn: () => getMenus(businessId, normalizedParams),
+    enabled: isUuid(businessId),
+    meta: {
+      errorTitle: "Gagal Memuat Menu",
+    },
   });
 }
 
-export function useMenuItemsQuery() {
-  return useQuery({
-    queryKey: menuItemQueryKeys.lists(),
-    queryFn: getMenuItems,
-  });
-}
+// ─── Create ────────────────────────────────────────────────────────────────────
 
-export function useCreateMenuItemMutation() {
-  const { setListCache, invalidateList } = useMenuItemListCache();
+export function useCreateMenuMutation(businessId: string) {
+  const { setListCache, invalidateList } = useMenuListCache();
 
   const mutation = useMutation({
-    mutationFn: (payload: CreateMenuItemRequest) => createMenuItem(payload),
-    onSuccess: (createdItem) => {
+    mutationFn: async (payload: CreateMenuRequest) => {
+      const result = await createMenu(businessId, payload);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+      return result.data;
+    },
+    onSuccess: (createdMenu) => {
       setListCache((current) =>
-        upsertEntityByKey(current, createdItem, "menu_item_id"),
+        upsertEntityByKey(current, createdMenu, "menu_id"),
       );
-
       toast.success("Menu berhasil ditambahkan.", {
-        description: `${createdItem.menu_item_name} siap ditampilkan.`,
+        description: `${createdMenu.menu_name} siap ditampilkan.`,
         position: "top-right",
         richColors: true,
         duration: 3000,
       });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
     },
     onSettled: () => {
       invalidateList();
@@ -95,47 +102,47 @@ export function useCreateMenuItemMutation() {
   });
 
   return {
-    createMenuItem: mutation.mutateAsync,
+    createMenu: mutation.mutateAsync,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error ? getErrorMessage(mutation.error) : null,
   };
 }
 
-export function useUpdateMenuItemMutation() {
-  const { queryClient, setListCache, invalidateList } = useMenuItemListCache();
+// ─── Update ────────────────────────────────────────────────────────────────────
+
+export function useUpdateMenuMutation() {
+  const { queryClient, setListCache, invalidateList } = useMenuListCache();
 
   const mutation = useMutation({
-    mutationFn: (input: UpdateMenuItemInput) => updateMenuItem(input),
+    mutationFn: async (input: UpdateMenuInput) => {
+      const result = await updateMenu(input);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+      return result.data;
+    },
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: menuItemQueryKeys.lists() });
+      await queryClient.cancelQueries({ queryKey: menuQueryKeys.lists() });
 
-      const previous =
-        queryClient.getQueryData<MenuItemEntity[]>(menuItemQueryKeys.lists()) ??
-        [];
+      const previous = queryClient.getQueriesData<MenusListResponse>({
+        queryKey: menuQueryKeys.lists(),
+      });
 
       setListCache((current) =>
         current.map((item) =>
-          item.menu_item_id === input.menu_item_id
-            ? {
-                ...item,
-                ...input.payload,
-                image_url: input.payload.image_url ?? "",
-                updated_at: new Date().toISOString(),
-              }
+          item.menu_id === input.menu_id
+            ? { ...item, ...input.payload }
             : item,
         ),
       );
 
       return { previous };
     },
-    onSuccess: (updatedItem) => {
+    onSuccess: (updatedMenu) => {
       setListCache((current) =>
-        upsertEntityByKey(current, updatedItem, "menu_item_id"),
+        upsertEntityByKey(current, updatedMenu, "menu_id"),
       );
-
       toast.success("Menu berhasil diperbarui.", {
-        description: `${updatedItem.menu_item_name} telah diperbarui.`,
+        description: `${updatedMenu.menu_name} telah diperbarui.`,
         position: "top-right",
         richColors: true,
         duration: 3000,
@@ -143,14 +150,11 @@ export function useUpdateMenuItemMutation() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(menuItemQueryKeys.lists(), context.previous);
+        context.previous.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
-
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
     },
     onSettled: () => {
       invalidateList();
@@ -158,35 +162,44 @@ export function useUpdateMenuItemMutation() {
   });
 
   return {
-    updateMenuItem: mutation.mutateAsync,
+    updateMenu: mutation.mutateAsync,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error ? getErrorMessage(mutation.error) : null,
   };
 }
 
-export function useDeleteMenuItemMutation() {
-  const { queryClient, setListCache, invalidateList } = useMenuItemListCache();
+// ─── Delete ────────────────────────────────────────────────────────────────────
+
+export function useDeleteMenuMutation() {
+  const { queryClient, setListCache, invalidateList } = useMenuListCache();
 
   const mutation = useMutation({
-    mutationFn: (input: DeleteMenuItemInput) => deleteMenuItem(input),
+    mutationFn: async (input: DeleteMenuInput) => {
+      const result = await deleteMenu(input);
+      if (!result.ok) throw formatApiError(result.status, result.message);
+    },
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: menuItemQueryKeys.lists() });
+      await queryClient.cancelQueries({ queryKey: menuQueryKeys.lists() });
 
-      const previous =
-        queryClient.getQueryData<MenuItemEntity[]>(menuItemQueryKeys.lists()) ??
-        [];
-      const target = previous.find(
-        (item) => item.menu_item_id === input.menu_item_id,
-      );
+      const previous = queryClient.getQueriesData<MenusListResponse>({
+        queryKey: menuQueryKeys.lists(),
+      });
+
+      let target: MenuEntity | undefined;
+      previous.forEach(([, data]) => {
+        if (!target && data?.data) {
+          target = data.data.find((item) => item.menu_id === input.menu_id);
+        }
+      });
 
       setListCache((current) =>
-        removeEntityByKey(current, "menu_item_id", input.menu_item_id),
+        removeEntityByKey(current, "menu_id", input.menu_id),
       );
 
       return {
         previous,
-        deletedName: target?.menu_item_name ?? "Menu",
+        deletedName: target?.menu_name ?? "Menu",
       };
     },
     onSuccess: (_result, _input, context) => {
@@ -199,14 +212,11 @@ export function useDeleteMenuItemMutation() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(menuItemQueryKeys.lists(), context.previous);
+        context.previous.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
-
-      toast.error(getErrorMessage(error), {
-        position: "top-right",
-        richColors: true,
-        duration: 3000,
-      });
+      if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
     },
     onSettled: () => {
       invalidateList();
@@ -214,11 +224,11 @@ export function useDeleteMenuItemMutation() {
   });
 
   return {
-    deleteMenuItem: mutation.mutateAsync,
+    deleteMenu: mutation.mutateAsync,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error ? getErrorMessage(mutation.error) : null,
   };
 }
 
-export type { MenuCategoryEntity, MenuItemEntity };
+export type { MenuEntity, MenusListResponse };

@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { useLogin } from "@/lib/hooks/use-login";
 import { loginRequestSchema, type LoginFormValues } from "@/lib/schemas/auth";
 
-export default function LoginForm() {
-  const { login, isPending } = useLogin();
+export default function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
+  const { login, isPending } = useLogin(callbackUrl);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -31,7 +31,10 @@ export default function LoginForm() {
       onSubmit={handleSubmit((data) => login(data))}
     >
       <div className="grid gap-1.5">
-        <Label htmlFor="username" className="text-foreground text-sm font-medium">
+        <Label
+          htmlFor="username"
+          className="text-foreground text-sm font-medium"
+        >
           Username
         </Label>
         <Input
@@ -39,18 +42,25 @@ export default function LoginForm() {
           type="text"
           placeholder="Masukkan Username Anda"
           className={`rounded-lg py-5 px-3 bg-background border-input focus-visible:ring-2 ${
-            errors.username ? "border-destructive focus-visible:ring-destructive" : ""
+            errors.username
+              ? "border-destructive focus-visible:ring-destructive"
+              : ""
           }`}
           disabled={isPending}
           {...register("username")}
         />
         {errors.username && (
-          <span className="text-xs text-destructive">{errors.username.message}</span>
+          <span className="text-xs text-destructive">
+            {errors.username.message}
+          </span>
         )}
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="password" className="text-foreground text-sm font-medium">
+        <Label
+          htmlFor="password"
+          className="text-foreground text-sm font-medium"
+        >
           Password
         </Label>
         <div className="relative">
@@ -59,22 +69,30 @@ export default function LoginForm() {
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
             className={`rounded-lg py-5 px-3 pr-10 bg-background border-input focus-visible:ring-2 ${
-              errors.password ? "border-destructive focus-visible:ring-destructive" : ""
+              errors.password
+                ? "border-destructive focus-visible:ring-destructive"
+                : ""
             }`}
             disabled={isPending}
             {...register("password")}
           />
-          <button
+          <Button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+            className="absolute right-3 top-1/2 bg-transparent -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
             disabled={isPending}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
         </div>
         {errors.password && (
-          <span className="text-xs text-destructive">{errors.password.message}</span>
+          <span className="text-xs text-destructive">
+            {errors.password.message}
+          </span>
         )}
       </div>
 

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, type Resolver, useForm } from "react-hook-form";
 
 import { CrudFormDialog } from "@/components/shared/crud-form-dialog";
 import { Input } from "@/components/ui/input";
@@ -14,12 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  createUnitRequestSchema,
-  type CreateUnitRequest,
-} from "@/lib/schemas/unit";
+import { createUnitRequestSchema } from "@/lib/schemas/unit";
+import type { CreateUnitRequest } from "@/lib/types/unit";
 import { cn } from "@/lib/utils";
 import { DEFAULT_UNIT_FORM_VALUES } from "@/lib/unit/constants";
+import { z } from "zod";
 
 type UnitFormDialogProps = {
   title: string;
@@ -32,6 +31,33 @@ type UnitFormDialogProps = {
   errorMessage?: string | null;
   onSubmit: (values: CreateUnitRequest) => Promise<void>;
 };
+
+function mapServerErrorToUnitField(
+  message: string,
+): keyof CreateUnitRequest | null {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("telepon") || normalized.includes("phone")) {
+    return "business_unit_phone";
+  }
+
+  if (normalized.includes("alamat") || normalized.includes("address")) {
+    return "business_unit_address";
+  }
+
+  if (normalized.includes("nama unit") || normalized.includes("name")) {
+    return "business_unit_name";
+  }
+
+  if (normalized.includes("status") || normalized.includes("aktif")) {
+    return "is_active";
+  }
+
+  return null;
+}
+
+type UnitFormInput = z.input<typeof createUnitRequestSchema>;
+type UnitFormOutput = z.output<typeof createUnitRequestSchema>;
 
 export function UnitFormDialog({
   title,
@@ -49,8 +75,10 @@ export function UnitFormDialog({
     control,
     handleSubmit,
     reset,
+    setError,
+    clearErrors,
     formState: { errors },
-  } = useForm<CreateUnitRequest>({
+  } = useForm<UnitFormInput, unknown, UnitFormOutput>({
     resolver: zodResolver(createUnitRequestSchema),
     defaultValues: initialValues,
   });
@@ -58,6 +86,18 @@ export function UnitFormDialog({
   useEffect(() => {
     if (open) reset(initialValues);
   }, [initialValues, open, reset]);
+
+  useEffect(() => {
+    if (!open || !errorMessage) return;
+
+    const field = mapServerErrorToUnitField(errorMessage);
+    if (!field) return;
+
+    setError(field, {
+      type: "server",
+      message: errorMessage,
+    });
+  }, [errorMessage, open, setError]);
 
   const onFormSubmit = handleSubmit(async (values) => {
     try {
@@ -84,93 +124,104 @@ export function UnitFormDialog({
       }}
     >
       <div className="space-y-2">
-        <Label htmlFor="unit_name">Nama Unit Usaha</Label>
+        <Label htmlFor="business_unit_name">Nama Unit Usaha</Label>
         <Input
-          id="unit_name"
+          id="business_unit_name"
           placeholder="Masukkan nama unit usaha"
           className={cn(
             "py-5",
-            errors.unit_name &&
+            errors.business_unit_name &&
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("unit_name")}
+          {...register("business_unit_name", {
+            onChange: () => clearErrors("business_unit_name"),
+          })}
         />
-        {errors.unit_name && (
-          <p className="text-xs text-destructive">{errors.unit_name.message}</p>
+        {errors.business_unit_name && (
+          <p className="text-xs text-destructive">
+            {errors.business_unit_name.message}
+          </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="unit_address">Alamat</Label>
+        <Label htmlFor="business_unit_address">Alamat</Label>
         <Input
-          id="unit_address"
+          id="business_unit_address"
           placeholder="Masukkan alamat unit usaha"
           className={cn(
             "py-5",
-            errors.unit_address &&
+            errors.business_unit_address &&
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("unit_address")}
+          {...register("business_unit_address", {
+            onChange: () => clearErrors("business_unit_address"),
+          })}
         />
-        {errors.unit_address && (
+        {errors.business_unit_address && (
           <p className="text-xs text-destructive">
-            {errors.unit_address.message}
+            {errors.business_unit_address.message}
           </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone_number">Nomor Telepon</Label>
+        <Label htmlFor="business_unit_phone">Nomor Telepon</Label>
         <Input
-          id="phone_number"
+          id="business_unit_phone"
           placeholder="Masukkan nomor telepon"
           className={cn(
             "py-5",
-            errors.phone_number &&
+            errors.business_unit_phone &&
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("phone_number")}
+          {...register("business_unit_phone", {
+            onChange: () => clearErrors("business_unit_phone"),
+          })}
         />
-        {errors.phone_number && (
+        {errors.business_unit_phone && (
           <p className="text-xs text-destructive">
-            {errors.phone_number.message}
+            {errors.business_unit_phone.message}
           </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="status">Status Keaktifan Unit Usaha</Label>
+        <Label htmlFor="is_active">Status Keaktifan Unit Usaha</Label>
         <Controller
           control={control}
-          name="status"
+          name="is_active"
           render={({ field }) => (
             <Select
-              value={field.value}
-              onValueChange={field.onChange}
+              value={String(field.value)}
+              onValueChange={(value) => {
+                clearErrors("is_active");
+                field.onChange(value);
+              }}
               disabled={isPending}
             >
               <SelectTrigger
                 id="status"
                 className={cn(
                   "w-full bg-background py-5",
-                  errors.status &&
+                  errors.is_active &&
                     "border-destructive focus-visible:ring-destructive",
                 )}
               >
                 <SelectValue placeholder="Pilih status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Aktif</SelectItem>
-                <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                <SelectItem value="true">Aktif</SelectItem>
+                <SelectItem value="false">Tidak Aktif</SelectItem>
               </SelectContent>
             </Select>
           )}
         />
-        {errors.status && (
-          <p className="text-xs text-destructive">{errors.status.message}</p>
+        {errors.is_active && (
+          <p className="text-xs text-destructive">{errors.is_active.message}</p>
         )}
       </div>
     </CrudFormDialog>

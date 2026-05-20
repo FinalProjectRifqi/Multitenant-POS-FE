@@ -7,23 +7,26 @@ import {
 } from "@/components/shared/detail-dialog";
 import {
   formatCurrency,
-  formatDate,
   getMenuAvailabilityLabel,
 } from "@/lib/menu/constants";
-import type { MenuItemRow } from "@/lib/menu/types";
+import type { MenuRow } from "@/lib/menu/types";
 
-const MENU_DETAIL_FIELDS: DetailFieldDef<MenuItemRow>[] = [
+const MENU_DETAIL_FIELDS: DetailFieldDef<MenuRow>[] = [
   {
     label: "Nama Menu",
-    render: (item) => item.menu_item_name,
+    render: (item) => item.menu_name,
   },
   {
     label: "Kategori",
-    render: (item) => item.category_name,
+    render: (item) => item.menu_category_name,
+  },
+  {
+    label: "Unit Usaha",
+    render: (item) => item.business_unit_name ?? "-",
   },
   {
     label: "Harga",
-    render: (item) => formatCurrency(item.item_price),
+    render: (item) => formatCurrency(item.menu_price),
   },
   {
     label: "Status Ketersediaan",
@@ -41,33 +44,26 @@ const MENU_DETAIL_FIELDS: DetailFieldDef<MenuItemRow>[] = [
     ),
   },
   {
-    label: "URL Gambar",
+    label: "Gambar Menu",
     render: (item) =>
-      item.image_url ? (
-        <a
-          href={item.image_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary underline underline-offset-2 text-sm break-all"
-        >
-          {item.image_url}
-        </a>
+      item.menu_image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.menu_image}
+          alt={item.menu_name}
+          className="h-32 w-auto rounded-md object-cover border"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+        />
       ) : (
         <span className="text-muted-foreground italic">Tidak ada gambar</span>
       ),
   },
-  {
-    label: "Dibuat",
-    render: (item) => formatDate(item.created_at),
-  },
-  {
-    label: "Terakhir Diperbarui",
-    render: (item) => formatDate(item.updated_at),
-  },
 ];
 
 type MenuDetailDialogProps = {
-  menuItem: MenuItemRow | null;
+  menuItem: MenuRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };

@@ -10,60 +10,56 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  formatCurrency,
-  formatDate,
-  getMenuAvailabilityLabel,
-} from "@/lib/menu/constants";
-import type { MenuItemRow } from "@/lib/menu/types";
+import { formatCurrency, getMenuAvailabilityLabel } from "@/lib/menu/constants";
+import type { MenuRow } from "@/lib/menu/types";
 import { cn } from "@/lib/utils";
 
 type Actions = {
-  onView: (item: MenuItemRow) => void;
-  onEdit: (item: MenuItemRow) => void;
-  onDelete: (item: MenuItemRow) => void;
+  onView: (item: MenuRow) => void;
+  onEdit: (item: MenuRow) => void;
+  onDelete: (item: MenuRow) => void;
 };
 
 export function buildMenuItemColumns(
   actions: Actions,
-): ColumnDef<MenuItemRow, unknown>[] {
+): ColumnDef<MenuRow, unknown>[] {
   return [
     {
-      accessorKey: "menu_item_name",
+      accessorKey: "menu_name",
       header: "Nama Menu",
       filterFn: (row, _colId, filterValue: string) => {
         const item = row.original;
         const query = filterValue.toLowerCase();
 
         return [
-          item.menu_item_name,
-          item.category_name,
+          item.menu_name,
+          item.menu_category_name,
           getMenuAvailabilityLabel(item.is_available),
-          formatCurrency(item.item_price),
+          formatCurrency(item.menu_price),
         ].some((field) => field.toLowerCase().includes(query));
       },
       cell: ({ row }) => (
         <span className="font-medium text-foreground">
-          {row.getValue("menu_item_name")}
+          {row.getValue("menu_name")}
         </span>
       ),
     },
     {
-      accessorKey: "category_name",
+      accessorKey: "menu_category_name",
       header: "Kategori",
       enableSorting: false,
       cell: ({ row }) => (
         <span className="text-foreground/85">
-          {row.getValue("category_name")}
+          {row.getValue("menu_category_name")}
         </span>
       ),
     },
     {
-      accessorKey: "item_price",
+      accessorKey: "menu_price",
       header: "Harga",
       cell: ({ row }) => (
         <span className="text-foreground/85">
-          {formatCurrency(row.getValue("item_price"))}
+          {formatCurrency(row.getValue("menu_price"))}
         </span>
       ),
     },
@@ -88,15 +84,6 @@ export function buildMenuItemColumns(
       },
     },
     {
-      accessorKey: "created_at",
-      header: "Dibuat",
-      cell: ({ row }) => (
-        <span className="text-foreground/85">
-          {formatDate(row.getValue("created_at"))}
-        </span>
-      ),
-    },
-    {
       id: "actions",
       enableSorting: false,
       enableHiding: false,
@@ -109,7 +96,7 @@ export function buildMenuItemColumns(
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={`Aksi untuk ${item.menu_item_name}`}
+                aria-label={`Aksi untuk ${item.menu_name}`}
               >
                 <MoreHorizontal className="size-4" />
               </Button>

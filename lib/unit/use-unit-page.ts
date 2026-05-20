@@ -9,14 +9,22 @@ import {
   useUnitsQuery,
   useUpdateUnitMutation,
 } from "@/lib/queries/unit";
-import type { CreateUnitRequest, UnitEntity } from "@/lib/schemas/unit";
+import type { CreateUnitRequest, UnitEntity } from "@/lib/types/unit";
 import { DEFAULT_UNIT_FORM_VALUES } from "./constants";
 import { buildUnitStats } from "./stats";
 
 export function useUnitPage() {
   const [viewingUnit, setViewingUnit] = useState<UnitEntity | null>(null);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [search, setSearch] = useState("");
 
-  const unitsQuery = useUnitsQuery();
+  const [showInactive, setShowInactive] = useState(true);
+
+  // API uses 1-based indexing for page
+  const page = pagination.pageIndex + 1;
+  const limit = pagination.pageSize;
+
+  const unitsQuery = useUnitsQuery(page, limit, showInactive, true, search);
   const createMutation = useCreateUnitMutation();
   const updateMutation = useUpdateUnitMutation();
   const deleteMutation = useDeleteUnitMutation();
@@ -24,7 +32,8 @@ export function useUnitPage() {
   const controller = useCrudPageController({
     defaultFormValues: DEFAULT_UNIT_FORM_VALUES,
     listQuery: {
-      data: unitsQuery.data,
+      data: unitsQuery.data?.data,
+      meta: unitsQuery.data?.meta,
       isLoading: unitsQuery.isLoading,
       isError: unitsQuery.isError,
       error: unitsQuery.error,
@@ -45,15 +54,25 @@ export function useUnitPage() {
       error: deleteMutation.error,
     },
     mapEntityToFormValues: (unit: UnitEntity): CreateUnitRequest => {
-      const { unit_name, unit_address, phone_number, status } = unit;
-      return { unit_name, unit_address, phone_number, status };
+      const {
+        business_unit_name,
+        business_unit_address,
+        business_unit_phone,
+        business_unit_status: is_active,
+      } = unit;
+      return {
+        business_unit_name,
+        business_unit_address,
+        business_unit_phone,
+        is_active,
+      };
     },
     toUpdateInput: ({ entity, values }) => ({
-      unit_id: entity.unit_id,
+      business_unit_id: entity.business_unit_id,
       payload: values,
     }),
     toDeleteInput: (entity) => ({
-      unit_id: entity.unit_id,
+      business_unit_id: entity.business_unit_id,
     }),
   });
 
@@ -61,6 +80,11 @@ export function useUnitPage() {
     () => buildUnitStats(controller.items),
     [controller.items],
   );
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }
 
   return {
     units: controller.items,
@@ -75,6 +99,12 @@ export function useUnitPage() {
     setDeletingUnit: controller.setDeletingItem,
     viewingUnit,
     setViewingUnit,
+    showInactive,
+    setShowInactive,
+    search,
+    setSearch: handleSearchChange,
+    pagination,
+    setPagination,
     create: controller.create,
     update: controller.update,
     delete: controller.delete,
