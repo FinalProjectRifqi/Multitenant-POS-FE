@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { PaginationState } from "@tanstack/react-table";
 
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
@@ -89,10 +89,10 @@ export function useTransactionHistoryPage(unitId?: string) {
     setPagination((current) => ({ ...current, pageIndex: 0 }));
   }
 
-  function handleSearchChange(value: string) {
+  const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     setPagination((current) => ({ ...current, pageIndex: 0 }));
-  }
+  }, []);
 
   return {
     unitId: resolvedUnitId,
