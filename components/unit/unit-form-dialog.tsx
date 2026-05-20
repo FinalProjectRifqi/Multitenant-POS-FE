@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { Controller, type Resolver, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { CrudFormDialog } from "@/components/shared/crud-form-dialog";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createUnitRequestSchema } from "@/lib/schemas/unit";
-import type { CreateUnitRequest } from "@/lib/types/unit";
+import type { CreateUnitRequest, UnitEntity } from "@/lib/types/unit";
 import { cn } from "@/lib/utils";
 import { DEFAULT_UNIT_FORM_VALUES } from "@/lib/unit/constants";
 import { z } from "zod";
@@ -27,6 +27,8 @@ type UnitFormDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialValues?: CreateUnitRequest;
+  currentUnitId?: string;
+  existingUnits?: UnitEntity[];
   isPending: boolean;
   errorMessage?: string | null;
   onSubmit: (values: CreateUnitRequest) => Promise<void>;
@@ -56,6 +58,10 @@ function mapServerErrorToUnitField(
   return null;
 }
 
+function normalizeUnitName(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 type UnitFormInput = z.input<typeof createUnitRequestSchema>;
 type UnitFormOutput = z.output<typeof createUnitRequestSchema>;
 
@@ -66,6 +72,8 @@ export function UnitFormDialog({
   open,
   onOpenChange,
   initialValues = DEFAULT_UNIT_FORM_VALUES,
+  currentUnitId,
+  existingUnits = [],
   isPending,
   errorMessage,
   onSubmit,
@@ -99,7 +107,28 @@ export function UnitFormDialog({
     });
   }, [errorMessage, open, setError]);
 
+  const mappedServerField =
+    open && errorMessage ? mapServerErrorToUnitField(errorMessage) : null;
+
+  const generalErrorMessage =
+    errorMessage && !mappedServerField ? errorMessage : null;
+
   const onFormSubmit = handleSubmit(async (values) => {
+    const nextName = normalizeUnitName(values.business_unit_name);
+    const isDuplicateName = existingUnits.some(
+      (unit) =>
+        unit.business_unit_id !== currentUnitId &&
+        normalizeUnitName(unit.business_unit_name) === nextName,
+    );
+
+    if (isDuplicateName) {
+      setError("business_unit_name", {
+        type: "validate",
+        message: "Nama unit usaha sudah digunakan.",
+      });
+      return;
+    }
+
     try {
       await onSubmit(values);
       reset(DEFAULT_UNIT_FORM_VALUES);
@@ -117,7 +146,7 @@ export function UnitFormDialog({
       submitLabel={submitLabel}
       submitPendingLabel="Menyimpan..."
       isPending={isPending}
-      errorMessage={errorMessage}
+      errorMessage={generalErrorMessage}
       contentClassName="w-120"
       onSubmit={(event) => {
         void onFormSubmit(event);

@@ -35,7 +35,7 @@ export function DataTableToolbar<T>({
     controlledSearchValue ?? ((column?.getFilterValue() as string) || "");
   const [searchInput, setSearchInput] = useState(searchValue);
   const lastSyncedSearchValue = useRef(searchValue);
-  const debouncedSearchInput = useDebounce(searchInput);
+  const debouncedSearchInput = useDebounce(searchInput, 600);
   const isFiltered = table.getState().columnFilters.length > 0;
   const showSearch = onSearchChange != null || column != null;
 

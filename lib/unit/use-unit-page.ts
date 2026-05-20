@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useCrudPageController } from "@/lib/crud/use-crud-page-controller";
 import {
@@ -25,6 +25,7 @@ export function useUnitPage() {
   const limit = pagination.pageSize;
 
   const unitsQuery = useUnitsQuery(page, limit, showInactive, true, search);
+  const allUnitsQuery = useUnitsQuery(1, 1000, true, true);
   const createMutation = useCreateUnitMutation();
   const updateMutation = useUpdateUnitMutation();
   const deleteMutation = useDeleteUnitMutation();
@@ -81,13 +82,14 @@ export function useUnitPage() {
     [controller.items],
   );
 
-  function handleSearchChange(value: string) {
+  const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     setPagination((current) => ({ ...current, pageIndex: 0 }));
-  }
+  }, []);
 
   return {
     units: controller.items,
+    allUnits: allUnitsQuery.data?.data ?? controller.items,
     stats,
     editInitialValues: controller.editInitialValues,
     query: controller.query,
