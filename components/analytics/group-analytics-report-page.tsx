@@ -541,8 +541,8 @@ function PerUnitTab({ period }: { period: AnalyticsPeriod }) {
             data={paymentsQuery.data?.data}
             isLoading={paymentsQuery.isLoading}
             redirectToTransaksi
-            redirectToTransaksiUrl={`/group/transaksi/${selectedUnitId}`}
-            selectedUnitId={selectedUnitId}
+            redirectToTransaksiUrl={`/group/transaksi/${unitId}`}
+            selectedUnitId={unitId}
           />
           <InventoryStatusSection
             data={inventoryStatusQuery.data?.data}
