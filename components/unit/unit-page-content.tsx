@@ -121,7 +121,6 @@ export function UnitPageContent() {
         onOpenChange={p.setIsCreateOpen}
         isPending={p.create.isPending}
         errorMessage={p.create.error}
-        existingUnits={p.allUnits}
         onSubmit={p.create.handle}
       />
 
@@ -135,8 +134,6 @@ export function UnitPageContent() {
           if (!open) p.setEditingUnit(null);
         }}
         initialValues={p.editInitialValues}
-        currentUnitId={p.editingUnit?.business_unit_id}
-        existingUnits={p.allUnits}
         isPending={p.update.isPending}
         errorMessage={p.update.error}
         onSubmit={p.update.handle}

@@ -25,7 +25,6 @@ export function useUnitPage() {
   const limit = pagination.pageSize;
 
   const unitsQuery = useUnitsQuery(page, limit, showInactive, true, search);
-  const allUnitsQuery = useUnitsQuery(1, 1000, true, true);
   const createMutation = useCreateUnitMutation();
   const updateMutation = useUpdateUnitMutation();
   const deleteMutation = useDeleteUnitMutation();
@@ -89,7 +88,6 @@ export function useUnitPage() {
 
   return {
     units: controller.items,
-    allUnits: allUnitsQuery.data?.data ?? controller.items,
     stats,
     editInitialValues: controller.editInitialValues,
     query: controller.query,
