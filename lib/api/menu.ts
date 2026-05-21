@@ -11,7 +11,6 @@ import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/parsed-api-error";
 import type { CrudDeleteInput, CrudUpdateInput } from "@/lib/api/crud-types";
 import {
-  createMenuRequestSchema,
   menuIdSchema,
   menusListResponseSchema,
   menuResponseSchema,
@@ -43,6 +42,8 @@ export type DeleteMenuInput = CrudDeleteInput<"menu_id"> & {
 export type MenuMutationResult<TData = void> =
   | { ok: true; data: TData }
   | { ok: false; status: number; message: string };
+
+type MenuRequestBody = FormData | CreateMenuRequest | UpdateMenuRequest;
 
 // ─── Query params ──────────────────────────────────────────────────────────────
 
@@ -91,6 +92,38 @@ function toFormData(payload: CreateMenuRequest | UpdateMenuRequest): FormData {
   return fd;
 }
 
+function hasUploadFile(payload: CreateMenuRequest | UpdateMenuRequest): boolean {
+  const img = (payload as CreateMenuRequest).menu_image;
+  return typeof File !== "undefined" && img instanceof File;
+}
+
+function toJsonPayload(
+  payload: CreateMenuRequest | UpdateMenuRequest,
+): CreateMenuRequest | UpdateMenuRequest {
+  const json: UpdateMenuRequest = {};
+
+  if ("menu_name" in payload && payload.menu_name !== undefined) {
+    json.menu_name = payload.menu_name;
+  }
+  if ("menu_category_id" in payload && payload.menu_category_id !== undefined) {
+    json.menu_category_id = payload.menu_category_id;
+  }
+  if ("item_price" in payload && payload.item_price !== undefined) {
+    json.item_price = payload.item_price;
+  }
+  if ("is_available" in payload && payload.is_available !== undefined) {
+    json.is_available = payload.is_available;
+  }
+
+  return json;
+}
+
+function toRequestBody(
+  payload: CreateMenuRequest | UpdateMenuRequest,
+): MenuRequestBody {
+  return hasUploadFile(payload) ? toFormData(payload) : toJsonPayload(payload);
+}
+
 function toMenuMutationError(error: unknown): MenuMutationResult<never> {
   const parsed = parseApiError(error);
   return { ok: false, status: parsed.status, message: parsed.message };
@@ -114,9 +147,9 @@ async function createMenuWithApi(
 ): Promise<MenuEntity> {
   // Do not call createMenuRequestSchema.parse() here — it would strip File
   // objects from menu_image. The payload is already validated client-side.
-  const formData = toFormData(payload);
+  const body = toRequestBody(payload);
 
-  return apiPost<MenuEntity, FormData>(menusEndpoint(businessId), formData, {
+  return apiPost<MenuEntity, MenuRequestBody>(menusEndpoint(businessId), body, {
     schema: menuResponseSchema,
     // Do NOT set Content-Type manually — axios auto-sets
     // "multipart/form-data; boundary=..." when body is FormData.
@@ -125,11 +158,11 @@ async function createMenuWithApi(
 
 async function updateMenuWithApi(input: UpdateMenuInput): Promise<MenuEntity> {
   const menuId = assertValidMenuId(input.menu_id);
-  const formData = toFormData(input.payload);
+  const body = toRequestBody(input.payload);
 
-  return apiPatch<MenuEntity, FormData>(
+  return apiPatch<MenuEntity, MenuRequestBody>(
     menuDetailEndpoint(input.businessId, menuId),
-    formData,
+    body,
     {
       schema: menuResponseSchema,
       // Do NOT set Content-Type manually — axios auto-sets the boundary.
