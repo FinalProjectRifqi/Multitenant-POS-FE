@@ -144,7 +144,10 @@ export function useUpdateUnitMutation() {
           unit.business_unit_id === input.business_unit_id
             ? {
                 ...unit,
-                ...input.payload,
+                business_unit_name: input.payload.business_unit_name,
+                business_unit_address: input.payload.business_unit_address,
+                business_unit_phone: input.payload.business_unit_phone,
+                business_unit_status: input.payload.is_active,
                 updated_at: new Date().toISOString(),
               }
             : unit,

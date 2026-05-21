@@ -165,7 +165,24 @@ export function useUpdateMenuMutation() {
       setListCache(input.businessId, (current) =>
         current.map((item) =>
           item.menu_id === input.menu_id
-            ? { ...item, ...input.payload }
+            ? {
+                ...item,
+                ...(input.payload.menu_name !== undefined
+                  ? { menu_name: input.payload.menu_name }
+                  : {}),
+                ...(input.payload.menu_category_id !== undefined
+                  ? { menu_category_id: input.payload.menu_category_id }
+                  : {}),
+                ...(input.payload.item_price !== undefined
+                  ? { menu_price: input.payload.item_price }
+                  : {}),
+                ...(input.payload.is_available !== undefined
+                  ? { is_available: input.payload.is_available }
+                  : {}),
+                ...(typeof input.payload.menu_image === "string"
+                  ? { menu_image: input.payload.menu_image }
+                  : {}),
+              }
             : item,
         ),
       );

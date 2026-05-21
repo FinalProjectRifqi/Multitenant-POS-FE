@@ -34,6 +34,15 @@ export type UnitMutationResult<TData = void> =
   | { ok: true; data: TData }
   | { ok: false; status: number; message: string };
 
+type UnitStatusPayload = {
+  business_unit_name: string;
+  business_unit_address: string;
+  business_unit_phone: string;
+  is_active?: boolean;
+  business_unit_status?: "active" | "inactive";
+  status?: "active" | "inactive";
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function assertValidUnitId(id: string): string {
@@ -82,11 +91,43 @@ async function updateUnitWithApi(input: UpdateUnitInput): Promise<UnitEntity> {
   // Parse + coerce the payload (handles is_active string from form)
   const normalized = updateUnitRequestSchema.parse(input.payload);
 
-  return apiPatch<UnitEntity, UpdateUnitRequest>(
+  let updated = await apiPatch<UnitEntity, UnitStatusPayload>(
     `${UNITS_ENDPOINT}/${unitId}`,
-    normalized as UpdateUnitRequest,
+    normalized as UnitStatusPayload,
     { schema: updateUnitResponseSchema },
   );
+
+  if (updated.business_unit_status === normalized.is_active) {
+    return updated;
+  }
+
+  const status = normalized.is_active ? "active" : "inactive";
+  const basePayload = {
+    business_unit_name: normalized.business_unit_name,
+    business_unit_address: normalized.business_unit_address,
+    business_unit_phone: normalized.business_unit_phone,
+  };
+
+  for (const statusPayload of [
+    { ...basePayload, business_unit_status: status },
+    { ...basePayload, status },
+  ] satisfies UnitStatusPayload[]) {
+    try {
+      const retried = await apiPatch<UnitEntity, UnitStatusPayload>(
+        `${UNITS_ENDPOINT}/${unitId}`,
+        statusPayload,
+        { schema: updateUnitResponseSchema },
+      );
+      updated = retried;
+      if (retried.business_unit_status === normalized.is_active) {
+        break;
+      }
+    } catch {
+      // Try the next status field variant; backend deployments differ here.
+    }
+  }
+
+  return updated;
 }
 
 async function deleteUnitWithApi(input: DeleteUnitInput): Promise<void> {

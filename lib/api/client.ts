@@ -22,9 +22,6 @@ const BASE_URL = (process.env.API_BASE_URL ?? "").replace(/\/$/, "");
 const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: DEFAULT_TIMEOUT_IN_MS,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 /**
@@ -165,16 +162,16 @@ async function request<
     }
   }
 
+  const isFormData =
+    typeof FormData !== "undefined" && body instanceof FormData;
+
   const response = await apiClient.request<unknown>({
     method,
     url,
     data: body,
     headers: {
       ...authHeaders,
-      "Content-Type":
-        typeof FormData !== "undefined" && body instanceof FormData
-          ? "multipart/form-data"
-          : "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
     },
     ...requestOptions,
   });
