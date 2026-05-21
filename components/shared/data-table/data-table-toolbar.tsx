@@ -1,9 +1,10 @@
 import type { Table } from "@tanstack/react-table";
 import { Plus, Search, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type DataTableToolbarProps<T> = {
   table: Table<T>;
@@ -32,8 +33,27 @@ export function DataTableToolbar<T>({
   const column = searchColumn ? table.getColumn(searchColumn) : undefined;
   const searchValue =
     controlledSearchValue ?? ((column?.getFilterValue() as string) || "");
+  const [searchInput, setSearchInput] = useState(searchValue);
+  const lastSyncedSearchValue = useRef(searchValue);
+  const debouncedSearchInput = useDebounce(searchInput, 600);
   const isFiltered = table.getState().columnFilters.length > 0;
   const showSearch = onSearchChange != null || column != null;
+
+  useEffect(() => {
+    if (searchValue === lastSyncedSearchValue.current) return;
+
+    lastSyncedSearchValue.current = searchValue;
+    setSearchInput(searchValue);
+  }, [searchValue]);
+
+  useEffect(() => {
+    if (!onSearchChange) return;
+
+    const nextValue = debouncedSearchInput.trim();
+    if (nextValue === (controlledSearchValue ?? "")) return;
+
+    onSearchChange(nextValue);
+  }, [controlledSearchValue, debouncedSearchInput, onSearchChange]);
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -44,11 +64,11 @@ export function DataTableToolbar<T>({
             <Input
               placeholder={searchPlaceholder}
               className="bg-background pl-8 py-5"
-              value={searchValue}
+              value={onSearchChange ? searchInput : searchValue}
               onChange={(e) => {
                 const nextValue = e.target.value;
                 if (onSearchChange) {
-                  onSearchChange(nextValue);
+                  setSearchInput(nextValue);
                   return;
                 }
 

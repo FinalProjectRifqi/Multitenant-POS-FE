@@ -118,7 +118,7 @@ export function MenuPageContent({ unitId }: MenuPageContentProps) {
             data={p.menuItems}
             isLoading={p.query.isLoading}
             searchColumn="menu_name"
-            searchPlaceholder="Cari nama menu, kategori, harga, status..."
+            searchPlaceholder="Cari nama menu..."
             searchValue={p.search}
             onSearchChange={p.setSearch}
             actionLabel="Tambah Menu"

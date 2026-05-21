@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
 import { getErrorMessage } from "@/lib/api/client";
 import type { InventarisRow } from "@/lib/inventaris/types";
 import type { InventarisItemFormValues } from "@/lib/schemas/inventaris";
@@ -155,22 +156,16 @@ export function InventarisView(props: InventarisViewProps) {
   const [editDraftValues, setEditDraftValues] =
     useState<InventarisItemFormValues | null>(null);
   const [searchInput, setSearchInput] = useState(() => search ?? "");
+  const debouncedSearchInput = useDebounce(searchInput);
 
   useEffect(() => {
     if (!onSearchChange) return;
 
-    const timeoutId = window.setTimeout(() => {
-      const normalized = searchInput.trim();
-      const nextValue = normalized.length > 0 ? normalized : "";
-      if (nextValue !== (search ?? "")) {
-        onSearchChange(nextValue);
-      }
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [searchInput, search, onSearchChange]);
+    const nextValue = debouncedSearchInput.trim();
+    if (nextValue !== (search ?? "")) {
+      onSearchChange(nextValue);
+    }
+  }, [debouncedSearchInput, search, onSearchChange]);
 
   const editHandler = canEdit ? props.setEditingItem : undefined;
   const deleteHandler = canEdit ? props.setDeletingItem : undefined;

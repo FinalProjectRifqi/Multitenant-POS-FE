@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useCrudPageController } from "@/lib/crud/use-crud-page-controller";
 import {
@@ -81,10 +81,10 @@ export function useUnitPage() {
     [controller.items],
   );
 
-  function handleSearchChange(value: string) {
+  const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     setPagination((current) => ({ ...current, pageIndex: 0 }));
-  }
+  }, []);
 
   return {
     units: controller.items,
