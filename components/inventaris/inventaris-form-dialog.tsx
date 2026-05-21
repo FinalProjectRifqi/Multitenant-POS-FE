@@ -338,10 +338,6 @@ export function InventarisFormDialog({
           })}
         />
       </div>
-
-      {generalErrorMessage && (
-        <p className="text-sm text-destructive">{generalErrorMessage}</p>
-      )}
     </CrudFormDialog>
   );
 }

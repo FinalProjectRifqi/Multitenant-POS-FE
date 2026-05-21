@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { Controller, type Resolver, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { CrudFormDialog } from "@/components/shared/crud-form-dialog";
 import { Input } from "@/components/ui/input";
@@ -99,6 +99,12 @@ export function UnitFormDialog({
     });
   }, [errorMessage, open, setError]);
 
+  const mappedServerField =
+    open && errorMessage ? mapServerErrorToUnitField(errorMessage) : null;
+
+  const generalErrorMessage =
+    errorMessage && !mappedServerField ? errorMessage : null;
+
   const onFormSubmit = handleSubmit(async (values) => {
     try {
       await onSubmit(values);
@@ -117,7 +123,7 @@ export function UnitFormDialog({
       submitLabel={submitLabel}
       submitPendingLabel="Menyimpan..."
       isPending={isPending}
-      errorMessage={errorMessage}
+      errorMessage={generalErrorMessage}
       contentClassName="w-120"
       onSubmit={(event) => {
         void onFormSubmit(event);

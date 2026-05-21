@@ -107,7 +107,7 @@ export function PaymentHistorySection({
               className="gap-1 text-sm font-semibold text-muted-foreground"
               onClick={() =>
                 router.push(
-                  redirectToTransaksiUrl || `group/transaksi/${selectedUnitId}`,
+                  redirectToTransaksiUrl || `/group/transaksi/${selectedUnitId}`,
                 )
               }
             >

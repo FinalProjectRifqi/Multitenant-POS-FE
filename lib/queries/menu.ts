@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type Query,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "@/lib/api/client";
@@ -29,12 +34,33 @@ import { isUuid } from "@/lib/utils";
 
 // ─── Cache helpers ─────────────────────────────────────────────────────────────
 
+function isMenuListQueryForBusiness(query: Query, businessId: string): boolean {
+  const [resource, scope, params] = query.queryKey;
+
+  if (resource !== menuQueryKeys.all[0] || scope !== "list") {
+    return false;
+  }
+
+  return (
+    params != null &&
+    typeof params === "object" &&
+    "businessId" in params &&
+    (params as { businessId?: unknown }).businessId === businessId
+  );
+}
+
 function useMenuListCache() {
   const queryClient = useQueryClient();
 
-  const setListCache = (updater: (current: MenuEntity[]) => MenuEntity[]) => {
+  const setListCache = (
+    businessId: string,
+    updater: (current: MenuEntity[]) => MenuEntity[],
+  ) => {
     queryClient.setQueriesData<MenusListResponse>(
-      { queryKey: menuQueryKeys.lists() },
+      {
+        queryKey: menuQueryKeys.lists(),
+        predicate: (query) => isMenuListQueryForBusiness(query, businessId),
+      },
       (current) => {
         if (!current) return current;
         return {
@@ -45,8 +71,11 @@ function useMenuListCache() {
     );
   };
 
-  const invalidateList = () =>
-    queryClient.invalidateQueries({ queryKey: menuQueryKeys.lists() });
+  const invalidateList = (businessId: string) =>
+    queryClient.invalidateQueries({
+      queryKey: menuQueryKeys.lists(),
+      predicate: (query) => isMenuListQueryForBusiness(query, businessId),
+    });
 
   return { queryClient, setListCache, invalidateList };
 }
@@ -83,7 +112,7 @@ export function useCreateMenuMutation(businessId: string) {
       return result.data;
     },
     onSuccess: (createdMenu) => {
-      setListCache((current) =>
+      setListCache(businessId, (current) =>
         upsertEntityByKey(current, createdMenu, "menu_id"),
       );
       toast.success("Menu berhasil ditambahkan.", {
@@ -97,7 +126,7 @@ export function useCreateMenuMutation(businessId: string) {
       if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
     },
     onSettled: () => {
-      invalidateList();
+      invalidateList(businessId);
     },
   });
 
@@ -121,13 +150,19 @@ export function useUpdateMenuMutation() {
       return result.data;
     },
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: menuQueryKeys.lists() });
+      await queryClient.cancelQueries({
+        queryKey: menuQueryKeys.lists(),
+        predicate: (query) =>
+          isMenuListQueryForBusiness(query, input.businessId),
+      });
 
       const previous = queryClient.getQueriesData<MenusListResponse>({
         queryKey: menuQueryKeys.lists(),
+        predicate: (query) =>
+          isMenuListQueryForBusiness(query, input.businessId),
       });
 
-      setListCache((current) =>
+      setListCache(input.businessId, (current) =>
         current.map((item) =>
           item.menu_id === input.menu_id
             ? { ...item, ...input.payload }
@@ -137,8 +172,8 @@ export function useUpdateMenuMutation() {
 
       return { previous };
     },
-    onSuccess: (updatedMenu) => {
-      setListCache((current) =>
+    onSuccess: (updatedMenu, input) => {
+      setListCache(input.businessId, (current) =>
         upsertEntityByKey(current, updatedMenu, "menu_id"),
       );
       toast.success("Menu berhasil diperbarui.", {
@@ -156,8 +191,8 @@ export function useUpdateMenuMutation() {
       }
       if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
     },
-    onSettled: () => {
-      invalidateList();
+    onSettled: (_data, _error, input) => {
+      invalidateList(input.businessId);
     },
   });
 
@@ -180,10 +215,16 @@ export function useDeleteMenuMutation() {
       if (!result.ok) throw formatApiError(result.status, result.message);
     },
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: menuQueryKeys.lists() });
+      await queryClient.cancelQueries({
+        queryKey: menuQueryKeys.lists(),
+        predicate: (query) =>
+          isMenuListQueryForBusiness(query, input.businessId),
+      });
 
       const previous = queryClient.getQueriesData<MenusListResponse>({
         queryKey: menuQueryKeys.lists(),
+        predicate: (query) =>
+          isMenuListQueryForBusiness(query, input.businessId),
       });
 
       let target: MenuEntity | undefined;
@@ -193,7 +234,7 @@ export function useDeleteMenuMutation() {
         }
       });
 
-      setListCache((current) =>
+      setListCache(input.businessId, (current) =>
         removeEntityByKey(current, "menu_id", input.menu_id),
       );
 
@@ -218,8 +259,8 @@ export function useDeleteMenuMutation() {
       }
       if (shouldHandleMutationErrorGlobally(error)) handleApiError(error);
     },
-    onSettled: () => {
-      invalidateList();
+    onSettled: (_data, _error, input) => {
+      invalidateList(input.businessId);
     },
   });
 

@@ -55,8 +55,8 @@ export default function ManajemenGrupDashboard() {
         />
         <DashboardCard
           icon={Users}
-          title="Kelola Pengguna"
-          description="Atur akun & hak akses pengguna di seluruh unit bisnis"
+          title="Riwayat Transaksi"
+          description="Lihat dan kelola riwayat transaksi di seluruh unit bisnis"
           href="/group/transaksi"
         />
       </div>

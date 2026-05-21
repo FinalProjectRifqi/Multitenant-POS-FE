@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImagePlus, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { CrudFormDialog } from "@/components/shared/crud-form-dialog";
@@ -38,6 +38,39 @@ type MenuFormDialogProps = {
   businessUnitId: string;
 };
 
+function mapServerErrorToMenuField(
+  message: string,
+): keyof CreateMenuRequest | null {
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("nama menu") ||
+    normalized.includes("menu name") ||
+    normalized.includes("sudah digunakan") ||
+    normalized.includes("conflict")
+  ) {
+    return "menu_name";
+  }
+
+  if (normalized.includes("kategori") || normalized.includes("category")) {
+    return "menu_category_id";
+  }
+
+  if (normalized.includes("harga") || normalized.includes("price")) {
+    return "item_price";
+  }
+
+  if (
+    normalized.includes("ketersediaan") ||
+    normalized.includes("available") ||
+    normalized.includes("status")
+  ) {
+    return "is_available";
+  }
+
+  return null;
+}
+
 export function MenuFormDialog({
   title,
   description,
@@ -63,6 +96,7 @@ export function MenuFormDialog({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   /** selectedFile: the File object the user picked — only this gets uploaded. */
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isExistingImageCleared, setIsExistingImageCleared] = useState(false);
 
   const {
     register,
@@ -70,6 +104,8 @@ export function MenuFormDialog({
     handleSubmit,
     reset,
     setValue,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<CreateMenuRequest>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,16 +117,38 @@ export function MenuFormDialog({
   useEffect(() => {
     if (open) {
       reset(initialValues);
-      setSelectedFile(null);
-      // For edit mode, show the existing image URL as a preview
-      const existingUrl =
-        typeof initialValues?.menu_image === "string" &&
-        initialValues.menu_image.startsWith("http")
-          ? initialValues.menu_image
-          : null;
-      setImagePreview(existingUrl);
     }
   }, [initialValues, open, reset]);
+
+  const existingImagePreview = useMemo(() => {
+    if (isExistingImageCleared) return null;
+
+    return typeof initialValues?.menu_image === "string" &&
+      initialValues.menu_image.startsWith("http")
+      ? initialValues.menu_image
+      : null;
+  }, [initialValues?.menu_image, isExistingImageCleared]);
+
+  const displayImagePreview = imagePreview ?? existingImagePreview;
+
+  const mappedServerField =
+    open && errorMessage ? mapServerErrorToMenuField(errorMessage) : null;
+
+  const generalErrorMessage =
+    errorMessage && !mappedServerField ? errorMessage : null;
+
+  useEffect(() => {
+    if (!open || !errorMessage || !mappedServerField) return;
+
+    setError(mappedServerField, {
+      type: "server",
+      message: errorMessage,
+    });
+  }, [errorMessage, mappedServerField, open, setError]);
+
+  function clearServerFeedback(field: keyof CreateMenuRequest): void {
+    clearErrors(field);
+  }
 
   // Revoke object URLs to avoid memory leaks
   useEffect(() => {
@@ -111,9 +169,11 @@ export function MenuFormDialog({
     }
 
     setSelectedFile(file);
+    setIsExistingImageCleared(false);
     setImagePreview(URL.createObjectURL(file));
     // Inject the File into react-hook-form so it reaches the submit handler
     setValue("menu_image", file);
+    clearServerFeedback("menu_image");
   }
 
   function handleClearImage() {
@@ -121,8 +181,10 @@ export function MenuFormDialog({
       URL.revokeObjectURL(imagePreview);
     }
     setSelectedFile(null);
+    setIsExistingImageCleared(true);
     setImagePreview(null);
     setValue("menu_image", undefined);
+    clearServerFeedback("menu_image");
     // Reset the native file input so the same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
@@ -133,6 +195,7 @@ export function MenuFormDialog({
       await onSubmit({ ...values, menu_image: selectedFile ?? undefined });
       reset(DEFAULT_MENU_ITEM_FORM_VALUES);
       setSelectedFile(null);
+      setIsExistingImageCleared(false);
       setImagePreview(null);
     } catch {
       // Errors are handled by the mutation hooks
@@ -148,7 +211,7 @@ export function MenuFormDialog({
       submitLabel={submitLabel}
       submitPendingLabel="Menyimpan..."
       isPending={isPending}
-      errorMessage={errorMessage}
+      errorMessage={generalErrorMessage}
       contentClassName="w-120"
       onSubmit={(event) => {
         void onFormSubmit(event);
@@ -166,7 +229,9 @@ export function MenuFormDialog({
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("menu_name")}
+          {...register("menu_name", {
+            onChange: () => clearServerFeedback("menu_name"),
+          })}
         />
         {errors.menu_name && (
           <p className="text-xs text-destructive">{errors.menu_name.message}</p>
@@ -182,7 +247,10 @@ export function MenuFormDialog({
           render={({ field }) => (
             <Select
               value={field.value}
-              onValueChange={field.onChange}
+              onValueChange={(value) => {
+                clearServerFeedback("menu_category_id");
+                field.onChange(value);
+              }}
               disabled={isPending || menuCategoriesLoading}
             >
               <SelectTrigger
@@ -234,7 +302,10 @@ export function MenuFormDialog({
               "border-destructive focus-visible:ring-destructive",
           )}
           disabled={isPending}
-          {...register("item_price", { valueAsNumber: true })}
+          {...register("item_price", {
+            valueAsNumber: true,
+            onChange: () => clearServerFeedback("item_price"),
+          })}
         />
         {errors.item_price && (
           <p className="text-xs text-destructive">
@@ -262,11 +333,11 @@ export function MenuFormDialog({
             isPending && "cursor-not-allowed opacity-50",
           )}
         >
-          {imagePreview ? (
+          {displayImagePreview ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={imagePreview}
+                src={displayImagePreview}
                 alt="Preview gambar menu"
                 className="h-48 w-full object-contain bg-muted"
                 onError={() => setImagePreview(null)}
@@ -331,7 +402,10 @@ export function MenuFormDialog({
           render={({ field }) => (
             <Select
               value={field.value ? "true" : "false"}
-              onValueChange={(v) => field.onChange(v === "true")}
+              onValueChange={(v) => {
+                clearServerFeedback("is_available");
+                field.onChange(v === "true");
+              }}
               disabled={isPending}
             >
               <SelectTrigger

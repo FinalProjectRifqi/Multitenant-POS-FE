@@ -118,13 +118,13 @@ function SidebarLoadingSkeleton() {
 
   return (
     <Sidebar collapsible="icon" className="bg-[#F1EEE9]">
-      <SidebarHeader className="px-5 pt-7 pb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)]">
+      <SidebarHeader className="px-5 pt-7 pb-6 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
+        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)] group-data-[collapsible=icon]:size-9">
             <UtensilsCrossed size={17} className="text-primary-foreground" />
           </div>
 
-          <div className="min-w-0 flex-1 space-y-2">
+          <div className="min-w-0 flex-1 space-y-2 group-data-[collapsible=icon]:hidden">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-3 w-36" />
           </div>
@@ -137,9 +137,11 @@ function SidebarLoadingSkeleton() {
             <SidebarMenu className="space-y-0.5 gap-0">
               {menuSkeletonWidths.map((widthClass, index) => (
                 <SidebarMenuItem key={index}>
-                  <div className="flex h-8 items-center gap-2 rounded-md px-2">
+                  <div className="flex h-8 items-center gap-2 rounded-md px-2 group-data-[collapsible=icon]:justify-center">
                     <Skeleton className="size-4 rounded-md" />
-                    <Skeleton className={`h-4 ${widthClass}`} />
+                    <Skeleton
+                      className={`h-4 ${widthClass} group-data-[collapsible=icon]:hidden`}
+                    />
                   </div>
                 </SidebarMenuItem>
               ))}
@@ -151,9 +153,9 @@ function SidebarLoadingSkeleton() {
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex h-12 items-center gap-3 px-2">
+            <div className="flex h-12 items-center gap-3 px-2 group-data-[collapsible=icon]:justify-center">
               <Skeleton className="h-9 w-9 rounded-lg" />
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 group-data-[collapsible=icon]:hidden">
                 <Skeleton className="h-3 w-24" />
                 <Skeleton className="h-3 w-20" />
               </div>
@@ -223,13 +225,13 @@ export function AppSidebar() {
   if (isError && !user && !session?.user?.role_code) {
     return (
       <Sidebar collapsible="icon" className="bg-[#F1EEE9]">
-        <SidebarHeader className="px-5 pt-7 pb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)]">
+        <SidebarHeader className="px-5 pt-7 pb-6 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
+          <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)] group-data-[collapsible=icon]:size-9">
               <UtensilsCrossed size={17} className="text-primary-foreground" />
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 group-data-[collapsible=icon]:hidden">
               <p className="text-base font-bold text-foreground tracking-tight leading-none">
                 Sistem POS XYZ
               </p>
@@ -255,10 +257,13 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={handleLogout}
-                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                tooltip="Logout"
+                className="text-destructive focus:text-destructive focus:bg-destructive/10 group-data-[collapsible=icon]:justify-center"
               >
-                <LogOut className="w-4 h-4 mr-2 shrink-0" />
-                Logout
+                <LogOut className="w-4 h-4 shrink-0 group-data-[collapsible=icon]:mr-0" />
+                <span className="group-data-[collapsible=icon]:hidden">
+                  Logout
+                </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -272,14 +277,14 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="bg-[#F1EEE9]">
       {/* ── Brand header ──────────────────────────── */}
-      <SidebarHeader className="px-5 pt-7 pb-6">
-        <div className="flex items-center gap-3">
+      <SidebarHeader className="px-5 pt-7 pb-6 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
+        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
           {/* Logo mark — bg-primary → var(--primary) #49111C */}
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)]">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-primary shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_28%,transparent)] group-data-[collapsible=icon]:size-9">
             <UtensilsCrossed size={17} className="text-primary-foreground" />
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             {/* text-foreground → var(--foreground) */}
             <p className="text-base font-bold text-foreground tracking-tight leading-none">
               Sistem POS XYZ
@@ -294,7 +299,7 @@ export function AppSidebar() {
 
       {/* ── Navigation ────────────────────────────── */}
       <SidebarContent>
-        <SidebarGroup className="px-3">
+        <SidebarGroup className="px-2">
           <SidebarGroupContent>
             {navItems.length > 0 ? (
               <SidebarMenu className="space-y-0.5 gap-0">
@@ -326,7 +331,7 @@ export function AppSidebar() {
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs shrink-0 shadow-sm">
                     {initials}
                   </div>
-                  <div className="flex flex-col gap-0.5 leading-none min-w-0">
+                  <div className="flex flex-col gap-0.5 leading-none min-w-0 group-data-[collapsible=icon]:hidden">
                     <span className="text-sm font-semibold truncate">
                       {user?.full_name ?? "—"}
                     </span>
@@ -342,7 +347,7 @@ export function AppSidebar() {
                     )} */}
                   </div>
 
-                  <ChevronsUpDown className="ml-auto w-4 h-4 shrink-0 text-muted-foreground" />
+                  <ChevronsUpDown className="ml-auto w-4 h-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
 
