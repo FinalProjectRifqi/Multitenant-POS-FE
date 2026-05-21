@@ -11,7 +11,7 @@ import { StatsGrid } from "@/components/shared/stats-grid";
 import { getErrorMessage } from "@/lib/api/client";
 import { KDS_FILTER_TABS } from "@/lib/kitchen-display/constants";
 import { useKitchenDisplayPage } from "@/lib/kitchen-display/use-kitchen-display-page";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, UtensilsCrossed } from "lucide-react";
 
 const STATUS_COLUMN_CLASS: Record<1 | 2 | 3 | 4, string> = {
   1: "lg:grid-cols-1",
@@ -59,6 +59,8 @@ function KdsColumnSkeleton() {
       <div className="space-y-3">
         <KdsCardSkeleton />
         <KdsCardSkeleton />
+        <KdsCardSkeleton />
+        <KdsCardSkeleton />
       </div>
     </div>
   );
@@ -69,7 +71,7 @@ function KdsColumnSkeleton() {
 function KdsEmptyState({ hasFilter }: { hasFilter: boolean }) {
   return (
     <div className="w-full flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 text-5xl">🍽️</div>
+      <UtensilsCrossed className="h-12 w-12 text-muted-foreground" />
       <p className="text-base font-semibold text-foreground">
         {hasFilter
           ? "Tidak ada pesanan dengan status ini"
