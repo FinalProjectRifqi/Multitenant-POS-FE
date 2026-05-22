@@ -1,5 +1,5 @@
 # ─── Stage 1: Install ALL dependencies (dev + prod) for build ─────────────────
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -12,7 +12,7 @@ RUN pnpm install --frozen-lockfile
 
 
 # ─── Stage 2: Build the Next.js application ───────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -40,7 +40,7 @@ RUN pnpm build
 
 
 # ─── Stage 3: Production runtime (minimal image) ──────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 # wget is used by HEALTHCHECK below
 RUN apk add --no-cache wget
