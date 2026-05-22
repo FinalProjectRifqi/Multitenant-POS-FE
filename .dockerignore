@@ -1,0 +1,31 @@
+# ── Build artifacts ────────────────────────────────────────────────────────────
+.next/
+out/
+
+# ── Dependencies (re-installed inside Docker) ──────────────────────────────────
+node_modules/
+
+# ── Environment / secrets (NEVER bake into image) ─────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Version control ────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── Editor / IDE ───────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── CI / tooling ───────────────────────────────────────────────────────────────
+.github/
+.husky/
+
+# ── Docs / misc ────────────────────────────────────────────────────────────────
+README*
+*.md
+docker-compose*.yml
+Dockerfile*

@@ -1,0 +1,81 @@
+# CATATAN NETWORK:
+#   - proxy     : external, Traefik route traffic dari internet ke container
+#   - pos-network: external, FE reach BE via http://backend:3004 (internal)
+#
+# CATATAN PORT:
+#   Service hanya expose port ke internal Docker network (`expose:`).
+#   Dokploy/Traefik handle routing ke publik via labels-nya sendiri.
+#   Jika ingin akses langsung (non-Dokploy), ganti `expose:` ke `ports:`.
+#
+# LOKI LOGGING SETUP (opsional):
+#   Install plugin Loki di Docker host:
+#     docker plugin install grafana/loki-docker-driver:latest \
+#       --alias loki --grant-all-permissions
+#   Lalu uncomment blok `logging:` di service di bawah.
+# =============================================================================
+
+name: multitenant-pos-fe
+
+networks:
+  proxy:
+    external: true
+  pos-network:
+    external: true
+
+services:
+  frontend:
+    image: multitenant-pos-fe:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* baked ke JS bundle saat build time.
+        NEXT_PUBLIC_AUTH_MODE: ${NEXT_PUBLIC_AUTH_MODE:-real}
+        NEXT_PUBLIC_INVENTARIS_MODE: ${NEXT_PUBLIC_INVENTARIS_MODE:-real}
+    restart: unless-stopped
+    networks:
+      - proxy
+      - pos-network
+    expose:
+      - "${FE_PORT:-3000}"
+    environment:
+      NODE_ENV: production
+      PORT: ${FE_PORT:-3000}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL}
+      # FE reach BE via pos-network (internal Docker network).
+      # "backend" adalah nama service di docker-compose.yml repo multitenant-pos-be.
+      API_BASE_URL: ${API_BASE_URL:-http://backend:3004}
+      # ── Feature flags (server-side runtime) ─────────────────────────────
+      NEXT_PUBLIC_AUTH_MODE: ${NEXT_PUBLIC_AUTH_MODE:-real}
+      NEXT_PUBLIC_INVENTARIS_MODE: ${NEXT_PUBLIC_INVENTARIS_MODE:-real}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:${FE_PORT:-3000}/api/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+
+    # ── Loki logging ─────────────────────────────────────────────────────────
+    # Uncomment setelah install plugin loki-docker-driver.
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: "${LOKI_URL}/loki/api/v1/push"
+    #     loki-batch-size: "400"
+    #     loki-retries: "5"
+    #     loki-timeout: "2s"
+    #     keep-file: "true"
+    #     loki-external-labels: "service=frontend,env=production"
