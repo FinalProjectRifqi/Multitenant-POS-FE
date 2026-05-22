@@ -1,17 +1,5 @@
-# CATATAN NETWORK:
-#   - proxy     : external, Traefik route traffic dari internet ke container
-#   - pos-network: external, FE reach BE via http://backend:3004 (internal)
-#
-# CATATAN PORT:
-#   Service hanya expose port ke internal Docker network (`expose:`).
-#   Dokploy/Traefik handle routing ke publik via labels-nya sendiri.
-#   Jika ingin akses langsung (non-Dokploy), ganti `expose:` ke `ports:`.
-#
-# LOKI LOGGING SETUP (opsional):
-#   Install plugin Loki di Docker host:
-#     docker plugin install grafana/loki-docker-driver:latest \
-#       --alias loki --grant-all-permissions
-#   Lalu uncomment blok `logging:` di service di bawah.
+# =============================================================================
+# docker-compose.yml — Multitenant POS Frontend (Production)
 # =============================================================================
 
 name: multitenant-pos-fe
@@ -41,14 +29,44 @@ services:
     environment:
       NODE_ENV: production
       PORT: ${FE_PORT:-3000}
+
+      # ── NextAuth v5 ──────────────────────────────────────────────────────
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_URL: ${AUTH_URL}
+
+      # ── Backend API ──────────────────────────────────────────────────────
       # FE reach BE via pos-network (internal Docker network).
       # "backend" adalah nama service di docker-compose.yml repo multitenant-pos-be.
       API_BASE_URL: ${API_BASE_URL:-http://backend:3004}
+
       # ── Feature flags (server-side runtime) ─────────────────────────────
       NEXT_PUBLIC_AUTH_MODE: ${NEXT_PUBLIC_AUTH_MODE:-real}
       NEXT_PUBLIC_INVENTARIS_MODE: ${NEXT_PUBLIC_INVENTARIS_MODE:-real}
+
+    labels:
+      - "traefik.enable=true"
+      # Beritahu Traefik pakai network "proxy" (bukan pos-network)
+      - "traefik.docker.network=proxy"
+
+      # ── HTTP Router → redirect ke HTTPS ──────────────────────────────────
+      - "traefik.http.routers.multitenant-pos-fe.entrypoints=http"
+      - "traefik.http.routers.multitenant-pos-fe.rule=Host(`${DOMAIN_FE}`)"
+      - "traefik.http.routers.multitenant-pos-fe.middlewares=multitenant-pos-fe-https-redirect"
+
+      # ── HTTPS Router (TLS) ────────────────────────────────────────────────
+      - "traefik.http.routers.multitenant-pos-fe-secure.entrypoints=https"
+      - "traefik.http.routers.multitenant-pos-fe-secure.rule=Host(`${DOMAIN_FE}`)"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls=true"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-cloudflare}"
+      - "traefik.http.routers.multitenant-pos-fe-secure.service=multitenant-pos-fe"
+
+      # ── Service: port yang Traefik forward ───────────────────────────────
+      - "traefik.http.services.multitenant-pos-fe.loadbalancer.server.port=${FE_PORT:-3000}"
+
+      # ── Middleware: HTTP → HTTPS permanent redirect ───────────────────────
+      - "traefik.http.middlewares.multitenant-pos-fe-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.multitenant-pos-fe-https-redirect.redirectscheme.permanent=true"
+
     healthcheck:
       test:
         [
@@ -59,6 +77,7 @@ services:
       timeout: 10s
       start_period: 60s
       retries: 3
+
     deploy:
       resources:
         limits:
@@ -78,4 +97,5 @@ services:
     #     loki-retries: "5"
     #     loki-timeout: "2s"
     #     keep-file: "true"
+    #     loki-external-labels: "service=frontend,env=production"
     #     loki-external-labels: "service=frontend,env=production"
