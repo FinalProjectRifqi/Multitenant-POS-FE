@@ -66,7 +66,6 @@ services:
       - "traefik.http.routers.multitenant-pos-fe-secure.entrypoints=https"
       - "traefik.http.routers.multitenant-pos-fe-secure.rule=Host(`${DOMAIN_FE}`)"
       - "traefik.http.routers.multitenant-pos-fe-secure.tls=true"
-      - "traefik.http.routers.multitenant-pos-fe-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-cloudflare}"
       - "traefik.http.routers.multitenant-pos-fe-secure.service=multitenant-pos-fe"
 
       # ── Service: port yang Traefik forward ───────────────────────────────
