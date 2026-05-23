@@ -51,25 +51,26 @@ services:
 
     labels:
       - "traefik.enable=true"
-      # Beritahu Traefik pakai network "proxy" (bukan pos-network)
       - "traefik.docker.network=proxy"
 
-      # ── HTTP Router → redirect ke HTTPS ──────────────────────────────────
+      # HTTP redirect
       - "traefik.http.routers.multitenant-pos-fe.entrypoints=http"
       - "traefik.http.routers.multitenant-pos-fe.rule=Host(`multitenant-pos.rifqifzn.my.id`)"
       - "traefik.http.routers.multitenant-pos-fe.middlewares=multitenant-pos-fe-https-redirect"
 
-      # ── HTTPS Router (TLS) ────────────────────────────────────────────────
+      # HTTPS
       - "traefik.http.routers.multitenant-pos-fe-secure.entrypoints=https"
       - "traefik.http.routers.multitenant-pos-fe-secure.rule=Host(`multitenant-pos.rifqifzn.my.id`)"
       - "traefik.http.routers.multitenant-pos-fe-secure.tls=true"
       - "traefik.http.routers.multitenant-pos-fe-secure.tls.certresolver=cloudflare-rifqifzn"
-      - "traefik.http.routers.multitenant-pos-fe-secure.service=multitenant-pos-fe"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls.domains[0].main=rifqifzn.my.id"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls.domains[0].sans=*.rifqifzn.my.id"
+      - "traefik.http.routers.multitenant-pos-fe-secure.service=multitenant-pos-fe-svc"
 
-      # ── Service: port yang Traefik forward ───────────────────────────────
-      - "traefik.http.services.multitenant-pos-fe.loadbalancer.server.port=3020"
+      # Service → port INTERNAL container (3000, bukan 3020)
+      - "traefik.http.services.multitenant-pos-fe-svc.loadbalancer.server.port=3000"
 
-      # ── Middleware: HTTP → HTTPS permanent redirect ───────────────────────
+      # Middleware redirect
       - "traefik.http.middlewares.multitenant-pos-fe-https-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.multitenant-pos-fe-https-redirect.redirectscheme.permanent=true"
 
