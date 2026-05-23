@@ -29,6 +29,27 @@ ARG NEXT_PUBLIC_INVENTARIS_MODE=real
 ENV NEXT_PUBLIC_AUTH_MODE=$NEXT_PUBLIC_AUTH_MODE
 ENV NEXT_PUBLIC_INVENTARIS_MODE=$NEXT_PUBLIC_INVENTARIS_MODE
 
+# ── Order status UUIDs ────────────────────────────────────────────────────────
+# These UUIDs are seeded once into the database and are the same across all
+# environments. Default values match the seed data in the repository.
+# Override via build args if your database uses different seed UUIDs.
+ARG NEXT_PUBLIC_JUST_IN_ORDER_STATUS_ID=e7f281a6-22cb-4f7c-ad6e-0588996515f4
+ARG NEXT_PUBLIC_ON_PROCESS_ORDER_STATUS_ID=4df54409-695e-4fef-b519-46608ac9e0a5
+ARG NEXT_PUBLIC_READY_ORDER_STATUS_ID=5b6b821f-6fc3-469c-9a2a-f0ffbef05a80
+ARG NEXT_PUBLIC_COMPLETE_ORDER_STATUS_ID=044b4c5b-a8c0-45e8-b00d-8ecbaec2ba68
+ARG NEXT_PUBLIC_CANCEL_ORDER_STATUS_ID=365894dd-f81b-435f-b19b-44cae066f351
+ENV NEXT_PUBLIC_JUST_IN_ORDER_STATUS_ID=$NEXT_PUBLIC_JUST_IN_ORDER_STATUS_ID
+ENV NEXT_PUBLIC_ON_PROCESS_ORDER_STATUS_ID=$NEXT_PUBLIC_ON_PROCESS_ORDER_STATUS_ID
+ENV NEXT_PUBLIC_READY_ORDER_STATUS_ID=$NEXT_PUBLIC_READY_ORDER_STATUS_ID
+ENV NEXT_PUBLIC_COMPLETE_ORDER_STATUS_ID=$NEXT_PUBLIC_COMPLETE_ORDER_STATUS_ID
+ENV NEXT_PUBLIC_CANCEL_ORDER_STATUS_ID=$NEXT_PUBLIC_CANCEL_ORDER_STATUS_ID
+
+# ── Feature flags ─────────────────────────────────────────────────────────────
+# NEXT_PUBLIC_SIMULATE_PAYMENT_SUCCESS: enables a "Simulate Success" button for
+# Midtrans payment testing. Must be false in production.
+ARG NEXT_PUBLIC_SIMULATE_PAYMENT_SUCCESS=false
+ENV NEXT_PUBLIC_SIMULATE_PAYMENT_SUCCESS=$NEXT_PUBLIC_SIMULATE_PAYMENT_SUCCESS
+
 # Provide a placeholder so the API client module doesn't throw during build.
 ENV API_BASE_URL=http://placeholder-buildtime
 # Signal Next.js we're in the production build phase so conditional build-only
