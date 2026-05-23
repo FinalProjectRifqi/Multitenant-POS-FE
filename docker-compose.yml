@@ -7,8 +7,6 @@ name: multitenant-pos-fe
 networks:
   proxy:
     external: true
-  pos-network:
-    external: true
 
 services:
   frontend:
@@ -32,7 +30,6 @@ services:
     restart: unless-stopped
     networks:
       - proxy
-      - pos-network
     ports:
       - "${FE_PORT:-3000}"
     environment:
