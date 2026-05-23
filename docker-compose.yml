@@ -33,7 +33,7 @@ services:
     networks:
       - proxy
       - pos-network
-    expose:
+    ports:
       - "${FE_PORT:-3000}"
     environment:
       NODE_ENV: production
