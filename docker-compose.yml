@@ -31,7 +31,7 @@ services:
     networks:
       - proxy
     ports:
-      - 3000:3000
+      - 3020:3000
     environment:
       NODE_ENV: production
       PORT: ${FE_PORT:-3000}
