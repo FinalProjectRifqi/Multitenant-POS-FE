@@ -56,17 +56,18 @@ services:
 
       # ── HTTP Router → redirect ke HTTPS ──────────────────────────────────
       - "traefik.http.routers.multitenant-pos-fe.entrypoints=http"
-      - "traefik.http.routers.multitenant-pos-fe.rule=Host(multitenant-pos.rifqifzn.my.id)"
+      - "traefik.http.routers.multitenant-pos-fe.rule=Host(`multitenant-pos.rifqifzn.my.id`)"
       - "traefik.http.routers.multitenant-pos-fe.middlewares=multitenant-pos-fe-https-redirect"
 
       # ── HTTPS Router (TLS) ────────────────────────────────────────────────
       - "traefik.http.routers.multitenant-pos-fe-secure.entrypoints=https"
-      - "traefik.http.routers.multitenant-pos-fe-secure.rule=Host(multitenant-pos.rifqifzn.my.id)"
+      - "traefik.http.routers.multitenant-pos-fe-secure.rule=Host(`multitenant-pos.rifqifzn.my.id`)"
       - "traefik.http.routers.multitenant-pos-fe-secure.tls=true"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls.certresolver=cloudflare-rifqifzn"
       - "traefik.http.routers.multitenant-pos-fe-secure.service=multitenant-pos-fe"
 
       # ── Service: port yang Traefik forward ───────────────────────────────
-      - "traefik.http.services.multitenant-pos-fe.loadbalancer.server.port=${FE_PORT:-3000}"
+      - "traefik.http.services.multitenant-pos-fe.loadbalancer.server.port=3020"
 
       # ── Middleware: HTTP → HTTPS permanent redirect ───────────────────────
       - "traefik.http.middlewares.multitenant-pos-fe-https-redirect.redirectscheme.scheme=https"
