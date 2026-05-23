@@ -72,7 +72,6 @@ services:
 
       # Middleware redirect
       - "traefik.http.middlewares.multitenant-pos-fe-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.multitenant-pos-fe-https-redirect.redirectscheme.permanent=true"
 
     healthcheck:
       test:
