@@ -7,10 +7,13 @@ name: multitenant-pos-fe
 networks:
   proxy:
     external: true
+  pos-network:
+    external: true
 
 services:
-  frontend:
+  multitenant-pos-frontend:
     image: multitenant-pos-fe:${IMAGE_TAG:-latest}
+    container_name: multitenant-pos-fe
     build:
       context: .
       dockerfile: Dockerfile
@@ -30,6 +33,7 @@ services:
     restart: unless-stopped
     networks:
       - proxy
+      - pos-network
     ports:
       - 3020:3000
     environment:
@@ -38,7 +42,6 @@ services:
 
       # ── NextAuth v5 ──────────────────────────────────────────────────────
       AUTH_SECRET: ${AUTH_SECRET}
-      AUTH_URL: ${AUTH_URL}
 
       # ── Backend API ──────────────────────────────────────────────────────
       # FE reach BE via pos-network (internal Docker network).
