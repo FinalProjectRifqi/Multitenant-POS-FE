@@ -36,7 +36,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
 import { useCurrentUserContextState } from "@/components/dashboard/current-user-context";
 import { signOut, useSession } from "next-auth/react";
-import { ROLE_NAV, type NavItem } from "@/lib/constants/navigation";
+import {
+  isNavItemActive,
+  isPathAllowedForRole,
+  ROLE_NAV,
+  type NavItem,
+} from "@/lib/constants/navigation";
 import { getDashboardRoute, type RoleCode } from "@/lib/constants/roles";
 import {
   DropdownMenu,
@@ -69,9 +74,7 @@ function NavIcon({ name }: { name: string }) {
 /* ─── Single nav item ───────────────────────────────────────────────────────── */
 function NavItem({ item }: { item: NavItem }) {
   const pathname = usePathname();
-  const isActive = item.exact
-    ? pathname === item.href
-    : pathname === item.href || pathname.startsWith(item.href + "/");
+  const isActive = isNavItemActive(item, pathname);
 
   return (
     <SidebarMenuItem>
@@ -177,8 +180,8 @@ export function AppSidebar() {
     useCurrentUserContextState();
   const { data: session } = useSession();
   const user = useCurrentUser();
-  const roleCode =
-    user?.role?.role_code ?? (session?.user?.role_code as RoleCode | undefined);
+  const roleCode = (user?.role?.role_code ??
+    session?.user?.role_code) as RoleCode | undefined;
   const resolvedRoleCode = roleCode as RoleCode | undefined;
   const navItems: NavItem[] = resolvedRoleCode
     ? (ROLE_NAV[resolvedRoleCode] ?? [])
@@ -205,15 +208,7 @@ export function AppSidebar() {
     if (!roleCode) return;
 
     const dashboardPath = getDashboardRoute(roleCode);
-    const isGroupPath = pathname.startsWith("/group");
-    const isUnitPath = pathname.startsWith("/unit");
-    const isGroupDashboard = dashboardPath.startsWith("/group");
-    const isUnitDashboard = dashboardPath.startsWith("/unit");
-
-    if (
-      (isGroupPath && !isGroupDashboard) ||
-      (isUnitPath && !isUnitDashboard)
-    ) {
+    if (!isPathAllowedForRole(roleCode, pathname)) {
       router.replace(dashboardPath);
     }
   }, [pathname, roleCode, router]);

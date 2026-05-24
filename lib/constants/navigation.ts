@@ -65,3 +65,20 @@ export const ROLE_NAV: Record<RoleCode, NavItem[]> = {
     },
   ],
 };
+
+export function isNavItemActive(item: NavItem, pathname: string): boolean {
+  return item.exact
+    ? pathname === item.href
+    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+export function isPathAllowedForRole(
+  roleCode: RoleCode | undefined,
+  pathname: string,
+): boolean {
+  if (!roleCode) return false;
+
+  return (ROLE_NAV[roleCode] ?? []).some((item) =>
+    isNavItemActive(item, pathname),
+  );
+}

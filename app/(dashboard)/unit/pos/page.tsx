@@ -125,7 +125,7 @@ export default function KelolaPesananPage() {
             onActionClick={() => router.push("/unit/pos/tambah")}
             searchEmptyMessage="Pesanan tidak ditemukan."
             searchColumn="customer_name"
-            searchPlaceholder="Cari pelanggan..."
+            searchPlaceholder="Cari order, pelanggan, meja, tipe, status..."
             searchValue={search}
             onSearchChange={setSearch}
             extraControls={

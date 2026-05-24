@@ -7,6 +7,7 @@ import {
 import { AppSidebar } from "@/components/dashboard/sidebar";
 import { SessionExpiryWatcher } from "@/components/dashboard/session-expiry-watcher";
 import { CurrentUserProvider } from "@/components/dashboard/current-user-context";
+import { RoleRouteGuard } from "@/components/dashboard/role-route-guard";
 
 export default function DashboardLayout({
   children,
@@ -28,7 +29,7 @@ export default function DashboardLayout({
             </div>
           </header>
           <main className="flex-1 overflow-hidden h-full bg-[#F1EEE9]">
-            {children}
+            <RoleRouteGuard>{children}</RoleRouteGuard>
           </main>
         </SidebarInset>
       </SidebarProvider>
