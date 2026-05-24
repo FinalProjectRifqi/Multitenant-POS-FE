@@ -29,19 +29,19 @@ export default function ManajerUnitDashboard() {
           icon={BarChart3}
           title="Monitoring Laporan"
           description="Pantau performa penjualan & omzet unit secara real-time"
-          href="/dashboard/unit/laporan"
+          href="/unit/laporan"
         />
         <DashboardCard
           icon={PackageSearch}
           title="Kelola Inventaris"
           description="Pantau stok bahan baku & ketersediaan di unit Anda"
-          href="/dashboard/unit/inventaris"
+          href="/unit/inventaris"
         />
         <DashboardCard
           icon={ClipboardList}
           title="Riwayat Transaksi"
           description="Lihat & ekspor seluruh riwayat transaksi unit"
-          href="/dashboard/unit/transaksi"
+          href="/unit/transaksi"
         />
       </div>
     </div>

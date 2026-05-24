@@ -31,7 +31,7 @@ export const ROLE_DASHBOARD_ROUTE: Record<RoleCode, string> = {
 };
 
 /** Fallback route for unknown role codes */
-export const DEFAULT_DASHBOARD_ROUTE = "/dashboard";
+export const DEFAULT_DASHBOARD_ROUTE = "/unit";
 
 /** Returns the correct dashboard route for a given role code. */
 export function getDashboardRoute(roleCode: string): string {
