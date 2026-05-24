@@ -1,0 +1,110 @@
+# =============================================================================
+# docker-compose.yml — Multitenant POS Frontend (Production)
+# =============================================================================
+
+name: multitenant-pos-fe
+
+networks:
+  proxy:
+    external: true
+  pos-network:
+    external: true
+
+services:
+  multitenant-pos-frontend:
+    image: multitenant-pos-fe:${IMAGE_TAG:-latest}
+    container_name: multitenant-pos-fe
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* baked ke JS bundle saat build time.
+        NEXT_PUBLIC_AUTH_MODE: ${NEXT_PUBLIC_AUTH_MODE:-real}
+        NEXT_PUBLIC_INVENTARIS_MODE: ${NEXT_PUBLIC_INVENTARIS_MODE:-real}
+        # Order status UUIDs — seeded once, same across environments.
+        # Override di .env hanya jika database-mu pakai UUID yang berbeda dari seed.
+        NEXT_PUBLIC_JUST_IN_ORDER_STATUS_ID: ${NEXT_PUBLIC_JUST_IN_ORDER_STATUS_ID:-e7f281a6-22cb-4f7c-ad6e-0588996515f4}
+        NEXT_PUBLIC_ON_PROCESS_ORDER_STATUS_ID: ${NEXT_PUBLIC_ON_PROCESS_ORDER_STATUS_ID:-4df54409-695e-4fef-b519-46608ac9e0a5}
+        NEXT_PUBLIC_READY_ORDER_STATUS_ID: ${NEXT_PUBLIC_READY_ORDER_STATUS_ID:-5b6b821f-6fc3-469c-9a2a-f0ffbef05a80}
+        NEXT_PUBLIC_COMPLETE_ORDER_STATUS_ID: ${NEXT_PUBLIC_COMPLETE_ORDER_STATUS_ID:-044b4c5b-a8c0-45e8-b00d-8ecbaec2ba68}
+        NEXT_PUBLIC_CANCEL_ORDER_STATUS_ID: ${NEXT_PUBLIC_CANCEL_ORDER_STATUS_ID:-365894dd-f81b-435f-b19b-44cae066f351}
+        # Simulate payment success — harus false di production
+        NEXT_PUBLIC_SIMULATE_PAYMENT_SUCCESS: ${NEXT_PUBLIC_SIMULATE_PAYMENT_SUCCESS:-false}
+    restart: unless-stopped
+    networks:
+      - proxy
+      - pos-network
+    ports:
+      - 3020:3000
+    environment:
+      NODE_ENV: production
+      PORT: ${FE_PORT:-3000}
+
+      # ── NextAuth v5 ──────────────────────────────────────────────────────
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL:-https://multitenant-pos.rifqifzn.my.id} # FE reach BE via pos-network (internal Docker network).
+      # ── Backend API ──────────────────────────────────────────────────────
+      # FE reach BE via pos-network (internal Docker network).
+      # "backend" adalah nama service di docker-compose.yml repo multitenant-pos-be.
+      API_BASE_URL: ${API_BASE_URL:-http://multitenant-pos-backend:3004/v1}
+
+      # ── Feature flags (server-side runtime) ─────────────────────────────
+      NEXT_PUBLIC_AUTH_MODE: ${NEXT_PUBLIC_AUTH_MODE:-real}
+      NEXT_PUBLIC_INVENTARIS_MODE: ${NEXT_PUBLIC_INVENTARIS_MODE:-real}
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+
+      # HTTP redirect
+      - "traefik.http.routers.multitenant-pos-fe.entrypoints=http"
+      - "traefik.http.routers.multitenant-pos-fe.rule=Host(`multitenant-pos.rifqifzn.my.id`)"
+      - "traefik.http.routers.multitenant-pos-fe.middlewares=multitenant-pos-fe-https-redirect"
+
+      # HTTPS
+      - "traefik.http.routers.multitenant-pos-fe-secure.entrypoints=https"
+      - "traefik.http.routers.multitenant-pos-fe-secure.rule=Host(`multitenant-pos.rifqifzn.my.id`)"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls=true"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls.certresolver=cloudflare-rifqifzn"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls.domains[0].main=rifqifzn.my.id"
+      - "traefik.http.routers.multitenant-pos-fe-secure.tls.domains[0].sans=*.rifqifzn.my.id"
+      - "traefik.http.routers.multitenant-pos-fe-secure.service=multitenant-pos-fe-svc"
+
+      # Service → port INTERNAL container (3000, bukan 3020)
+      - "traefik.http.services.multitenant-pos-fe-svc.loadbalancer.server.port=3000"
+
+      # Middleware redirect
+      - "traefik.http.middlewares.multitenant-pos-fe-https-redirect.redirectscheme.scheme=https"
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:${FE_PORT:-3000}/api/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+
+    # ── Loki logging ─────────────────────────────────────────────────────────
+    # Uncomment setelah install plugin loki-docker-driver.
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: "${LOKI_URL}/loki/api/v1/push"
+    #     loki-batch-size: "400"
+    #     loki-retries: "5"
+    #     loki-timeout: "2s"
+    #     keep-file: "true"
+    #     loki-external-labels: "service=frontend,env=production"
+    #     loki-external-labels: "service=frontend,env=production"
