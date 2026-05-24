@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import { type LucideIcon } from "lucide-react";
 
-// ─── Page Header ─────────────────────────────────────────────────────────────
 interface PageHeaderProps {
   title: string;
   description?: string;
@@ -27,7 +26,6 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
   );
 }
 
-// ─── Dashboard Card ───────────────────────────────────────────────────────────
 interface DashboardCardProps {
   icon: LucideIcon;
   iconColor?: string;
@@ -48,7 +46,10 @@ export function DashboardCard({
   linkLabel = "Lihat Menu",
 }: DashboardCardProps) {
   return (
-    <div className="group bg-primary-foreground rounded-2xl border border-border p-6 hover:border-primary/30 hover:shadow-md transition-all duration-300 flex flex-col gap-4">
+    <Link
+      href={href}
+      className="group bg-primary-foreground rounded-2xl border border-border p-6 hover:border-primary/30 hover:shadow-md transition-all duration-300 flex flex-col gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+    >
       <div
         className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}
       >
@@ -60,17 +61,13 @@ export function DashboardCard({
           {description}
         </p>
       </div>
-      <Link
-        href={href}
-        className="text-xs font-medium text-primary hover:underline underline-offset-2 self-start"
-      >
-        {linkLabel} →
-      </Link>
-    </div>
+      <span className="text-xs font-medium text-primary group-hover:underline underline-offset-2 self-start">
+        {linkLabel} -&gt;
+      </span>
+    </Link>
   );
 }
 
-// ─── Stats Card ───────────────────────────────────────────────────────────────
 interface StatsCardProps {
   icon: LucideIcon;
   label: string;
@@ -79,13 +76,7 @@ interface StatsCardProps {
   trendUp?: boolean;
 }
 
-export function StatsCard({
-  icon: Icon,
-  label,
-  value,
-  trend,
-  trendUp,
-}: StatsCardProps) {
+export function StatsCard({ icon: Icon, label, value }: StatsCardProps) {
   return (
     <div className="bg-primary rounded-2xl border border-border p-5 flex flex-col gap-3 text-primary-foreground">
       <div className="flex items-center justify-between">
@@ -98,11 +89,6 @@ export function StatsCard({
       </div>
       <div>
         <p className="text-2xl font-bold text-primary-foreground">{value}</p>
-        {/* {trend && (
-          <p className={`text-xs mt-1 font-medium ${trendUp ? "text-green-600" : "text-red-500"}`}>
-            {trendUp ? "↑" : "↓"} {trend}
-          </p>
-        )} */}
       </div>
     </div>
   );
