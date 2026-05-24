@@ -50,7 +50,7 @@ services:
       NEXT_PUBLIC_INVENTARIS_MODE: ${NEXT_PUBLIC_INVENTARIS_MODE:-real}
 
     labels:
-      - "traefik.enable=true"
+      - "traefik.enable=false"
       - "traefik.docker.network=proxy"
 
       # HTTP redirect
