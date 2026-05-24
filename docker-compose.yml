@@ -42,11 +42,11 @@ services:
 
       # ── NextAuth v5 ──────────────────────────────────────────────────────
       AUTH_SECRET: ${AUTH_SECRET}
-
+      AUTH_URL: ${AUTH_URL:-https://multitenant-pos.rifqifzn.my.id} # FE reach BE via pos-network (internal Docker network).
       # ── Backend API ──────────────────────────────────────────────────────
       # FE reach BE via pos-network (internal Docker network).
       # "backend" adalah nama service di docker-compose.yml repo multitenant-pos-be.
-      API_BASE_URL: ${API_BASE_URL:-http://backend:3004}
+      API_BASE_URL: ${API_BASE_URL:-http://multitenant-pos-backend:3004/v1}
 
       # ── Feature flags (server-side runtime) ─────────────────────────────
       NEXT_PUBLIC_AUTH_MODE: ${NEXT_PUBLIC_AUTH_MODE:-real}

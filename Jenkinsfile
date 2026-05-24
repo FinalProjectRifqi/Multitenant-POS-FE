@@ -1,20 +1,4 @@
-// =============================================================================
-// Jenkinsfile — Multitenant POS Frontend
-//
-// PRASYARAT (sekali, di server tempat Jenkins & Docker berjalan):
-//   1. Jalankan perintah berikut di server untuk membuat external network:
-//        docker network create proxy
-//   2. Tambahkan kredensial berikut di Jenkins → Manage Credentials:
-//        ID: mpos-fe-auth-secret         Nilai: AUTH_SECRET (NextAuth secret key)
-//        ID: mpos-fe-auth-url            Nilai: AUTH_URL    (contoh: https://multitenant-pos.rifqifzn.my.id)
-//        ID: mpos-fe-api-base-url        Nilai: API_BASE_URL (contoh: https://api-multitenant-pos.rifqifzn.my.id)
-//
-// CATATAN:
-//   - NEXT_PUBLIC_* order status UUIDs sudah ada default-nya di Dockerfile (seed values).
-//     Tidak perlu dimasukkan sebagai credential kecuali kamu pakai UUID berbeda.
-//   - Domain Traefik sudah hardcoded di docker-compose.yml: multitenant-pos.rifqifzn.my.id
-//   - Semua credential harus bertipe "Secret text" di Jenkins Credentials Manager.
-// =============================================================================
+
 
 pipeline {
     agent any
@@ -25,7 +9,7 @@ pipeline {
     }
 
     environment {
-        CONTAINER_NAME = 'multitenant-pos-fe-frontend-1'
+        CONTAINER_NAME = 'multitenant-pos-fe'
         PROJECT_NAME   = 'multitenant-pos-fe'
         COMPOSE_FILE   = 'docker-compose.yml'
         HEALTH_PORT    = '3020'
