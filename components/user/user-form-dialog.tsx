@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type Resolver,
   useForm,
@@ -93,6 +94,7 @@ export function UserFormDialog({
   requirePassword = true,
   onSubmit,
 }: UserFormDialogProps) {
+  const [showPassword, setShowPassword] = useState(false);
   const { data: rolesResponse, isLoading: rolesLoading } = useRolesQuery();
   const { data: unitsResponse, isLoading: unitsLoading } = useUnitsQuery();
   const activeUnits = useMemo(
@@ -154,10 +156,15 @@ export function UserFormDialog({
     }
   });
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) setShowPassword(false);
+    onOpenChange(nextOpen);
+  }
+
   return (
     <CrudFormDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={title}
       description={description}
       submitLabel={submitLabel}
@@ -312,14 +319,35 @@ export function UserFormDialog({
       {requirePassword && (
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Masukkan password"
-            className={cn("py-5", errors.password && "border-destructive")}
-            disabled={isPending}
-            {...register("password")}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Masukkan password"
+              className={cn(
+                "py-5 pr-10",
+                errors.password && "border-destructive",
+              )}
+              disabled={isPending}
+              {...register("password")}
+            />
+            <button
+              type="button"
+              aria-label={
+                showPassword ? "Sembunyikan password" : "Tampilkan password"
+              }
+              aria-pressed={showPassword}
+              onClick={() => setShowPassword((current) => !current)}
+              className="absolute right-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              disabled={isPending}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-xs text-destructive">
               {errors.password.message}

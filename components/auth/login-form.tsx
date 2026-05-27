@@ -76,10 +76,12 @@ export default function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
             disabled={isPending}
             {...register("password")}
           />
-          <Button
+          <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 bg-transparent -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+            aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+            aria-pressed={showPassword}
+            onClick={() => setShowPassword((current) => !current)}
+            className="absolute right-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
             disabled={isPending}
           >
             {showPassword ? (
@@ -87,7 +89,7 @@ export default function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
             ) : (
               <Eye className="h-4 w-4" />
             )}
-          </Button>
+          </button>
         </div>
         {errors.password && (
           <span className="text-xs text-destructive">
