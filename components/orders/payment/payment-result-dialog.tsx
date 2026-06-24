@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import type { ResultState } from "./order-payment-constants";
 import { formatRupiah, getMethodLabel } from "./order-payment-utils";
 import { ReceiptPreview } from "./receipt-preview";
+import { printReceipt } from "./receipt-print";
 
 interface PaymentResultDialogProps {
   result: ResultState | null;
@@ -120,6 +121,11 @@ export function PaymentResultDialog({
                   reference={
                     result.status === "success" ? result.reference : undefined
                   }
+                  paidAmount={
+                    result.status === "success"
+                      ? result.paidAmount
+                      : undefined
+                  }
                 />
               </div>
               <div className="grid shrink-0 grid-cols-2 gap-4 border-t border-border bg-background px-5 py-4 max-sm:grid-cols-1 sm:px-8 sm:py-5">
@@ -127,7 +133,21 @@ export function PaymentResultDialog({
                   type="button"
                   variant="outline"
                   className="h-12"
-                  onClick={() => window.print()}
+                  onClick={() =>
+                    printReceipt({
+                      detail,
+                      source,
+                      method: result.method,
+                      reference:
+                        result.status === "success"
+                          ? result.reference
+                          : undefined,
+                      paidAmount:
+                        result.status === "success"
+                          ? result.paidAmount
+                          : undefined,
+                    })
+                  }
                 >
                   <Printer className="h-4 w-4" />
                   Cetak Struk

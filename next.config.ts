@@ -4,6 +4,9 @@ import type { NextConfig } from "next";
 // role-aware. Static next.config.ts redirects cannot read the session and
 // therefore cannot redirect users to their role-appropriate dashboard.
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   images: {
     remotePatterns: [
       {
