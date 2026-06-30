@@ -5,9 +5,9 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Enable pnpm via corepack
-# Pin to pnpm@8 to match pnpm-lock.yaml lockfileVersion '6.0' (created with pnpm v8).
+# Pin to pnpm@10 to match pnpm-lock.yaml lockfileVersion '6.0' (created with pnpm v8).
 # Upgrading to pnpm@9/10 requires regenerating pnpm-lock.yaml locally first.
-RUN corepack enable && corepack prepare pnpm@8 --activate
+RUN corepack enable && corepack prepare pnpm@10 --activate
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
@@ -19,7 +19,7 @@ FROM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@8 --activate
+RUN corepack enable && corepack prepare pnpm@10 --activate
 
 # ── Build-time public env vars ─────────────────────────────────────────────────
 # NEXT_PUBLIC_* are inlined into the JS bundle during `next build`.
