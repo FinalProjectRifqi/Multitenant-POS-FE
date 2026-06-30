@@ -171,6 +171,7 @@ export function OrderPaymentDialog({
           method: effectiveMethod,
           amount: totalAmount,
           reference: response.reference_number,
+          paidAmount: effectiveMethod === "cash" ? cashReceived : undefined,
         });
         return;
       }

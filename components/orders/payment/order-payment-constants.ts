@@ -8,6 +8,8 @@ export type ResultState =
       method: PaymentMethod;
       amount: number;
       reference?: string;
+      /** For cash: the amount the customer handed over (to show change on receipt) */
+      paidAmount?: number;
     }
   | {
       status: "failed";

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 import { PAYMENT_METHODS, type PaymentMethod } from "./order-payment-constants";
 import { formatRupiah, getOrderPlace } from "./order-payment-utils";
+import { printReceipt } from "./receipt-print";
 
 interface PaymentDetailSheetProps {
   open: boolean;
@@ -229,7 +230,14 @@ export function PaymentDetailSheet({
             type="button"
             variant="outline"
             className="h-12"
-            onClick={() => window.print()}
+            onClick={() => {
+              if (!source) return;
+              printReceipt({
+                detail,
+                source,
+                method,
+              });
+            }}
           >
             <Printer className="h-4 w-4" />
             Cetak Struk
