@@ -4,9 +4,9 @@ import type { NextConfig } from "next";
 // role-aware. Static next.config.ts redirects cannot read the session and
 // therefore cannot redirect users to their role-appropriate dashboard.
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: __dirname,
-  },
+  // Produce a minimal self-contained server bundle for Docker deployment.
+  // Creates .next/standalone/ which only includes files needed at runtime.
+  output: "standalone",
   images: {
     remotePatterns: [
       {
